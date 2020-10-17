@@ -13,6 +13,10 @@ import (
 	config "github.com/karai/go-karai/configuration"
 	"database/sql"
 	"strconv"
+
+	"github.com/golang-migrate/migrate/v4"
+    _ "github.com/golang-migrate/migrate/v4/database/postgres"
+
 )
 
 type Database struct {
@@ -34,6 +38,11 @@ func (d Database) Connect() (*sqlx.DB, error) {
 	db, err := sqlx.Connect("postgres", connectParams)
 	util.Handle("Error creating a DB connection: ", err)
 	return db, err
+}
+
+func (d Database) DB_init() {
+	d.CreateTables()
+	d.CreateRoot()
 }
 
 func (d Database) CreateTables() {

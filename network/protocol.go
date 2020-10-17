@@ -33,7 +33,8 @@ func Protocol_Init(c *config.Config) {
 	s.prtl = &p
 	s.PeerManager =  &pmm
 
-	d.CreateRoot()
+	d.DB_init()
+
 	log.Println(s.cf.Lport)
 	if !s.GrabExternalIPAddr() {
 		log.Panic("unable to grab external ip")
