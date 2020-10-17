@@ -106,7 +106,7 @@ func (s Server) HandleGetData(request []byte) {
 	log.Println("[RECV] [" + command + "] Data Request from: " + payload.AddrFrom)
 }
 
-func (s Server) HandleTx(ctx flatend.Context, request []byte) {
+func (s *Server) HandleTx(ctx flatend.Context, request []byte) {
 	command := BytesToCmd(request[:commandLength])
 
 	var buff bytes.Buffer
@@ -127,11 +127,12 @@ func (s Server) HandleTx(ctx flatend.Context, request []byte) {
 	// 		s.SendInv(provider, "tx", [][]byte{[]byte(tx.Hash)})
 	// 	}
 	// }
+
 	log.Println("[RECV] [" + command + "] Handle Transaction: " + tx.Hash + " from id: ")
 
-	// if !s.prtl.dat.HaveTx(tx.Hash) {
-	// 	s.prtl.dat.CommitDBTx(tx)
-	// }
+	if !s.prtl.dat.HaveTx(tx.Hash) {
+		s.prtl.dat.CommitDBTx(tx)
+	}
 }
 
 func (s Server) HandleVersion(ctx flatend.Context, request []byte) {
@@ -157,7 +158,7 @@ func (s Server) HandleVersion(ctx flatend.Context, request []byte) {
 	log.Println("[RECV] [" + command + "] Peers Known: " + strconv.Itoa(len(KnownNodes)) + " Num Tx: " + strconv.Itoa(payload.TxSize))
 	//s.SendAddr(payload.AddrFrom)
 
-	s.SendTx(ctx, transaction.Transaction{})
+	s.SendTx(ctx, transaction.CreateTransaction("2","","xhv_price: 16000"))
 }
 
 func (s Server) HandleToSync(request []byte) {
