@@ -45,7 +45,6 @@ func Protocol_Init(c *config.Config) {
 		SecretKey:  flatend.GenerateSecretKey(),
 		Services: map[string]flatend.Handler{
 			"karai-xeq": func(ctx *flatend.Context) {
-				s.SendVersion(ctx)
 				log.Println(ctx.ID.Host.String())
 				s.HandleConnection(ctx)
 			},
@@ -59,7 +58,7 @@ func Protocol_Init(c *config.Config) {
 		err = s.node.Start()
 	}
 
-
+	s.SendVersion()
 
 	if err != nil {
 		log.Println("Unable to connect")

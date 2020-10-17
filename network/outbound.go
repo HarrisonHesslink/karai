@@ -3,11 +3,12 @@ package network
 import (
 	//"github.com/karai/go-karai/transaction"
 	"github.com/lithdew/flatend"
-	//"bytes"
+	"bytes"
 	"log"
 	//"math/rand"
 	//"time"
 	//"strconv"
+	"io/ioutil"
 )
 
 func(s Server) RequestTxes() {
@@ -35,6 +36,16 @@ func(s Server) RequestTxes() {
 
 func (s Server) SendData(ctx *flatend.Context, data []byte) {
 		ctx.Write(data)
+}
+
+func (s Server) BroadCastData(data []byte) {
+	providers := s.node.ProvidersFor("karia-xeq")
+	for _, provider := range providers {
+		_, err := provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
+		if err != nil {
+			//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
+		}
+	}
 }
 
 // func (s Server) SendBroadcastTX(tx transaction.Transaction) {
@@ -97,13 +108,13 @@ func (s Server) SendData(ctx *flatend.Context, data []byte) {
 // 	//log.Println("[SEND] [GDTA][" + kind + "] Sending Data to: " + address)
 // }
 
-func (s Server) SendVersion(ctx *flatend.Context) {
+func (s Server) SendVersion() {
 	numTx := s.prtl.dat.GetDAGSize()
 
 	payload := GobEncode(Version{version, numTx, s.ExternalIP})
 
 	request := append(CmdToBytes("version"), payload...)
 
-	s.SendData(ctx, request)
+	s.BroadCastData(request)
 	log.Println("[SEND] [VERSION] Version Call")
 }
