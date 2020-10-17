@@ -1,124 +1,109 @@
 package network
 
 import (
-	"github.com/karai/go-karai/transaction"
-	//"github.com/lithdew/kademlia"
-	"fmt"
-	"io/ioutil"
-	"bytes"
+	//"github.com/karai/go-karai/transaction"
+	"github.com/lithdew/flatend"
+	//"bytes"
 	"log"
-	"math/rand"
-	"time"
-	"strconv"
+	//"math/rand"
+	//"time"
+	//"strconv"
 )
 
 func(s Server) RequestTxes() {
-	for _, node := range KnownNodes {
-		s.SendGetTxes(node)
-	}
+	//for _, node := range KnownNodes {
+		///s.SendGetTxes(node)
+	//}
 }
 
-func (s Server) SendAddr(address string) {
-	nodes := Addr{KnownNodes}
-	nodes.AddrList = append(nodes.AddrList, nodeAddress)
-	payload := GobEncode(nodes)
-	request := append(CmdToBytes("addr"), payload...)
+// func (s Server) SendAddr(provider flatend.Provider) {
+// 	nodes := Addr{KnownNodes}
+// 	nodes.AddrList = append(nodes.AddrList, nodeAddress)
+// 	payload := GobEncode(nodes)
+// 	request := append(CmdToBytes("addr"), payload...)
 
-	s.SendData(address, request)
+// 	s.SendData(address, request)
+// }
+
+// func(s Server)  SendTx(provider flatend.Provider, tx transaction.Transaction) {
+// 	data := GOB_TX{tx.Serialize()}
+// 	payload := GobEncode(data)
+// 	request := append(CmdToBytes("tx"), payload...)
+
+// //	s.SendData(addr, request)
+// }
+
+func (s Server) SendData(ctx *flatend.Context, data []byte) {
+		ctx.Write(data)
 }
 
-func(s Server)  SendTx(addr string, tx transaction.Transaction) {
-	data := GOB_TX{nodeAddress, tx.Serialize()}
-	payload := GobEncode(data)
-	request := append(CmdToBytes("tx"), payload...)
+// func (s Server) SendBroadcastTX(tx transaction.Transaction) {
+// 	data := GOB_TX{tx.Serialize()}
+// 	payload := GobEncode(data)
+// 	request := append(CmdToBytes("broadtx"), payload...)
 
-	if addr == "" {
-		addr = nodeAddress
-	}
+// 	rand.Seed(time.Now().UnixNano())
+// 	// providers := s.node.ProvidersFor("karai-xeq")
+// 	// for _, provider := range providers {
+// 	// 	s.SendData(*provider, request)
+// 	// 	// if err != nil {
+// 	// 	// 	fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
+// 	// 	// }
+// 	// 	log.Println("[SEND] [BRD] Broadcasting Transaction: " + tx.Hash)
+// 	// }
+// }
 
-	s.SendData(addr, request)
-}
+// func (s Server) SendBroadcastNewPeer(provider flatend.Provider) {
+// 	data := NewPeer{nodeAddress, addr}
+// 	payload := GobEncode(data)
+// 	request := append(CmdToBytes("newpeer"), payload...)
 
-func (s Server) SendData(addr string, data []byte) {
-	providers := s.node.ProvidersFor("karai-xeq")
-	for _, provider := range providers {
-		_, err := provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
-		if err != nil {
-			fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
-		}
-	}
-}
+// 	rand.Seed(time.Now().UnixNano())
 
-func (s Server) SendBroadcastTX(tx transaction.Transaction) {
-	data := GOB_TX{nodeAddress, tx.Serialize()}
-	payload := GobEncode(data)
-	request := append(CmdToBytes("broadtx"), payload...)
+// 	ok := false
+// 	//loop to make sure it broadcasts not self
+// 	for ok == false {
+// 		index := rand.Intn(len(KnownNodes))
+// 		if KnownNodes[index] != nodeAddress {
+// 			//s.SendData(KnownNodes[index], request)
+// 			log.Println("[SEND] [BRD] Broadcasting Connected Peer: " + addr)
+// 			ok = true
+// 		}
+// 	}
+// }
 
-	rand.Seed(time.Now().UnixNano())
+// func (s Server) SendInv(provider flatend.Provider, kind string, items [][]byte) {
+// 	inventory := Inv{nodeAddress, kind, items}
+// 	payload := GobEncode(inventory)
+// 	request := append(CmdToBytes("inv"), payload...)
 
-	ok := false
-	//loop to make sure it broadcasts not self
-	for ok == false {
-		index := rand.Intn(len(KnownNodes))
-		if KnownNodes[index] != nodeAddress {
-			s.SendData(KnownNodes[index], request)
-			log.Println("[SEND] [BRD] Broadcasting Transaction: " + tx.Hash)
-			ok = true
-		}
-	}
-}
+// 	//s.SendData(address, request)
+// 	log.Println("[SEND] [INV] Sending INV: " + strconv.Itoa(len(items)))
+// }
 
-func (s Server) SendBroadcastNewPeer(addr string) {
-	data := NewPeer{nodeAddress, addr}
-	payload := GobEncode(data)
-	request := append(CmdToBytes("newpeer"), payload...)
+// func (s Server)SendGetTxes(provider flatend.Provider) {
+// 	payload := GobEncode(GetTxes{nodeAddress, s.prtl.dat.GetDAGSize()})
+// 	request := append(CmdToBytes("gettxes"), payload...)
 
-	rand.Seed(time.Now().UnixNano())
+// 	//s.SendData(address, request)
+// 	//log.Println("[SEND] [GTXS] Requesting Transactions to: " + address)
+// }
 
-	ok := false
-	//loop to make sure it broadcasts not self
-	for ok == false {
-		index := rand.Intn(len(KnownNodes))
-		if KnownNodes[index] != nodeAddress {
-			s.SendData(KnownNodes[index], request)
-			log.Println("[SEND] [BRD] Broadcasting Connected Peer: " + addr)
-			ok = true
-		}
-	}
-}
+// func (s Server) SendGetData(provider flatend.Provider, kind string, id []byte) {
+// 	payload := GobEncode(GetData{nodeAddress, kind, id})
+// 	request := append(CmdToBytes("getdata"), payload...)
 
-func (s Server) SendInv(address, kind string, items [][]byte) {
-	inventory := Inv{nodeAddress, kind, items}
-	payload := GobEncode(inventory)
-	request := append(CmdToBytes("inv"), payload...)
+// 	//s.SendData(address, request)
+// 	//log.Println("[SEND] [GDTA][" + kind + "] Sending Data to: " + address)
+// }
 
-	s.SendData(address, request)
-	log.Println("[SEND] [INV] Sending INV: " + strconv.Itoa(len(items)))
-}
-
-func (s Server)SendGetTxes(address string) {
-	payload := GobEncode(GetTxes{nodeAddress, s.prtl.dat.GetDAGSize()})
-	request := append(CmdToBytes("gettxes"), payload...)
-
-	s.SendData(address, request)
-	log.Println("[SEND] [GTXS] Requesting Transactions to: " + address)
-}
-
-func (s Server) SendGetData(address, kind string, id []byte) {
-	payload := GobEncode(GetData{nodeAddress, kind, id})
-	request := append(CmdToBytes("getdata"), payload...)
-
-	s.SendData(address, request)
-	log.Println("[SEND] [GDTA][" + kind + "] Sending Data to: " + address)
-}
-
-func (s Server) SendVersion(addr string) {
+func (s Server) SendVersion(ctx *flatend.Context) {
 	numTx := s.prtl.dat.GetDAGSize()
 
-	payload := GobEncode(Version{version, numTx, nodeAddress})
+	payload := GobEncode(Version{version, numTx, s.ExternalIP})
 
 	request := append(CmdToBytes("version"), payload...)
 
-	s.SendData(addr, request)
+	s.SendData(ctx, request)
 	log.Println("[SEND] [VERSION] Version Call")
 }

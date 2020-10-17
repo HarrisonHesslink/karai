@@ -26,7 +26,6 @@ type Addr struct {
 }
 
 type GOB_TX struct {
-	AddrFrom string
 	TX   []byte
 }
 
