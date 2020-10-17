@@ -2,9 +2,9 @@ package network
 
 import (
 	"github.com/karai/go-karai/transaction"
-	"net"
+	//"github.com/lithdew/kademlia"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"bytes"
 	"log"
 	"math/rand"
@@ -40,30 +40,12 @@ func(s Server)  SendTx(addr string, tx transaction.Transaction) {
 }
 
 func (s Server) SendData(addr string, data []byte) {
-	conn, err := net.Dial(protocol, addr)
-
-	if err != nil {
-		fmt.Printf("%s is not available\n", addr)
-		var updatedNodes []string
-
-		for _, node := range KnownNodes {
-			if node != addr {
-				if !stringInSlice(node, KnownNodes) {
-					updatedNodes = append(updatedNodes, node)
-				}
-			}
+	providers := s.node.ProvidersFor("karai-xeq")
+	for _, provider := range providers {
+		_, err := provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
+		if err != nil {
+			fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
 		}
-
-		KnownNodes = updatedNodes
-
-		return
-	}
-
-	defer conn.Close()
-
-	_, err = io.Copy(conn, bytes.NewReader(data))
-	if err != nil {
-		log.Panic(err)
 	}
 }
 

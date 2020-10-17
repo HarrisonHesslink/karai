@@ -74,3 +74,8 @@ type Server struct {
 type Protocol struct {
 	dat *db.Database
 }
+
+// type PeerList struct {
+// 	Peers []string `json:`
+// }
+

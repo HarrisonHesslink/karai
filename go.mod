@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/ccding/go-stun v0.1.2
 	github.com/davecgh/go-spew v1.1.1
+	github.com/glendc/go-external-ip v0.0.0-20200601212049-c872357d968e
 	github.com/golang/protobuf v1.4.0
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.4
@@ -32,6 +33,7 @@ require (
 	github.com/libp2p/go-tcp-transport v0.2.1
 	github.com/libp2p/go-ws-transport v0.3.1
 	github.com/lithdew/flatend v0.0.8
+	github.com/lithdew/kademlia v0.0.0-20200622165832-45f8d02aa528
 	github.com/multiformats/go-multiaddr v0.3.1
 	github.com/onsi/gomega v1.9.0 // indirect
 	github.com/scottjg/upnp v0.0.0-20161226025956-82caf20da2dd
