@@ -4,7 +4,7 @@ import (
 	"github.com/karai/go-karai/db"
 	config "github.com/karai/go-karai/configuration"
 	"github.com/karai/go-karai/peer_manager"
-	"github.com/scottjg/upnp"
+	"github.com/lithdew/flatend"
 
 )
 const (
@@ -62,7 +62,7 @@ type Server struct {
 	prtl *Protocol
 	cf *config.Config
 	PeerManager *peer_manager.PeerManager
-	u *upnp.Upnp
+	node *flatend.Node
 
 	Peers []string
 	ExternalIP string

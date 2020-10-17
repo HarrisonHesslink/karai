@@ -31,6 +31,7 @@ require (
 	github.com/libp2p/go-libp2p-yamux v0.2.8
 	github.com/libp2p/go-tcp-transport v0.2.1
 	github.com/libp2p/go-ws-transport v0.3.1
+	github.com/lithdew/flatend v0.0.8
 	github.com/multiformats/go-multiaddr v0.3.1
 	github.com/onsi/gomega v1.9.0 // indirect
 	github.com/scottjg/upnp v0.0.0-20161226025956-82caf20da2dd
@@ -38,6 +39,4 @@ require (
 	github.com/vrecan/death v3.0.1+incompatible
 	github.com/whyrusleeping/go-logging v0.0.1
 	golang.org/x/crypto v0.0.0-20200709230013-948cd5f35899
-	golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae // indirect
-	google.golang.org/appengine v1.4.0 // indirect
 )

@@ -1,13 +1,13 @@
 package network
 
 import (	
-	"net"
 	"bytes"
 	"encoding/gob"
 	"log"
 	"strconv"
 	"io/ioutil"
 	"github.com/karai/go-karai/transaction"
+	"github.com/lithdew/flatend"
 )
 func (s Server) HandleAddr(request []byte) {
 	command := BytesToCmd(request[:commandLength])
@@ -183,13 +183,13 @@ func (s Server) HandleNewPeer(request []byte) {
 	log.Println("[RECV] [" + command + "] New Relayed Peer: " + payload.NewPeer)
 }
 
-func (s *Server) HandleConnection(conn net.Conn) {
-	req, err := ioutil.ReadAll(conn)
-	defer conn.Close()
+func (s *Server) HandleConnection(ctx *flatend.Context) {
+	req, err := ioutil.ReadAll(ctx.Body)
 	
 	if err != nil {
 		log.Panic(err)
 	}
+
 	command := BytesToCmd(req[:commandLength])
 
 	switch command {
