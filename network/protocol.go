@@ -11,7 +11,6 @@ import (
 	//"strconv"
 	"github.com/glendc/go-external-ip"
 	//"github.com/karai/go-karai/transaction"
-
 )
 
 func Protocol_Init(c *config.Config) {
@@ -41,12 +40,11 @@ func Protocol_Init(c *config.Config) {
 	s.ExternalIP = ip.String()
 	log.Println(s.ExternalIP)
 	s.node = &flatend.Node{
-		PublicAddr: "0.0.0.0:4201",
+		PublicAddr: ":4201",
 		SecretKey:  flatend.GenerateSecretKey(),
 		Services: map[string]flatend.Handler{
 			"karai-xeq": func(ctx *flatend.Context) {
-				log.Println(ctx.ID.Host.String())
-				s.HandleConnection(ctx)
+				s.HandleConnection(*ctx)
 			},
 		},
 	}
@@ -58,13 +56,12 @@ func Protocol_Init(c *config.Config) {
 		err = s.node.Start()
 	}
 
-	s.SendVersion()
-
 	if err != nil {
 		log.Println("Unable to connect")
 		log.Panic(err)
 	}
 
+	s.SendVersion()
 
 	select {}
 }

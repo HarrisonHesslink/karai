@@ -1,13 +1,13 @@
 package network
 
 import (
-	//"github.com/karai/go-karai/transaction"
+	"github.com/karai/go-karai/transaction"
 	"github.com/lithdew/flatend"
 	"bytes"
 	"log"
 	//"math/rand"
 	//"time"
-	//"strconv"
+	"strconv"
 	"io/ioutil"
 )
 
@@ -26,20 +26,21 @@ func(s Server) RequestTxes() {
 // 	s.SendData(address, request)
 // }
 
-// func(s Server)  SendTx(provider flatend.Provider, tx transaction.Transaction) {
-// 	data := GOB_TX{tx.Serialize()}
-// 	payload := GobEncode(data)
-// 	request := append(CmdToBytes("tx"), payload...)
+func(s *Server)  SendTx(ctx flatend.Context, tx transaction.Transaction) {
+	data := GOB_TX{tx.Serialize()}
+	payload := GobEncode(data)
+	request := append(CmdToBytes("tx"), payload...)
 
-// //	s.SendData(addr, request)
-// }
+	s.SendData(ctx, request)
+}
 
-func (s Server) SendData(ctx *flatend.Context, data []byte) {
+func (s *Server) SendData(ctx flatend.Context, data []byte) {
 		ctx.Write(data)
 }
 
-func (s Server) BroadCastData(data []byte) {
-	providers := s.node.ProvidersFor("karia-xeq")
+func (s *Server) BroadCastData(data []byte) {
+	providers := s.node.ProvidersFor("karai-xeq")
+	log.Println(strconv.Itoa(len(providers)))
 	for _, provider := range providers {
 		_, err := provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
 		if err != nil {
@@ -108,7 +109,7 @@ func (s Server) BroadCastData(data []byte) {
 // 	//log.Println("[SEND] [GDTA][" + kind + "] Sending Data to: " + address)
 // }
 
-func (s Server) SendVersion() {
+func (s *Server) SendVersion() {
 	numTx := s.prtl.dat.GetDAGSize()
 
 	payload := GobEncode(Version{version, numTx, s.ExternalIP})
