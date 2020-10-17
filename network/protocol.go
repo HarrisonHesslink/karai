@@ -51,8 +51,7 @@ func Protocol_Init(c *config.Config) {
 	}
 	defer s.node.Shutdown()
 
-	if(s.ExternalIP != "157.230.91.2")
-	{
+	if(s.ExternalIP != "157.230.91.2") {
 		err = s.node.Start("157.230.91.2:4201")
 	} else {
 		err = s.node.Start(":4201")
