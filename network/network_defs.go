@@ -4,7 +4,7 @@ import (
 	"github.com/karai/go-karai/db"
 	config "github.com/karai/go-karai/configuration"
 	"github.com/karai/go-karai/peer_manager"
-	"github.com/lithdew/flatend"
+	"github.com/harrisonhesslink/flatend"
 
 )
 const (

@@ -7,7 +7,7 @@ import (
 	config "github.com/karai/go-karai/configuration"
 	"github.com/karai/go-karai/db"
 	"github.com/karai/go-karai/peer_manager"
-	"github.com/lithdew/flatend"
+	"github.com/harrisonhesslink/flatend"
 	//"strconv"
 	"github.com/glendc/go-external-ip"
 	//"github.com/karai/go-karai/transaction"

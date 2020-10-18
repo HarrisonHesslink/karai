@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"io/ioutil"
 	"github.com/karai/go-karai/transaction"
-	"github.com/lithdew/flatend"
+	"github.com/harrisonhesslink/flatend"
 )
 func (s Server) HandleAddr(request []byte) {
 	command := BytesToCmd(request[:commandLength])

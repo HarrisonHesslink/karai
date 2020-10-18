@@ -2,7 +2,7 @@ package network
 
 import (
 	"github.com/karai/go-karai/transaction"
-	"github.com/lithdew/flatend"
+	"github.com/harrisonhesslink/flatend"
 	"bytes"
 	"log"
 	//"math/rand"
