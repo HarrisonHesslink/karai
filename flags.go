@@ -24,12 +24,13 @@ func flags(c *config.Config) {
 	dir := flag.String("dir", "./config", "Change the dir of all duh fyles")
 	lport := flag.Int("l", 4201, "wait for incoming connections")
 	name := flag.String("db-name", "transactions", "set db-name for psql")
-
+	flag.Parse()
+	
 	c.KaraiAPIPort = *apiport
 	c.WantsClean = *wantclean
 	c.ConfigDir = *dir
 	c.Lport = *lport
 	c.TableName = *name
 
-	flag.Parse()
+
 }
