@@ -26,15 +26,17 @@ func(s Server) RequestTxes() {
 // 	s.SendData(address, request)
 // }
 
-func(s *Server)  SendTx(ctx flatend.Context, tx transaction.Transaction) {
+func(s *Server)  SendTx(ctx *flatend.Context, tx transaction.Transaction) {
 	data := GOB_TX{tx.Serialize()}
 	payload := GobEncode(data)
 	request := append(CmdToBytes("tx"), payload...)
 
 	s.SendData(ctx, request)
+	log.Println("[SEND] [TXT] Sending Transaction to " + ctx.ID.Pub.String() + " ip: " + ctx.ID.Host.String())
+
 }
 
-func (s *Server) SendData(ctx flatend.Context, data []byte) {
+func (s *Server) SendData(ctx *flatend.Context, data []byte) {
 		ctx.Write(data)
 }
 

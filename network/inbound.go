@@ -106,7 +106,7 @@ func (s Server) HandleGetData(request []byte) {
 	log.Println("[RECV] [" + command + "] Data Request from: " + payload.AddrFrom)
 }
 
-func (s *Server) HandleTx(ctx flatend.Context, request []byte) {
+func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	command := BytesToCmd(request[:commandLength])
 
 	var buff bytes.Buffer
@@ -135,7 +135,7 @@ func (s *Server) HandleTx(ctx flatend.Context, request []byte) {
 	}
 }
 
-func (s Server) HandleVersion(ctx flatend.Context, request []byte) {
+func (s Server) HandleVersion(ctx *flatend.Context, request []byte) {
 	command := BytesToCmd(request[:commandLength])
 	var buff bytes.Buffer
 	var payload Version
@@ -186,7 +186,7 @@ func (s Server) HandleNewPeer(request []byte) {
 	log.Println("[RECV] [" + command + "] New Relayed Peer: " + payload.NewPeer)
 }
 
-func (s *Server) HandleConnection(ctx flatend.Context) {
+func (s *Server) HandleConnection(ctx *flatend.Context) {
 	req, err := ioutil.ReadAll(ctx.Body)
 	
 	if err != nil {
