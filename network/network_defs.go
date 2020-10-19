@@ -3,8 +3,8 @@ import (
 	"os"
 	"github.com/karai/go-karai/db"
 	config "github.com/karai/go-karai/configuration"
-	"github.com/karai/go-karai/peer_manager"
 	"github.com/harrisonhesslink/flatend"
+	"github.com/lithdew/kademlia"
 
 )
 const (
@@ -58,12 +58,10 @@ type NewPeer struct {
 }
 
 type Server struct { 
-	prtl *Protocol
+	Prtl *Protocol
 	cf *config.Config
-	PeerManager *peer_manager.PeerManager
 	node *flatend.Node
-
-	Peers []string
+	pl *PeerList
 	ExternalIP string
 	ExternalPort int
 
@@ -71,10 +69,17 @@ type Server struct {
 }
 
 type Protocol struct {
-	dat *db.Database
+	Dat *db.Database
 }
 
-// type PeerList struct {
-// 	Peers []string `json:`
-// }
+type Peer struct {
+	ID *kademlia.ID
+	Provider *flatend.Provider
+}
+
+type PeerList struct {
+	Peers []Peer
+
+	Count int 
+}
 

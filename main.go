@@ -16,9 +16,11 @@ func main() {
 	//createRoot()
 	//go restAPI(keys)
 	//ascii()
-	go network.Protocol_Init(&c)
+	var s network.Server
+	go network.Protocol_Init(&c, &s)
 	//go getDataCovid19(1000)
 	//go getDataOgre(500)
 	//go generateRandomTransactions()
-	inputHandler()
+	inputHandler(&s)
+
 }

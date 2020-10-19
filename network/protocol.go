@@ -6,30 +6,30 @@ import (
 	//"github.com/karai/go-karai/db"
 	config "github.com/karai/go-karai/configuration"
 	"github.com/karai/go-karai/db"
-	"github.com/karai/go-karai/peer_manager"
 	"github.com/harrisonhesslink/flatend"
-	//"strconv"
+	"strconv"
 	"github.com/glendc/go-external-ip"
 	//"github.com/karai/go-karai/transaction"
-	//"io/ioutil"
+	"io/ioutil"
+	"time"
+	"github.com/lithdew/kademlia"
+
 )
 
-func Protocol_Init(c *config.Config) {
-	var s Server
+func Protocol_Init(c *config.Config, s *Server) {
 	var d db.Database
 	var p Protocol
-	var pmm peer_manager.PeerManager
+	var peer_list PeerList
 
-	pmm.Cf = c
+	s.pl = &peer_list
 	d.Cf = c
 	s.cf = c
 
-	p.dat = &d
+	p.Dat = &d
 
-	s.prtl = &p
-	s.PeerManager =  &pmm
+	s.Prtl = &p
 	d.DB_init()
-
+	log.Println(c.Lport)
 
   	consensus := externalip.DefaultConsensus(nil, nil)
     // Get your IP,
@@ -40,19 +40,20 @@ func Protocol_Init(c *config.Config) {
 	}
 	s.ExternalIP = ip.String()
 	s.node = &flatend.Node{
-		PublicAddr: ":4201",
-		BindAddrs:  []string{":4201"},
+		PublicAddr: ":" + strconv.Itoa(c.Lport),
+		BindAddrs:  []string{":" + strconv.Itoa(c.Lport)},
 		SecretKey:  flatend.GenerateSecretKey(),
 		Services: map[string]flatend.Handler{
 			"karai-xeq": func(ctx *flatend.Context) {
 
-				// req, err := ioutil.ReadAll(ctx.Body)
-				// if err != nil {
-				// 	log.Panic(err)
-				// }
+				req, err := ioutil.ReadAll(ctx.Body)
+				if err != nil {
+					log.Panic(err)
+				}
 			
-				//log.Println(string(req))
-				s.HandleConnection(ctx)
+				s.HandleConnection(req, ctx)
+
+				ctx.Write([]byte("close"))
 			},
 		},
 	}
@@ -67,9 +68,9 @@ func Protocol_Init(c *config.Config) {
 		log.Panic(err)
 	}
 
-	s.SendVersion()
+	go s.LookForNodes()
 
-	
+	log.Println("Active Peer Count with streams: " + strconv.Itoa(s.pl.Count))
 
 	// for _, provider := range providers {
 	// 	_, err := provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
@@ -81,6 +82,50 @@ func Protocol_Init(c *config.Config) {
 	select {}
 }
 
-func (s Server) addPeer(addr string) {
-	s.Peers = append(s.Peers, addr)
+func (s *Server) HandleCall(stream *flatend.Stream) {
+	req, err := ioutil.ReadAll(stream.Reader)
+	if err != nil {
+		log.Panic(err)
+	}
+	go s.HandleConnection(req, nil)
+}
+
+func (s *Server) GetProviderFromID(id  *kademlia.ID) *flatend.Provider {
+	providers := s.node.ProvidersFor("karai-xeq")
+	for _, provider := range providers {
+		if provider.GetID().Pub.String() == id.Pub.String(){
+			return provider
+		}
+	}
+	return nil
+}
+
+func (s *Server) LookForNodes() {
+	for {
+		new_ids := s.node.Bootstrap()
+
+		//probe new nodes
+
+		for _, peer := range new_ids {
+			log.Println(peer.Host.String() + ":" + strconv.Itoa(int(peer.Port)))
+			s.node.Probe(peer.Host.String() + ":" + strconv.Itoa(int(peer.Port)))
+		}
+
+
+
+		providers := s.node.ProvidersFor("karai-xeq")
+		log.Println(strconv.Itoa(len(providers)))
+		for _, provider := range providers {
+	
+				stream := s.SendVersion(provider)
+				if s.pl.Count < 9 {
+					s.pl.Peers = append(s.pl.Peers, Peer{provider.GetID(), provider})
+					s.pl.Count++
+				}
+	
+				s.HandleCall(stream)
+		}
+
+		time.Sleep(1 * time.Minute)
+	}
 }

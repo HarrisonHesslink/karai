@@ -5,7 +5,7 @@ import (
 	"encoding/gob"
 	"log"
 	"strconv"
-	"io/ioutil"
+	//"io/ioutil"
 	"github.com/karai/go-karai/transaction"
 	"github.com/harrisonhesslink/flatend"
 )
@@ -49,7 +49,7 @@ func (s Server) HandleInv(request []byte) {
 		txesInTransit = payload.Items
 
 		for _, byte_data := range payload.Items {
-			have_tx := s.prtl.dat.HaveTx(string(byte_data))
+			have_tx := s.Prtl.Dat.HaveTx(string(byte_data))
 			if !have_tx && len(byte_data) > 0 {
 				//s.SendGetData(payload.AddrFrom, "tx", byte_data)
 			}
@@ -59,7 +59,7 @@ func (s Server) HandleInv(request []byte) {
 	}
 }
 
-func (s Server) HandleGetTxes(request []byte) {
+func (s Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	command := BytesToCmd(request[:commandLength])
 
 	var buff bytes.Buffer
@@ -71,21 +71,21 @@ func (s Server) HandleGetTxes(request []byte) {
 	if err != nil {
 		log.Panic(err)
 	}
-	txSize := s.prtl.dat.GetDAGSize()
+	txSize := s.Prtl.Dat.GetDAGSize()
 
 	if txSize <= payload.numTx {
 
-		//txes := s.prtl.dat.ReturnRangeOfTransactions(payload.numTx)
+		//txes := s.Prtl.Dat.ReturnRangeOfTransactions(payload.numTx)
 
 		//s.SendInv(payload.AddrFrom, "tx", txes)
 	} else {
 		//ahead or equal nothing to do maybe relay? 
 	}
 
-	log.Println("[RECV] [" + command + "] Get Txes from: " + payload.AddrFrom)
+	log.Println("[RECV] [" + command + "] Get Txes from: " + ctx.ID.Pub.String())
 }
 
-func (s Server) HandleGetData(request []byte) {
+func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {
 	command := BytesToCmd(request[:commandLength])
 
 	var buff bytes.Buffer
@@ -100,10 +100,11 @@ func (s Server) HandleGetData(request []byte) {
 
 	if payload.Type == "tx" {
 
-	//	tx := s.prtl.dat.GetTransaction(payload.ID)
-		//s.SendTx(payload.AddrFrom, tx)
+		tx := s.Prtl.Dat.GetTransaction(payload.ID)
+
+		s.SendTx(s.GetProviderFromID(&ctx.ID), tx)
 	}
-	log.Println("[RECV] [" + command + "] Data Request from: " + payload.AddrFrom)
+	log.Println("[RECV] [" + command + "] Data Request from: " + ctx.ID.Pub.String())
 }
 
 func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
@@ -122,20 +123,16 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	txData := payload.TX
 	tx := transaction.DeserializeTransaction(txData)
 
-	// for _, node := range KnownNodes {
-	// 	if node != nodeAddress && node != payload.AddrFrom {
-	// 		s.SendInv(provider, "tx", [][]byte{[]byte(tx.Hash)})
-	// 	}
-	// }
+	s.SendInv("tx", [][]byte{[]byte(tx.Hash)})		
 
-	log.Println("[RECV] [" + command + "] Handle Transaction: " + tx.Hash + " from id: ")
-
-	if !s.prtl.dat.HaveTx(tx.Hash) {
-		s.prtl.dat.CommitDBTx(tx)
+	if !s.Prtl.Dat.HaveTx(tx.Hash) {
+		s.Prtl.Dat.CommitDBTx(tx)
 	}
+
+	log.Println("[RECV] [" + command + "] Handle Transaction: " + tx.Hash)
 }
 
-func (s Server) HandleVersion(ctx *flatend.Context, request []byte) {
+func (s Server) HandleVersion(request []byte) {
 	command := BytesToCmd(request[:commandLength])
 	var buff bytes.Buffer
 	var payload Version
@@ -146,74 +143,29 @@ func (s Server) HandleVersion(ctx *flatend.Context, request []byte) {
 	if err != nil {
 		log.Panic(err)
 	}
-	if !NodeIsKnown(payload.AddrFrom) {
-		KnownNodes = append(KnownNodes, payload.AddrFrom)
-	//	s.SendBroadcastNewPeer(payload.AddrFrom)
-	}
 
-	if payload.TxSize > s.prtl.dat.GetDAGSize() {
+	if payload.TxSize > s.Prtl.Dat.GetDAGSize() {
 		s.RequestTxes()
 	}
-
-	log.Println("[RECV] [" + command + "] Peers Known: " + strconv.Itoa(len(KnownNodes)) + " Num Tx: " + strconv.Itoa(payload.TxSize))
-	//s.SendAddr(payload.AddrFrom)
-
-	s.SendTx(ctx, transaction.CreateTransaction("2","","xhv_price: 16000"))
+	log.Println("[RECV] [" + command + "] Num Tx: " + strconv.Itoa(payload.TxSize))
 }
 
-func (s Server) HandleToSync(request []byte) {
-
-}
-
-func (s Server) HandleNewPeer(request []byte) {
-	command := BytesToCmd(request[:commandLength])
-	var buff bytes.Buffer
-	var payload NewPeer
-
-	buff.Write(request[commandLength:])
-	dec := gob.NewDecoder(&buff)
-	err := dec.Decode(&payload)
-	if err != nil {
-		log.Panic(err)
-
-	}
-
-	// if !stringInSlice(payload.NewPeer, KnownNodes) {
-	// 	KnownNodes = append(KnownNodes, payload.NewPeer)
-	// 	s.SendVersion(nodeAddress)
-	// }
-	
-	log.Println("[RECV] [" + command + "] New Relayed Peer: " + payload.NewPeer)
-}
-
-func (s *Server) HandleConnection(ctx *flatend.Context) {
-	req, err := ioutil.ReadAll(ctx.Body)
-	
-	if err != nil {
-		log.Panic(err)
-	}
+func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {
 
 	command := BytesToCmd(req[:commandLength])
-	log.Println(req)
 	switch command {
 	case "addr":
 		s.HandleAddr(req)
 	case "inv":
 		s.HandleInv(req)
 	 case "gettxes":
-	 	s.HandleGetTxes(req)
+	 	s.HandleGetTxes(ctx, req)
 	 case "getdata":
-	 	s.HandleGetData(req)
+	 	s.HandleGetData(ctx, req)
 	case "tx":
 		s.HandleTx(ctx, req)
 	case "version":
-		s.HandleVersion(ctx, req)
-	case "broadtx":
-		s.HandleTx(ctx, req)
-	case "sync":
-		s.HandleToSync(req)
-	case "newpeer":
-		s.HandleNewPeer(req)
+		s.HandleVersion(req)
 	default:
 		log.Println("Unknown command")
 	}

@@ -9,6 +9,7 @@ import (
 	//"time"
 	"strconv"
 	"io/ioutil"
+	"github.com/lithdew/kademlia"
 )
 
 func(s Server) RequestTxes() {
@@ -26,18 +27,21 @@ func(s Server) RequestTxes() {
 // 	s.SendData(address, request)
 // }
 
-func(s *Server)  SendTx(ctx *flatend.Context, tx transaction.Transaction) {
+func(s *Server)  SendTx(p *flatend.Provider, tx transaction.Transaction) {
 	data := GOB_TX{tx.Serialize()}
 	payload := GobEncode(data)
 	request := append(CmdToBytes("tx"), payload...)
 
-	s.SendData(ctx, request)
-	log.Println("[SEND] [TXT] Sending Transaction to " + ctx.ID.Pub.String() + " ip: " + ctx.ID.Host.String())
-
+	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	if err != nil {
+		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
+	}
+	log.Println("[SEND] [TXT] Sending Transaction to " + p.GetID().Pub.String() + " ip: " + p.GetID().Host.String())
+	s.HandleCall(stream)
 }
 
-func (s *Server) SendData(ctx *flatend.Context, data []byte) {
-		ctx.Write(data)
+func (s *Server) SendData(peer *kademlia.ID, data []byte) {
+
 }
 
 func (s *Server) BroadCastData(data []byte) {
@@ -86,17 +90,23 @@ func (s *Server) BroadCastData(data []byte) {
 // 	}
 // }
 
-// func (s Server) SendInv(provider flatend.Provider, kind string, items [][]byte) {
-// 	inventory := Inv{nodeAddress, kind, items}
-// 	payload := GobEncode(inventory)
-// 	request := append(CmdToBytes("inv"), payload...)
+func (s *Server) SendInv( kind string, items [][]byte) {
+	inventory := Inv{nodeAddress, kind, items}
+	payload := GobEncode(inventory)
+	request := append(CmdToBytes("inv"), payload...)
 
-// 	//s.SendData(address, request)
-// 	log.Println("[SEND] [INV] Sending INV: " + strconv.Itoa(len(items)))
-// }
+	for _, p := range s.pl.Peers {
+			stream, err := p.Provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+			if err != nil {
+				//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
+			}
+			log.Println("[SEND] [INV] Sending INV: " + strconv.Itoa(len(items)))
+			s.HandleCall(stream)
+	}
+}
 
 // func (s Server)SendGetTxes(provider flatend.Provider) {
-// 	payload := GobEncode(GetTxes{nodeAddress, s.prtl.dat.GetDAGSize()})
+// 	payload := GobEncode(GetTxes{nodeAddress, s.Prtl.Dat.GetDAGSize()})
 // 	request := append(CmdToBytes("gettxes"), payload...)
 
 // 	//s.SendData(address, request)
@@ -111,13 +121,17 @@ func (s *Server) BroadCastData(data []byte) {
 // 	//log.Println("[SEND] [GDTA][" + kind + "] Sending Data to: " + address)
 // }
 
-func (s *Server) SendVersion() {
-	numTx := s.prtl.dat.GetDAGSize()
+func (s *Server) SendVersion(p *flatend.Provider) *flatend.Stream {
+	numTx := s.Prtl.Dat.GetDAGSize()
 
 	payload := GobEncode(Version{version, numTx, s.ExternalIP})
 
 	request := append(CmdToBytes("version"), payload...)
 
-	s.BroadCastData(request)
+	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	if err != nil {
+		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
+	}
 	log.Println("[SEND] [VERSION] Version Call")
+	return stream
 }

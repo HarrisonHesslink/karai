@@ -5,16 +5,18 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"github.com/karai/go-karai/network"
+
 //"time"
-//	"log"
-//	"strconv"
+	"log"
+	"strconv"
 )
 
 // // inputHandler This is a basic input loop that listens for
 // // a few words that correspond to functions in the app. When
 // // a command isn't understood, it displays the help menu and
 // // returns to listening to input.
-func inputHandler(/*keyCollection *ED25519Keys*/) {
+func inputHandler(s *network.Server/*keyCollection *ED25519Keys*/) {
 	reader := bufio.NewReader(os.Stdin)
 
 	//fmt.Printf("\n\n%v%v%v\n", white+"Type '", brightgreen+"menu", white+"' to view a list of commands")
@@ -41,8 +43,8 @@ func inputHandler(/*keyCollection *ED25519Keys*/) {
 		} else if strings.Compare("license", text) == 0 {
 		//	printLicense()
 		} else if strings.Compare("dag", text) == 0 {
-			//count := getDAGSize()
-			//log.Println("Txes: " + strconv.Itoa(count))
+			count := s.Prtl.Dat.GetDAGSize()
+			log.Println("Txes: " + strconv.Itoa(count))
 		} else if strings.Compare("a", text) == 0 {
 			// // start := time.Now()
 			// // txint := 50
