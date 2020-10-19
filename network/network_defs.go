@@ -83,3 +83,9 @@ type PeerList struct {
 	Count int 
 }
 
+type Request struct {
+	PubKey string `json:pub_key`
+	Signature string `json:signature`
+	Data string`json:data`
+	Task string`json:task`
+}

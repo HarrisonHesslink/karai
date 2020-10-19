@@ -14,7 +14,6 @@ func main() {
 	//cleanData()
 	//keys := initKeys()
 	//createRoot()
-	//go restAPI(keys)
 	//ascii()
 	var s network.Server
 	go network.Protocol_Init(&c, &s)

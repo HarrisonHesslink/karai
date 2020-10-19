@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"time"
 	"github.com/lithdew/kademlia"
+	"encoding/json"
 
 )
 
@@ -29,6 +30,9 @@ func Protocol_Init(c *config.Config, s *Server) {
 
 	s.Prtl = &p
 	d.DB_init()
+
+	go s.RestAPI()
+
 	log.Println(c.Lport)
 
   	consensus := externalip.DefaultConsensus(nil, nil)
@@ -128,4 +132,9 @@ func (s *Server) LookForNodes() {
 
 		time.Sleep(1 * time.Minute)
 	}
+}
+
+func (s *Server) NewDataTxFromCore(req Request) {
+	req_string, _ := json.Marshal(req)
+	log.Println(string(req_string))
 }
