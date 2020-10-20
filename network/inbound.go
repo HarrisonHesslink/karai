@@ -100,7 +100,7 @@ func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {
 
 	if payload.Type == "tx" {
 
-		tx := s.Prtl.Dat.GetTransaction(payload.ID)
+		//tx := s.Prtl.Dat.GetTransaction(payload.ID)
 
 		//s.SendTx(s.GetProviderFromID(&ctx.ID), tx)
 	}
