@@ -138,7 +138,7 @@ func (d Database) ReturnTopHash() (string, int) {
 	db, connectErr := d.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
-	_ = db.QueryRow("SELECT tx_hash, id FROM " + d.Cf.GetTableName() + " ORDER BY tx_time DESC LIMIT 1").Scan(&txHash, &id)
+	_ = db.QueryRow("SELECT tx_hash, id FROM " + d.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC LIMIT 1").Scan(&txHash, &id)
 	return txHash, id
 }
 

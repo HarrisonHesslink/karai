@@ -2,6 +2,7 @@ package network
 
 import (
 	"github.com/karai/go-karai/transaction"
+	"github.com/karai/go-karai/util"
 	"github.com/harrisonhesslink/flatend"
 	"bytes"
 	"log"
@@ -9,14 +10,14 @@ import (
 	//"time"
 	"strconv"
 	"io/ioutil"
-	"github.com/lithdew/kademlia"
+	//"github.com/lithdew/kademlia"
 )
 
-func(s Server) RequestTxes() {
-	//for _, node := range KnownNodes {
-		///s.SendGetTxes(node)
-	//}
-}
+// func(s *Server) RequestTxes(ctx *flatend.Context) {
+// 	for _, node := range KnownNodes {
+// 		/s.SendGetTxes(node)
+// 	}
+// }
 
 // func (s Server) SendAddr(provider flatend.Provider) {
 // 	nodes := Addr{KnownNodes}
@@ -53,8 +54,8 @@ func(s *Server)  BroadCastTX(tx transaction.Transaction) {
 	s.HandleCall(stream)
 }
 
-func (s *Server) SendData(peer *kademlia.ID, data []byte) {
-
+func (s *Server) SendData(ctx *flatend.Context, data []byte) {
+	ctx.Write(data)
 }
 
 func (s *Server) BroadCastData(data []byte) {
@@ -118,13 +119,22 @@ func (s *Server) SendInv( kind string, items [][]byte) {
 	}
 }
 
-// func (s Server)SendGetTxes(provider flatend.Provider) {
-// 	payload := GobEncode(GetTxes{nodeAddress, s.Prtl.Dat.GetDAGSize()})
-// 	request := append(CmdToBytes("gettxes"), payload...)
+func (s *Server)SendGetTxes(ctx *flatend.Context) {
+	
+	var txPrev string
 
-// 	//s.SendData(address, request)
-// 	//log.Println("[SEND] [GTXS] Requesting Transactions to: " + address)
-// }
+	db, connectErr := s.Prtl.Dat.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
+
+	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+
+	payload := GobEncode(GetTxes{txPrev})
+	request := append(CmdToBytes("gettxes"), payload...)
+
+	s.SendData(ctx, request)
+	log.Println("[SEND] [GTXS] Requesting Transactions starting from: " + txPrev)
+}
 
 // func (s Server) SendGetData(provider flatend.Provider, kind string, id []byte) {
 // 	payload := GobEncode(GetData{nodeAddress, kind, id})

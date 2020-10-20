@@ -66,7 +66,7 @@ func Protocol_Init(c *config.Config, s *Server) {
 
 	err = s.node.Start(s.ExternalIP)
 
-	s.node.Probe("157.230.91.2:4201")
+	s.node.Probe("167.172.156.118:4201")
 
 	if err != nil {
 		log.Println("Unable to connect")

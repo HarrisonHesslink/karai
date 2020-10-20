@@ -7,6 +7,7 @@ import (
 	"strconv"
 	//"io/ioutil"
 	"github.com/karai/go-karai/transaction"
+	"github.com/karai/go-karai/util"
 	"github.com/harrisonhesslink/flatend"
 )
 func (s Server) HandleAddr(request []byte) {
@@ -71,16 +72,25 @@ func (s Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	if err != nil {
 		log.Panic(err)
 	}
-	txSize := s.Prtl.Dat.GetDAGSize()
 
-	if txSize <= payload.numTx {
-
-		//txes := s.Prtl.Dat.ReturnRangeOfTransactions(payload.numTx)
-
-		//s.SendInv(payload.AddrFrom, "tx", txes)
-	} else {
-		//ahead or equal nothing to do maybe relay? 
+	top_hash, top_id  := s.Prtl.Dat.ReturnTopHash()
+	if top_hash != "" {
+		//somethin
 	}
+
+	if !s.Prtl.Dat.HaveTx(payload.top_hash) {
+		//somethin
+	}
+	top_id++
+
+	var next_tx transaction.Transaction
+	db, connectErr := s.Prtl.Dat.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
+	_ = db.QueryRow("SELECT (*) FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE id=$1 ORDER BY tx_time DESC", top_id).Scan(&next_tx)
+
+	log.Println(next_tx.Hash)
+	s.SendTx(s.GetProviderFromID(&ctx.ID), next_tx)
 
 	log.Println("[RECV] [" + command + "] Get Txes from: " + ctx.ID.Pub.String())
 }
@@ -132,7 +142,7 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	log.Println("[RECV] [" + command + "] Handle Transaction: " + tx.Hash)
 }
 
-func (s Server) HandleVersion(request []byte) {
+func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {
 	command := BytesToCmd(request[:commandLength])
 	var buff bytes.Buffer
 	var payload Version
@@ -145,9 +155,10 @@ func (s Server) HandleVersion(request []byte) {
 	}
 
 	if payload.TxSize > s.Prtl.Dat.GetDAGSize() {
-		//s.RequestTxes()
+		s.SendGetTxes(ctx)
 	}
-	log.Println("[RECV] [" + command + "] Num Tx: " + strconv.Itoa(payload.TxSize))
+
+	log.Println("[RECV] [" + command + "] Node has Num Tx: " + strconv.Itoa(payload.TxSize))
 }
 
 func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {
@@ -165,7 +176,7 @@ func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {
 	case "tx":
 		s.HandleTx(ctx, req)
 	case "version":
-		s.HandleVersion(req)
+		s.HandleVersion(ctx, req)
 	default:
 		log.Println("Unknown command")
 	}

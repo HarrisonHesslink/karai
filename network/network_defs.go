@@ -30,8 +30,7 @@ type GOB_TX struct {
 }
 
 type GetTxes struct {
-	AddrFrom string
-	numTx int
+	top_hash string
 }
 
 type GetData struct {
