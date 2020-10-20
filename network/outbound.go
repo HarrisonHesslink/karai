@@ -40,6 +40,19 @@ func(s *Server)  SendTx(p *flatend.Provider, tx transaction.Transaction) {
 	s.HandleCall(stream)
 }
 
+func(s *Server)  BroadCastTX(tx transaction.Transaction) {
+	data := GOB_TX{tx.Serialize()}
+	payload := GobEncode(data)
+	request := append(CmdToBytes("tx"), payload...)
+
+	stream, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	if err != nil {
+		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
+	}
+	log.Println("[SEND] [TXT] Sending Transaction to " + p.GetID().Pub.String() + " ip: " + p.GetID().Host.String())
+	s.HandleCall(stream)
+}
+
 func (s *Server) SendData(peer *kademlia.ID, data []byte) {
 
 }

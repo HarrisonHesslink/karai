@@ -102,7 +102,7 @@ func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {
 
 		tx := s.Prtl.Dat.GetTransaction(payload.ID)
 
-		s.SendTx(s.GetProviderFromID(&ctx.ID), tx)
+		//s.SendTx(s.GetProviderFromID(&ctx.ID), tx)
 	}
 	log.Println("[RECV] [" + command + "] Data Request from: " + ctx.ID.Pub.String())
 }
@@ -145,7 +145,7 @@ func (s Server) HandleVersion(request []byte) {
 	}
 
 	if payload.TxSize > s.Prtl.Dat.GetDAGSize() {
-		s.RequestTxes()
+		//s.RequestTxes()
 	}
 	log.Println("[RECV] [" + command + "] Num Tx: " + strconv.Itoa(payload.TxSize))
 }

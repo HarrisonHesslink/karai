@@ -175,6 +175,7 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	new_tx := transaction.CreateTransaction("2", txPrev, req_string, txhash_on_epoc, txdata_on_epoc)
 	log.Println(new_tx.Hash)
 	s.Prtl.Dat.CommitDBTx(new_tx)
+	s.BroadCastTX(new_tx)
 }
 
 func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {
@@ -192,5 +193,6 @@ func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {
 	new_tx := transaction.CreateTransaction("1", txPrev, req_string, []string{}, []string{})
 	log.Println(new_tx.Hash)
 	s.Prtl.Dat.CommitDBTx(new_tx)
+	s.BroadCastTX(new_tx)
 }
 

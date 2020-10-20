@@ -108,15 +108,14 @@ func CreateTransaction(txType, last_epoc_tx string, data []byte, txhash_on_epoc 
 				oldest_epoc_task = txhash_on_epoc[i]
 			}
 			newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, newTx.Prev)
+			newTx.Subg = oldest_epoc_task
 		} else {
 			newTx.Prev = last_epoc_tx
 			newTx.Prnt = last_epoc_tx
 			newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, newTx.Prev)
 			newTx.Subg = newTx.Hash
 		}
-
-		newTx.Subg = oldest_epoc_task
-
+		
 		return newTx
 	} else if newTx.Type == "1" {
 		
