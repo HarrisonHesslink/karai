@@ -49,7 +49,7 @@ func(s *Server)  BroadCastTX(tx transaction.Transaction) {
 	if err != nil {
 		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
 	}
-	log.Println("[SEND] [TXT] Sending Transaction to " + p.GetID().Pub.String() + " ip: " + p.GetID().Host.String())
+	log.Println("[SEND] [TXT] Broadcasting Transaction Out")
 	s.HandleCall(stream)
 }
 
