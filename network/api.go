@@ -3,11 +3,13 @@ package network
 import (
 	"net/http"
 	//"strconv"
-	"log"
+	// "log"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	//"github.com/karai/go-karai/transaction"
 	"encoding/json"
+	"github.com/karai/go-karai/transaction"
+
 )
 
 // restAPI() This is the main API that is activated when isCoord == true
@@ -69,8 +71,7 @@ func (s *Server) RestAPI() {
 	// }).Methods(http.MethodGet)
 
 	api.HandleFunc("/new_tx", func(w http.ResponseWriter, r *http.Request) {
-		var req Request
-		log.Println(r.Body)
+		var req transaction.Request_Data_TX
 		// Try to decode the request body into the struct. If there is an error,
 		// respond to the client with the error message and a 400 status code.
 		err := json.NewDecoder(r.Body).Decode(&req)
@@ -80,6 +81,19 @@ func (s *Server) RestAPI() {
 		}
 		
 		s.NewDataTxFromCore(req)
+	}).Methods("POST")
+
+	api.HandleFunc("/new_consensus_tx", func(w http.ResponseWriter, r *http.Request) {
+		var req transaction.Request_Consensus_TX
+		// Try to decode the request body into the struct. If there is an error,
+		// respond to the client with the error message and a 400 status code.
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		
+		s.NewConsensusTXFromCore(req)
 	}).Methods("POST")
 
 	// // Channel Socket

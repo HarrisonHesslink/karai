@@ -9,7 +9,8 @@ import (
 	"github.com/harrisonhesslink/flatend"
 	"strconv"
 	"github.com/glendc/go-external-ip"
-	//"github.com/karai/go-karai/transaction"
+	"github.com/karai/go-karai/transaction"
+	"github.com/karai/go-karai/util"
 	"io/ioutil"
 	"time"
 	"github.com/lithdew/kademlia"
@@ -115,10 +116,8 @@ func (s *Server) LookForNodes() {
 			s.node.Probe(peer.Host.String() + ":" + strconv.Itoa(int(peer.Port)))
 		}
 
-
-
 		providers := s.node.ProvidersFor("karai-xeq")
-		log.Println(strconv.Itoa(len(providers)))
+		//log.Println(strconv.Itoa(len(providers)))
 		for _, provider := range providers {
 	
 				stream := s.SendVersion(provider)
@@ -134,7 +133,64 @@ func (s *Server) LookForNodes() {
 	}
 }
 
-func (s *Server) NewDataTxFromCore(req Request) {
+func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	req_string, _ := json.Marshal(req)
-	log.Println(string(req_string))
+
+	var txPrev string
+
+	db, connectErr := s.Prtl.Dat.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
+
+	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+	log.Println("Last Consensus TX: " + txPrev)
+	var txhash_on_epoc []string
+	var txdata_on_epoc []string
+
+	//Grab all first txes on epoc 
+	rows, err := db.Query("SELECT tx_hash, tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_epoc=$1 ORDER BY tx_time DESC" , txPrev)
+	if err != nil {
+		// handle this error better than this
+		panic(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var tx_hash string
+		var tx_data string
+		err = rows.Scan(&tx_hash, &tx_data)
+		if err != nil {
+			// handle this error
+			log.Panic(err)
+		}
+		
+		txhash_on_epoc = append(txhash_on_epoc, tx_hash)
+		txdata_on_epoc = append(txdata_on_epoc, tx_data)
+	}
+	// get any error encountered during iteration
+	err = rows.Err()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	new_tx := transaction.CreateTransaction("2", txPrev, req_string, txhash_on_epoc, txdata_on_epoc)
+	log.Println(new_tx.Hash)
+	s.Prtl.Dat.CommitDBTx(new_tx)
 }
+
+func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {
+	req_string, _ := json.Marshal(req)
+
+	var txPrev string
+
+	db, connectErr := s.Prtl.Dat.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
+
+	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+
+	log.Println(txPrev)
+	new_tx := transaction.CreateTransaction("1", txPrev, req_string, []string{}, []string{})
+	log.Println(new_tx.Hash)
+	s.Prtl.Dat.CommitDBTx(new_tx)
+}
+

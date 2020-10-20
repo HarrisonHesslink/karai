@@ -10,6 +10,20 @@ import (
 	"encoding/json"
 )
 
+type Request_Data_TX struct {
+	PubKey string `json:pub_key`
+	Signature string `json:signature`
+	Data string`json:data`
+	Task string`json:task`
+}
+
+type Request_Consensus_TX struct {
+	PubKey string `json:pub_key`
+	Signature string `json:signature`
+	Data []string`json:data`
+	Task string`json:task`
+}
+
 // Transaction This is the structure of the transaction
 type Transaction struct {
 	Time string `json:"time" db:"tx_time"`
@@ -47,44 +61,80 @@ func DeserializeTransaction(data []byte) Transaction {
 	return transaction
 }
 
-func CreateTransaction(txType, prev string, data string) Transaction {
+func CreateTransaction(txType, last_epoc_tx string, data []byte, txhash_on_epoc []string, txdata_on_epoc []string) Transaction {
 	var newTx Transaction
 
 	newTx.Type = txType
 	// if isCoordinator && txType == "2" {
 	if newTx.Type == "2" {
-		parsePayload := json.Valid([]byte(data))
+		parsePayload := json.Valid(data)
 		if !parsePayload {
-			newTx.Data = hex.EncodeToString([]byte(data))
+			newTx.Data = hex.EncodeToString(data)
 		} else if parsePayload {
-			newTx.Data = data
+			newTx.Data = string(data)
 		}
 
-		// db, connectErr := d.Connect()
-		// defer db.Close()
-		// util.Handle("Error creating a DB connection: ", connectErr)
-
-		// _ = db.QueryRow("SELECT tx_hash FROM " + d.c.GetTableName() + " ORDER BY tx_time DESC LIMIT 1").Scan(&txPrev)
-
+		rct := Request_Data_TX{}
+		_ = json.Unmarshal(data, &rct)
+	
+		
 		newTx.Time = util.UnixTimeStampNano()
-		newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, prev)
-		newTx.Epoc = "0"
+		newTx.Epoc = last_epoc_tx
 		newTx.Mile = false
 
-		// if d.txCount == 0 {
-		// 	txLead = true
-		// 	txSubg = txHash
-		// 	txPrnt = txEpoc
-		// 	d.thisSubgraph = txHash
-		// 	txPrnt = d.thisSubgraph
-		// 	d.thisSubgraphShortName = d.thisSubgraph[0:4]
-		// 	go d.newSubGraphTimer()
-		// } else if d.txCount > 0 {
-		// 	txLead = false
-		// 	txPrnt = d.thisSubgraph
-		// 	txSubg = d.thisSubgraph
-		// 	d.thisSubgraphShortName = d.thisSubgraph[0:4]
-		// }
+		oldest_epoc_task := ""
+
+		//check if there are any txes in epoc 
+		if len(txhash_on_epoc) > 0 {
+			//find last
+			for i, this_data := range txdata_on_epoc {
+
+				var this_tx_data Request_Data_TX
+				err := json.Unmarshal([]byte(this_data), &this_tx_data)
+				if err != nil {
+					// handle this error
+					log.Panic(err)
+				}
+
+				if this_tx_data.Task != rct.Task {
+					continue
+				}
+
+				if newTx.Prnt == "" {
+					newTx.Prnt = txhash_on_epoc[i]
+					newTx.Prev = txhash_on_epoc[i]
+				}
+
+				oldest_epoc_task = txhash_on_epoc[i]
+			}
+			newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, newTx.Prev)
+		} else {
+			newTx.Prev = last_epoc_tx
+			newTx.Prnt = last_epoc_tx
+			newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, newTx.Prev)
+			newTx.Subg = newTx.Hash
+		}
+
+		newTx.Subg = oldest_epoc_task
+
+		return newTx
+	} else if newTx.Type == "1" {
+		
+		parsePayload := json.Valid(data)
+		if !parsePayload {
+			newTx.Data = hex.EncodeToString(data)
+		} else if parsePayload {
+			newTx.Data = string(data)
+		}
+
+		newTx.Prev = last_epoc_tx
+
+		newTx.Time = util.UnixTimeStampNano()
+		newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, last_epoc_tx)
+		newTx.Subg = newTx.Hash
+		newTx.Epoc = "0"
+		newTx.Mile = true
+		newTx.Lead = true
 		log.Println("[SELF] New Transaction: " + newTx.Hash)
 		return newTx
 	}

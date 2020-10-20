@@ -70,7 +70,7 @@ func (d Database) CreateRoot() error {
 		//  fmt.Printf("Found %v transactions in the db.", count)
 		if count == 0 {
 			txTime := util.UnixTimeStampNano()
-			txType := "0"
+			txType := "1"
 			txSubg := "0"
 			txPrnt := "0"
 			txData := "8d3729b91a13878508c564fbf410ae4f33fcb4cfdb99677f4b23d4c4adb447650964b4fe9da16299831b9cc17aaabd5b8d81fb05460be92af99d128584101a30" // ?
