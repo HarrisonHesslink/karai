@@ -30,7 +30,7 @@ type GOB_TX struct {
 }
 
 type GetTxes struct {
-	top_hash string
+	Top_hash string
 }
 
 type GetData struct {

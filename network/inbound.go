@@ -78,7 +78,7 @@ func (s Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 		//somethin
 	}
 
-	if !s.Prtl.Dat.HaveTx(payload.top_hash) {
+	if !s.Prtl.Dat.HaveTx(payload.Top_hash) {
 		//somethin
 	}
 	top_id++
