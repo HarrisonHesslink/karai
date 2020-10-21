@@ -15,7 +15,7 @@ import (
 	"time"
 	"github.com/lithdew/kademlia"
 	"encoding/json"
-	"github.com/gorilla/websocket"
+	// "github.com/gorilla/websocket"
 
 )
 
@@ -220,19 +220,19 @@ func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {
 	s.BroadCastTX(new_tx)
 }
 
-func (s *Server) HandleAPISocket(c *websocket.Conn) {
-	for {
-		mt, message, err := c.ReadMessage()
-		if err != nil {
-			log.Println("read:", err)
-			break
-		}
-		log.Printf("recv: %s", message)
-		err = c.WriteMessage(mt, message)
-		if err != nil {
-			log.Println("write:", err)
-			break
-		}
-	}
-}
+// func (s *Server) HandleAPISocket(c *websocket.Conn) {
+// 	for {
+// 		mt, message, err := c.ReadMessage()
+// 		if err != nil {
+// 			log.Println("read:", err)
+// 			break
+// 		}
+// 		log.Printf("recv: %s", message)
+// 		err = c.WriteMessage(mt, message)
+// 		if err != nil {
+// 			log.Println("write:", err)
+// 			break
+// 		}
+// 	}
+// }
 

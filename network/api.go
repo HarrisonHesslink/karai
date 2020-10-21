@@ -4,12 +4,11 @@ import (
 	"net/http"
 	//"strconv"
 	// "log"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
-	//"github.com/karai/go-karai/transaction"
-	"encoding/json"
+	 "github.com/gorilla/handlers"
+	 "github.com/gorilla/mux"
 	"github.com/karai/go-karai/transaction"
-
+	"encoding/json"
+	// "github.com/gorilla/websocket"
 )
 
 // restAPI() This is the main API that is activated when isCoord == true
@@ -96,13 +95,12 @@ func (s *Server) RestAPI() {
 		go s.NewConsensusTXFromCore(req)
 	}).Methods("POST")
 
-	// // Channel Socket
-	// api.HandleFunc("/channel", func(w http.ResponseWriter, r *http.Request) {
-	// 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+	// api.HandleFunc("/tx_api", func(w http.ResponseWriter, r *http.Request) {
+	// 	var upgrader = websocket.Upgrader{}
 	// 	conn, _ := upgrader.Upgrade(w, r, nil)
 	// 	defer conn.Close()
-	// 	// fmt.Printf(brightgreen+"\n[%s] [%s] Peer socket opened!"+white, timeStamp(), conn.RemoteAddr())
-	// 	socketAuthAgent(conn, keyCollection)
+	// 	log.Println("socket open")
+	// 	s.HandleAPISocket(conn)
 	// })
 
 	// Serve via HTTP
