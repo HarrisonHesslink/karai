@@ -10,8 +10,8 @@ import (
 	"github.com/karai/go-karai/transaction"
 	"github.com/karai/go-karai/util"
 	"github.com/harrisonhesslink/flatend"
-	"time"
-	"encoding/json"
+	// "time"
+	// "encoding/json"
 
 )
 func (s *Server) HandleAddr(request []byte) {
@@ -105,6 +105,53 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 				// handle this error
 				log.Panic(err)
 			}
+
+			//loop through to find contracts
+			if this_tx.Prnt != "" {
+				rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='3' AND tx_prnt=$1 ORDER BY tx_time DESC", this_tx.Prnt)
+				if err != nil {
+					panic(err)
+				}
+				defer rows.Close()
+				for rows.Next() {
+					var t_tx transaction.Transaction
+					err = rows.StructScan(&this_tx)
+					if err != nil {
+						// handle this error
+						log.Panic(err)
+					}
+
+					//loop through to find oracle data
+					if this_tx.Epoc != "" {
+						rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='2' AND tx_epoc=$1 ORDER BY tx_time DESC", this_tx.Epoc)
+						if err != nil {
+							panic(err)
+						}
+						defer rows.Close()
+						for rows.Next() {
+							var t2_tx transaction.Transaction
+							err = rows.StructScan(&this_tx)
+							if err != nil {
+								// handle this error
+								log.Panic(err)
+							}
+							transactions = append(transactions, t2_tx)
+						}
+						err = rows.Err()
+						if err != nil {
+							log.Panic(err)
+						}
+					}
+
+					transactions = append(transactions, t_tx)
+				}
+				err = rows.Err()
+				if err != nil {
+					log.Panic(err)
+				}
+			}
+			
+
 			transactions = append(transactions, this_tx)
 		}
 		// get any error encountered during iteration
@@ -170,49 +217,10 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 
 		log.Println("[RECV] [" + command + "] Transaction: " + tx.Hash)
 
-		if tx.Type == "2" {
-			db, connectErr := s.Prtl.Dat.Connect()
-			defer db.Close()
-			util.Handle("Error creating a DB connection: ", connectErr)
-	
-			this_tx_data := transaction.Request_Data_TX{}
-			err := json.Unmarshal([]byte(tx.Data), &this_tx_data)
-			if err != nil {
-				// handle this error
-				log.Panic(err)
-			}
-	
-			i := 0
-			for i <= 10 {
-				var last_consensus_tx string
-				var last_consensus_hash string
-				//log.Println("[SELF] [" + command + "] Trying to add: " + tx.Hash)
-	
-				_ = db.QueryRow("SELECT tx_hash, tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&last_consensus_hash, &last_consensus_tx)
-	
-				last_consensus_data := transaction.Request_Consensus_TX{}
-				err := json.Unmarshal([]byte(last_consensus_tx), &last_consensus_data)
-				if err != nil {
-					// handle this error
-					log.Panic(err)
-				}
-	
-				if last_consensus_data.Height == this_tx_data.Height {
-					if !s.Prtl.Dat.HaveTx(tx.Hash) {
-						s.Prtl.Dat.CommitDBTx(tx)
-					}
-					break;
-				}
-	
-				i++
-				time.Sleep(5 * time.Second)
-			}
-	
-		} else {
-			if s.Prtl.Dat.HaveTx(tx.Prev) {
-				if !s.Prtl.Dat.HaveTx(tx.Hash) {
-					s.Prtl.Dat.CommitDBTx(tx)
-				}
+
+		if s.Prtl.Dat.HaveTx(tx.Prev) {
+			if !s.Prtl.Dat.HaveTx(tx.Hash) {
+				s.Prtl.Dat.CommitDBTx(tx)
 			}
 		}
 	}
