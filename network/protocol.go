@@ -15,6 +15,7 @@ import (
 	"time"
 	"github.com/lithdew/kademlia"
 	"encoding/json"
+	"github.com/gorilla/websocket"
 
 )
 
@@ -30,6 +31,9 @@ func Protocol_Init(c *config.Config, s *Server) {
 	p.Dat = &d
 
 	s.Prtl = &p
+
+	s.SocketConns = []websocket.Conn{}
+
 	d.DB_init()
 
 	go s.RestAPI()
@@ -142,6 +146,26 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
+	var txData string
+	i := 0
+	for i <= 10 {
+		_ = db.QueryRow("SELECT tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txData)
+
+		last_consensus_data := transaction.Request_Consensus_TX{}
+		err := json.Unmarshal([]byte(txData), &last_consensus_data)
+		if err != nil {
+			// handle this error
+			log.Panic(err)
+		}
+
+		if last_consensus_data.Height == req.Height {
+			break;
+		}
+
+		i++
+		time.Sleep(5 * time.Second)
+	}
+
 	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 	log.Println("Last Consensus TX: " + txPrev)
 
@@ -173,26 +197,6 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 		log.Panic(err)
 	}
 
-	var txData string
-	i := 0
-	for i <= 10 {
-		_ = db.QueryRow("SELECT tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txData)
-
-		last_consensus_data := transaction.Request_Consensus_TX{}
-		err := json.Unmarshal([]byte(txData), &last_consensus_data)
-		if err != nil {
-			// handle this error
-			log.Panic(err)
-		}
-
-		if last_consensus_data.Height == req.Height {
-			break;
-		}
-
-		i++
-		time.Sleep(5 * time.Second)
-	}
-
 	new_tx := transaction.CreateTransaction("2", txPrev, req_string, txhash_on_epoc, txdata_on_epoc)
 
 	s.BroadCastTX(new_tx)
@@ -216,5 +220,21 @@ func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {
 		
 	s.Prtl.Dat.CommitDBTx(new_tx)
 	s.BroadCastTX(new_tx)
+}
+
+func (s *Server) HandleAPISocket(c *websocket.Conn) {
+	for {
+		mt, message, err := c.ReadMessage()
+		if err != nil {
+			log.Println("read:", err)
+			break
+		}
+		log.Printf("recv: %s", message)
+		err = c.WriteMessage(mt, message)
+		if err != nil {
+			log.Println("write:", err)
+			break
+		}
+	}
 }
 
