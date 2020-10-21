@@ -143,7 +143,7 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 		defer db.Close()
 		util.Handle("Error creating a DB connection: ", connectErr)
 
-		var this_tx_data transaction.Request_Data_TX
+		this_tx_data := transaction.Request_Data_TX{}
 		err := json.Unmarshal([]byte(tx.Data), &this_tx_data)
 		if err != nil {
 			// handle this error
@@ -156,8 +156,9 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 			log.Println("[SELF] [" + command + "] Trying to add: " + tx.Hash)
 
 			_ = db.QueryRow("SELECT tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&last_consensus_tx)
+			log.Println(last_consensus_tx)
 
-			var last_consensus_data transaction.Request_Data_TX
+			last_consensus_data := transaction.Request_Consensus_TX{}
 			err := json.Unmarshal([]byte(last_consensus_tx), &last_consensus_data)
 			if err != nil {
 				// handle this error
