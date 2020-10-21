@@ -72,10 +72,9 @@ func Protocol_Init(c *config.Config, s *Server) {
 
 	if err != nil {
 		log.Println("Unable to connect")
-		log.Panic(err)
 	}
 
-	//go s.LookForNodes()
+	go s.LookForNodes()
 
 	log.Println("Active Peer Count with streams: " + strconv.Itoa(s.pl.Count))
 
@@ -166,7 +165,6 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	}
 
 	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
-	log.Println("Last Consensus TX: " + txPrev)
 
 	var txhash_on_epoc []string
 	var txdata_on_epoc []string
@@ -198,9 +196,10 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 
 	new_tx := transaction.CreateTransaction("2", txPrev, req_string, txhash_on_epoc, txdata_on_epoc)
 
+	s.Prtl.Dat.CommitDBTx(new_tx)
+
 	s.BroadCastTX(new_tx)
 
-	s.Prtl.Dat.CommitDBTx(new_tx)
 }
 
 func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {
@@ -214,10 +213,10 @@ func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {
 
 	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
-	log.Println(txPrev)
 	new_tx := transaction.CreateTransaction("1", txPrev, req_string, []string{}, []string{})
 		
 	s.Prtl.Dat.CommitDBTx(new_tx)
+	
 	s.BroadCastTX(new_tx)
 }
 

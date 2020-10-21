@@ -3,7 +3,7 @@ package network
 import (
 	"net/http"
 	//"strconv"
-	// "log"
+	"log"
 	 "github.com/gorilla/handlers"
 	 "github.com/gorilla/mux"
 	"github.com/karai/go-karai/transaction"
@@ -78,7 +78,8 @@ func (s *Server) RestAPI() {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		
+		log.Println("We are data boy")
+
 		go s.NewDataTxFromCore(req)
 	}).Methods("POST")
 
@@ -92,6 +93,8 @@ func (s *Server) RestAPI() {
 			return
 		}
 		
+		log.Println("We are consensus man")
+
 		go s.NewConsensusTXFromCore(req)
 	}).Methods("POST")
 

@@ -165,9 +165,6 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 				log.Panic(err)
 			}
 
-			log.Println(this_tx_data)
-			log.Println(last_consensus_data)
-
 			if last_consensus_data.Height == this_tx_data.Height {
 				if !s.Prtl.Dat.HaveTx(tx.Hash) {
 					s.Prtl.Dat.CommitDBTx(tx)
@@ -224,8 +221,6 @@ func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {
 		s.HandleTx(ctx, req)
 	case "version":
 		s.HandleVersion(ctx, req)
-	default:
-		log.Println("Unknown command")
 	}
 
 }
