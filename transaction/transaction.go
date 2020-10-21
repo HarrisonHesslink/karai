@@ -11,6 +11,7 @@ import (
 )
 
 type Request_Data_TX struct {
+	Hash string `json:hash`
 	PubKey string `json:pub_key`
 	Signature string `json:signature`
 	Data string`json:data`
@@ -19,6 +20,7 @@ type Request_Data_TX struct {
 }
 
 type Request_Consensus_TX struct {
+	Hash string `json:hash`
 	PubKey string `json:pub_key`
 	Signature string `json:signature`
 	Data []string`json:data`
@@ -99,6 +101,10 @@ func CreateTransaction(txType, last_epoc_tx string, data []byte, txhash_on_epoc 
 				}
 
 				if this_tx_data.Task != rct.Task {
+					continue
+				}
+
+				if this_tx_data.Height != rct.Height {
 					continue
 				}
 
