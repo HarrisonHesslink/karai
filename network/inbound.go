@@ -123,7 +123,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 
 		data := GOB_BATCH_TX{txes}
 		payload := GobEncode(data)
-		request := append(CmdToBytes("tx"), payload...)
+		request := append(CmdToBytes("batchtx"), payload...)
 
 		go s.SendData(ctx, request);
 	}
