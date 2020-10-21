@@ -36,8 +36,6 @@ func Protocol_Init(c *config.Config, s *Server) {
 
 	go s.RestAPI()
 
-	log.Println(c.Lport)
-
   	consensus := externalip.DefaultConsensus(nil, nil)
     // Get your IP,
     // which is never <nil> when err is <nil>.
@@ -57,6 +55,8 @@ func Protocol_Init(c *config.Config, s *Server) {
 				if err != nil {
 					log.Panic(err)
 				}
+
+
 			
 				go s.HandleConnection(req, ctx)
 			},

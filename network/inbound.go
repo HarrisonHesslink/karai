@@ -78,6 +78,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	}
 	log.Println("[RECV] [" + command + "] Get Tx from: " + payload.Top_hash)
 	last_hash := payload.Top_hash
+	log.Println("Last Hash: " + last_hash)
 
 
 	if !s.Prtl.Dat.HaveTx(last_hash) {
@@ -114,7 +115,6 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 		}
 
 		for _, tx := range transactions {
-			log.Println("Last Hash: " + last_hash)
 			log.Println(tx.Prev)
 			if tx.Prev == last_hash {
 				p := s.GetProviderFromID(&ctx.ID)
@@ -160,7 +160,6 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	if err != nil {
 		log.Panic(err)
 	}
-	log.Println(request)
 	txData := payload.TX
 	tx := transaction.DeserializeTransaction(txData)
 
