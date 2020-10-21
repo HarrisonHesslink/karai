@@ -56,7 +56,7 @@ func Protocol_Init(c *config.Config, s *Server) {
 					log.Panic(err)
 				}
 			
-				s.HandleConnection(req, ctx)
+				go s.HandleConnection(req, ctx)
 
 				ctx.Write([]byte("close"))
 			},
