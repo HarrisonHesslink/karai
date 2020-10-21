@@ -156,7 +156,6 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 			log.Println("[SELF] [" + command + "] Trying to add: " + tx.Hash)
 
 			_ = db.QueryRow("SELECT tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&last_consensus_tx)
-			log.Println(last_consensus_tx)
 
 			last_consensus_data := transaction.Request_Consensus_TX{}
 			err := json.Unmarshal([]byte(last_consensus_tx), &last_consensus_data)
@@ -164,6 +163,8 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 				// handle this error
 				log.Panic(err)
 			}
+
+			log.Println(this_tx_data)
 
 			if last_consensus_data.Height == this_tx_data.Height {
 				if !s.Prtl.Dat.HaveTx(tx.Hash) {
