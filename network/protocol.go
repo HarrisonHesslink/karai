@@ -32,8 +32,6 @@ func Protocol_Init(c *config.Config, s *Server) {
 
 	s.Prtl = &p
 
-	s.SocketConns = []websocket.Conn{}
-
 	d.DB_init()
 
 	go s.RestAPI()
