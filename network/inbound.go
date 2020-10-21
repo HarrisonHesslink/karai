@@ -94,7 +94,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 
 		transactions := []transaction.Transaction{}
 		//Grab all first txes on epoc 
-		rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time ASC")
+		rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC")
 		if err != nil {
 			panic(err)
 		}

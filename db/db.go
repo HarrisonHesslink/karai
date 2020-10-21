@@ -11,7 +11,6 @@ import (
 	"github.com/karai/go-karai/transaction"
 	"github.com/karai/go-karai/util"
 	config "github.com/karai/go-karai/configuration"
-	"database/sql"
 	"strconv"
 	"log"
 )
@@ -143,21 +142,16 @@ func (d *Database) ReturnTopHash() (string, int) {
 	return txHash, id
 }
 
-func(d Database) HaveTx(hash string) bool {
+func(d *Database) HaveTx(hash string) bool {
 	exists := true
 	var tx_hash string
 	db, connectErr := d.Connect()
 	util.Handle("Error creating a DB connection: ", connectErr)
 	defer db.Close()
 	row := db.QueryRow("SELECT tx_hash FROM " + d.Cf.GetTableName() + " WHERE tx_hash=$1", hash)
-	switch err := row.Scan(&tx_hash); err {
-
-	case sql.ErrNoRows:
-		exists = false 
-	case nil:
+	_ = row.Scan(&tx_hash); 
+	if tx_hash != hash {
 		exists = false
-	default:
-	  panic(err)
 	}
 
     return exists
