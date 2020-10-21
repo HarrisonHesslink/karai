@@ -7,6 +7,7 @@ import (
 	 "github.com/gorilla/handlers"
 	 "github.com/gorilla/mux"
 	"github.com/karai/go-karai/transaction"
+	"github.com/karai/go-karai/util"
 	"encoding/json"
 	// "github.com/gorilla/websocket"
 )
@@ -80,8 +81,44 @@ func (s *Server) RestAPI() {
 		}
 		log.Println("We are data boy")
 
-		///go s.NewDataTxFromCore(req)
+		go s.NewDataTxFromCore(req)
 	}).Methods("POST")
+
+	api.HandleFunc("/get_contracts", func(w http.ResponseWriter, r *http.Request) {
+
+		db, connectErr := s.Prtl.Dat.Connect()
+		defer db.Close()
+		util.Handle("Error creating a DB connection: ", connectErr)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		// reportRequest("transactions/"+hash, w, r)
+		transactions := []transaction.Transaction{}
+
+		rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='3' ORDER BY tx_time DESC")
+		if err != nil {
+			panic(err)
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var this_tx transaction.Transaction
+			err = rows.StructScan(&this_tx)
+			if err != nil {
+				// handle this error
+				log.Panic(err)
+			}
+			transactions = append(transactions, this_tx)
+		}
+		// get any error encountered during iteration
+		err = rows.Err()
+		if err != nil {
+			log.Panic(err)
+		}
+		
+		json,_ := json.Marshal(ArrayTX{transactions})
+
+		w.Write(json)
+	}).Methods("GET")
 
 	api.HandleFunc("/new_consensus_tx", func(w http.ResponseWriter, r *http.Request) {
 		var req transaction.Request_Consensus_TX

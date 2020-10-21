@@ -5,6 +5,7 @@ import (
 	config "github.com/karai/go-karai/configuration"
 	"github.com/harrisonhesslink/flatend"
 	"github.com/lithdew/kademlia"
+	"github.com/karai/go-karai/transaction"
 
 )
 const (
@@ -84,4 +85,8 @@ type PeerList struct {
 	Peers []Peer
 
 	Count int 
+}
+
+type ArrayTX struct {
+	Txes []transaction.Transaction`json:txes`
 }

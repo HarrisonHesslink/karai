@@ -238,52 +238,14 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 
 	log.Println("[RECV] [" + command + "] Transaction: " + tx.Hash)
 
-	if tx.Type == "2" {
-		db, connectErr := s.Prtl.Dat.Connect()
-		defer db.Close()
-		util.Handle("Error creating a DB connection: ", connectErr)
 
-		this_tx_data := transaction.Request_Data_TX{}
-		err := json.Unmarshal([]byte(tx.Data), &this_tx_data)
-		if err != nil {
-			// handle this error
-			log.Panic(err)
-		}
-
-		i := 0
-		for i <= 10 {
-			var last_consensus_tx string
-			var last_consensus_hash string
-			log.Println("[SELF] [" + command + "] Trying to add: " + tx.Hash)
-
-			_ = db.QueryRow("SELECT tx_hash, tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&last_consensus_hash, &last_consensus_tx)
-
-			last_consensus_data := transaction.Request_Consensus_TX{}
-			err := json.Unmarshal([]byte(last_consensus_tx), &last_consensus_data)
-			if err != nil {
-				// handle this error
-				log.Panic(err)
-			}
-
-			if last_consensus_data.Height == this_tx_data.Height {
-				if !s.Prtl.Dat.HaveTx(tx.Hash) {
-					s.Prtl.Dat.CommitDBTx(tx)
-				}
-				break;
-			}
-
-			i++
-			time.Sleep(5 * time.Second)
-		}
-
-	} else {
-
-		if s.Prtl.Dat.HaveTx(tx.Prev) {
-			if !s.Prtl.Dat.HaveTx(tx.Hash) {
-				s.Prtl.Dat.CommitDBTx(tx)
-			}
+	if s.Prtl.Dat.HaveTx(tx.Prev) {
+		if !s.Prtl.Dat.HaveTx(tx.Hash) {
+			s.Prtl.Dat.CommitDBTx(tx)
 		}
 	}
+		
+	
 
 	//s.SendInv("tx", [][]byte{[]byte(tx.Hash)})		
 

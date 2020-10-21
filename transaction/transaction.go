@@ -17,6 +17,8 @@ type Request_Data_TX struct {
 	Data string`json:data`
 	Task string`json:task`
 	Height string `json:height`
+	Source string `json:source`
+	Epoc string `json:epoc`
 }
 
 type Request_Consensus_TX struct {
@@ -81,49 +83,21 @@ func CreateTransaction(txType, last_epoc_tx string, data []byte, txhash_on_epoc 
 		rct := Request_Data_TX{}
 		_ = json.Unmarshal(data, &rct)
 	
-		
-		newTx.Time = util.UnixTimeStampNano()
-		newTx.Epoc = last_epoc_tx
-		newTx.Mile = false
+		if (last_epoc_tx == "") {
+			newTx.Prev = rct.Epoc
 
-		oldest_epoc_task := ""
-
-		//check if there are any txes in epoc 
-		if len(txhash_on_epoc) > 0 {
-			//find last
-			for i, this_data := range txdata_on_epoc {
-
-				var this_tx_data Request_Data_TX
-				err := json.Unmarshal([]byte(this_data), &this_tx_data)
-				if err != nil {
-					// handle this error
-					log.Println("Unable to parse tx_data")
-					continue;
-				}
-
-				if this_tx_data.Task != rct.Task {
-					continue
-				}
-
-				if this_tx_data.Height != rct.Height {
-					continue
-				}
-
-				if newTx.Prnt == "" {
-					newTx.Prnt = txhash_on_epoc[i]
-					newTx.Prev = txhash_on_epoc[i]
-				}
-
-				oldest_epoc_task = txhash_on_epoc[i]
-			}
-			newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, newTx.Prev)
-			newTx.Subg = oldest_epoc_task
 		} else {
 			newTx.Prev = last_epoc_tx
-			newTx.Prnt = last_epoc_tx
-			newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, newTx.Prev)
-			newTx.Subg = newTx.Hash
 		}
+			newTx.Time = util.UnixTimeStampNano()
+			newTx.Epoc = rct.Epoc
+			newTx.Mile = false
+
+
+			newTx.Prnt = newTx.Epoc
+				
+			newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, newTx.Prev)
+			newTx.Subg = newTx.Epoc		
 
 		return newTx
 	} else if newTx.Type == "1" {
@@ -144,6 +118,23 @@ func CreateTransaction(txType, last_epoc_tx string, data []byte, txhash_on_epoc 
 		newTx.Mile = true
 		newTx.Lead = true
 		log.Println("[SELF] New Transaction: " + newTx.Hash)
+		return newTx
+	} else if newTx.Type == "3" {
+		parsePayload := json.Valid(data)
+		if !parsePayload {
+			newTx.Data = hex.EncodeToString(data)
+		} else if parsePayload {
+			newTx.Data = string(data)
+		}
+
+		newTx.Prev = last_epoc_tx
+		newTx.Time = util.UnixTimeStampNano()
+		newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, last_epoc_tx)
+		newTx.Subg = newTx.Hash
+		newTx.Epoc = newTx.Hash
+		newTx.Mile = true
+		newTx.Lead = false
+		newTx.Prnt = last_epoc_tx
 		return newTx
 	}
 	return newTx

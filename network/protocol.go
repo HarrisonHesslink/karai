@@ -139,58 +139,9 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
-	var txData string
-	i := 0
-	for i <= 10 {
-		_ = db.QueryRow("SELECT tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txData)
-
-
-		last_consensus_data := transaction.Request_Consensus_TX{}
-		err := json.Unmarshal([]byte(txData), &last_consensus_data)
-		if err != nil {
-			log.Println("Unable to parse tx_data")
-			continue;
-		}
-
-		if last_consensus_data.Height == req.Height {
-			break;
-		}
-
-		i++
-		time.Sleep(5 * time.Second)
-	}
-
-	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
-
-	var txhash_on_epoc []string
-	var txdata_on_epoc []string
-
-	//Grab all first txes on epoc 
-	rows, err := db.Query("SELECT tx_hash, tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_epoc=$1 ORDER BY tx_time DESC" , txPrev)
-	if err != nil {
-		// handle this error better than this
-		panic(err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var tx_hash string
-		var tx_data string
-		err = rows.Scan(&tx_hash, &tx_data)
-		if err != nil {
-			// handle this error
-			log.Panic(err)
-		}
-		
-		txhash_on_epoc = append(txhash_on_epoc, tx_hash)
-		txdata_on_epoc = append(txdata_on_epoc, tx_data)
-	}
-	// get any error encountered during iteration
-	err = rows.Err()
-	if err != nil {
-		log.Panic(err)
-	}
-
-	new_tx := transaction.CreateTransaction("2", txPrev, req_string, txhash_on_epoc, txdata_on_epoc)
+	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='2' AND tx_epoc=$1 ORDER BY tx_time DESC", req.Epoc).Scan(&txPrev)
+	
+	new_tx := transaction.CreateTransaction("2", txPrev, req_string, []string{}, []string{})
 
 	s.Prtl.Dat.CommitDBTx(new_tx)
 
@@ -213,6 +164,31 @@ func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {
 	s.Prtl.Dat.CommitDBTx(new_tx)
 	
 	s.BroadCastTX(new_tx)
+}
+
+type Contract struct {
+	Asset string`json:asset`
+	Denom string`json:denom`
+}
+
+func (s *Server) CreateContract(asset string, denom string) {
+	var txPrev string
+	contract := Contract{asset, denom}
+	json,_ := json.Marshal(contract)
+
+	db, connectErr := s.Prtl.Dat.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
+
+	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+
+	tx := transaction.CreateTransaction("3", txPrev, []byte(json), []string{}, []string{})
+	log.Println("Created Contract " + tx.Hash[:8]+ ": " + asset + "/" + denom)
+	if !s.Prtl.Dat.HaveTx(tx.Hash) {
+		s.Prtl.Dat.CommitDBTx(tx)
+		s.BroadCastTX(tx)
+	}
+
 }
 
 // func (s *Server) HandleAPISocket(c *websocket.Conn) {
