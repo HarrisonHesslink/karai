@@ -173,15 +173,6 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 		log.Panic(err)
 	}
 
-	new_tx := transaction.CreateTransaction("2", txPrev, req_string, txhash_on_epoc, txdata_on_epoc)
-
-	this_tx_data := transaction.Request_Data_TX{}
-	err = json.Unmarshal([]byte(new_tx.Data), &this_tx_data)
-	if err != nil {
-		// handle this error
-		log.Panic(err)
-	}
-
 	var txData string
 	i := 0
 	for i <= 10 {
@@ -194,14 +185,16 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 			log.Panic(err)
 		}
 
-		if last_consensus_data.Height == this_tx_data.Height {
+		if last_consensus_data.Height == req.Height {
 			break;
 		}
 
 		i++
 		time.Sleep(5 * time.Second)
 	}
-	
+
+	new_tx := transaction.CreateTransaction("2", txPrev, req_string, txhash_on_epoc, txdata_on_epoc)
+
 	s.BroadCastTX(new_tx)
 
 	s.Prtl.Dat.CommitDBTx(new_tx)
