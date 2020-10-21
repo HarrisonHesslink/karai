@@ -51,7 +51,7 @@ func(s *Server)  BroadCastTX(tx transaction.Transaction) {
 		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
 	}
 	log.Println("[SEND] [TXT] Broadcasting Transaction Out")
-	s.HandleCall(stream)
+	go s.HandleCall(stream)
 }
 
 func (s *Server) SendData(ctx *flatend.Context, data []byte) {
@@ -61,7 +61,7 @@ func (s *Server) SendData(ctx *flatend.Context, data []byte) {
 	if err != nil {
 		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
 	}
-	s.HandleCall(stream)
+	go s.HandleCall(stream)
 }
 
 func (s *Server) BroadCastData(data []byte) {
@@ -138,7 +138,7 @@ func (s *Server)SendGetTxes(ctx *flatend.Context) {
 	payload := GobEncode(GetTxes{txPrev})
 	request := append(CmdToBytes("gettxes"), payload...)
 
-	s.SendData(ctx, request)
+	go s.SendData(ctx, request)
 	ctx.Write([]byte("exit"))
 	log.Println("[SEND] [GTXS] Requesting Transactions starting from: " + txPrev)
 }
