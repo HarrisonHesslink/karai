@@ -114,7 +114,6 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 			last_hash = tx.Hash
 		}	
 	}
-	ctx.Write([]byte("exit"))
 }
 
 func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {

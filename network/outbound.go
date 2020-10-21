@@ -160,8 +160,7 @@ func (s *Server) SendVersion(p *flatend.Provider) {
 	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	if err == nil {
 		go s.HandleCall(stream)
-		log.Println("[SEND] [VERSION] Version Call")
+		log.Println("[SEND] [VERSION] Call")
 	}
 
-	log.Println("[SEND] [VERSION] Call")
 }
