@@ -84,8 +84,8 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 
 		//uh oh we have no hashy wot do?
 		//lets request... 
-		s.SendGetTxes(ctx)
-		
+		go s.SendGetTxes(ctx)
+
 	} else {
 
 
