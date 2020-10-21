@@ -151,7 +151,7 @@ func (s *Server)SendGetTxes(ctx *flatend.Context) {
 // 	//log.Println("[SEND] [GDTA][" + kind + "] Sending Data to: " + address)
 // }
 
-func (s *Server) SendVersion(p *flatend.Provider) *flatend.Stream {
+func (s *Server) SendVersion(p *flatend.Provider) {
 	numTx := s.Prtl.Dat.GetDAGSize()
 
 	payload := GobEncode(Version{version, numTx, s.ExternalIP})
@@ -162,6 +162,7 @@ func (s *Server) SendVersion(p *flatend.Provider) *flatend.Stream {
 	if err != nil {
 		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
 	}
+	go s.HandleCall(stream)
+
 	log.Println("[SEND] [VERSION] Version Call")
-	return stream
 }

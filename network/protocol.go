@@ -119,13 +119,11 @@ func (s *Server) LookForNodes() {
 		log.Println(strconv.Itoa(len(providers)))
 		for _, provider := range providers {
 	
-				stream := s.SendVersion(provider)
+				s.SendVersion(provider)
 				if s.pl.Count < 9 {
 					s.pl.Peers = append(s.pl.Peers, Peer{provider.GetID(), provider})
 					s.pl.Count++
-				}
-	
-				go s.HandleCall(stream)
+				}	
 		}
 
 		time.Sleep(1 * time.Minute)
