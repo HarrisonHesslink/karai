@@ -174,6 +174,8 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	}
 
 	new_tx := transaction.CreateTransaction("2", txPrev, req_string, txhash_on_epoc, txdata_on_epoc)
+	
+	s.BroadCastTX(new_tx)
 
 	var this_tx_data transaction.Request_Data_TX
 	err = json.Unmarshal([]byte(new_tx.Data), &this_tx_data)
@@ -203,7 +205,6 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	}
 
 	s.Prtl.Dat.CommitDBTx(new_tx)
-	s.BroadCastTX(new_tx)
 }
 
 func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {

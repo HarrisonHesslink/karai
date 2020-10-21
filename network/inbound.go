@@ -181,8 +181,6 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 		}
 	}
 
-
-
 	//s.SendInv("tx", [][]byte{[]byte(tx.Hash)})		
 
 }
