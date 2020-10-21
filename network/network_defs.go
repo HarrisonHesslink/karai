@@ -29,6 +29,10 @@ type GOB_TX struct {
 	TX   []byte
 }
 
+type GOB_BATCH_TX struct {
+	Batch [][]byte
+}
+
 type GetTxes struct {
 	Top_hash string
 }

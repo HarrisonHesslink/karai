@@ -116,7 +116,7 @@ func (s *Server) LookForNodes() {
 		}
 
 		providers := s.node.ProvidersFor("karai-xeq")
-		log.Println(strconv.Itoa(len(providers)))
+		//log.Println(strconv.Itoa(len(providers)))
 		for _, provider := range providers {
 	
 				s.SendVersion(provider)
