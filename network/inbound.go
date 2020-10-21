@@ -81,10 +81,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 
 
 	if !s.Prtl.Dat.HaveTx(last_hash) {
-
-		//uh oh we have no hashy wot do?
-		//lets request... 
-		go s.SendGetTxes(ctx)
+		//nothing
 
 	} else {
 
