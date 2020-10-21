@@ -149,11 +149,12 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	for i <= 10 {
 		_ = db.QueryRow("SELECT tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txData)
 
+
 		last_consensus_data := transaction.Request_Consensus_TX{}
 		err := json.Unmarshal([]byte(txData), &last_consensus_data)
 		if err != nil {
-			// handle this error
-			log.Panic(err)
+			log.Println("Unable to parse tx_data")
+			continue;
 		}
 
 		if last_consensus_data.Height == req.Height {

@@ -97,7 +97,8 @@ func CreateTransaction(txType, last_epoc_tx string, data []byte, txhash_on_epoc 
 				err := json.Unmarshal([]byte(this_data), &this_tx_data)
 				if err != nil {
 					// handle this error
-					log.Panic(err)
+					log.Println("Unable to parse tx_data")
+					continue;
 				}
 
 				if this_tx_data.Task != rct.Task {
