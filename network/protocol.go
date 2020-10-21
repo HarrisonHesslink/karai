@@ -174,10 +174,10 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	}
 
 	new_tx := transaction.CreateTransaction("2", txPrev, req_string, txhash_on_epoc, txdata_on_epoc)
-	
+
 	s.BroadCastTX(new_tx)
 
-	var this_tx_data transaction.Request_Data_TX
+	this_tx_data := transaction.Request_Data_TX{}
 	err = json.Unmarshal([]byte(new_tx.Data), &this_tx_data)
 	if err != nil {
 		// handle this error
@@ -189,7 +189,7 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	for i <= 10 {
 		_ = db.QueryRow("SELECT tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txData)
 
-		var last_consensus_data transaction.Request_Data_TX
+		last_consensus_data := transaction.Request_Consensus_TX{}
 		err := json.Unmarshal([]byte(txData), &last_consensus_data)
 		if err != nil {
 			// handle this error
