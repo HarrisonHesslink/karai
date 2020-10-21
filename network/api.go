@@ -80,7 +80,7 @@ func (s *Server) RestAPI() {
 			return
 		}
 		
-		s.NewDataTxFromCore(req)
+		go s.NewDataTxFromCore(req)
 	}).Methods("POST")
 
 	api.HandleFunc("/new_consensus_tx", func(w http.ResponseWriter, r *http.Request) {
@@ -93,7 +93,7 @@ func (s *Server) RestAPI() {
 			return
 		}
 		
-		s.NewConsensusTXFromCore(req)
+		go s.NewConsensusTXFromCore(req)
 	}).Methods("POST")
 
 	// // Channel Socket
