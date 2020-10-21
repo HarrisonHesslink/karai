@@ -79,40 +79,53 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	log.Println("[RECV] [" + command + "] Get Tx from: " + payload.Top_hash)
 	last_hash := payload.Top_hash
 
-	db, connectErr := s.Prtl.Dat.Connect()
-	defer db.Close()
-	util.Handle("Error creating a DB connection: ", connectErr)
+
+	if !s.Prtl.Dat.HaveTx(last_hash) {
+
+		//uh oh we have no hashy wot do?
+		//lets request... 
+		s.SendGetTxes(ctx)
+		
+	} else {
 
 
-	transactions := []transaction.Transaction{}
-	//Grab all first txes on epoc 
-	rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time ASC")
-	if err != nil {
-		panic(err)
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var this_tx transaction.Transaction
-		err = rows.StructScan(&this_tx)
+		db, connectErr := s.Prtl.Dat.Connect()
+		defer db.Close()
+		util.Handle("Error creating a DB connection: ", connectErr)
+
+
+		transactions := []transaction.Transaction{}
+		//Grab all first txes on epoc 
+		rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time ASC")
 		if err != nil {
-			// handle this error
+			panic(err)
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var this_tx transaction.Transaction
+			err = rows.StructScan(&this_tx)
+			if err != nil {
+				// handle this error
+				log.Panic(err)
+			}
+			transactions = append(transactions, this_tx)
+		}
+		// get any error encountered during iteration
+		err = rows.Err()
+		if err != nil {
 			log.Panic(err)
 		}
-		transactions = append(transactions, this_tx)
-	}
-	// get any error encountered during iteration
-	err = rows.Err()
-	if err != nil {
-		log.Panic(err)
-	}
 
-	for _, tx := range transactions {
-		if tx.Prev == last_hash {
-			p := s.GetProviderFromID(&ctx.ID)
+		for _, tx := range transactions {
+			log.Println("Last Hash: " + last_hash)
+			log.Println(tx.Prev)
+			if tx.Prev == last_hash {
+				p := s.GetProviderFromID(&ctx.ID)
 
-			go s.SendTx(p, tx);
-			last_hash = tx.Hash
-		}	
+				go s.SendTx(p, tx);
+				last_hash = tx.Hash
+			}	
+		}
 	}
 }
 
@@ -150,7 +163,7 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	if err != nil {
 		log.Panic(err)
 	}
-
+	log.Println(request)
 	txData := payload.TX
 	tx := transaction.DeserializeTransaction(txData)
 
