@@ -80,7 +80,7 @@ func (s *Server) RestAPI() {
 		}
 		log.Println("We are data boy")
 
-		go s.NewDataTxFromCore(req)
+		///go s.NewDataTxFromCore(req)
 	}).Methods("POST")
 
 	api.HandleFunc("/new_consensus_tx", func(w http.ResponseWriter, r *http.Request) {
