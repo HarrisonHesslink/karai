@@ -35,10 +35,11 @@ func(s *Server)  SendTx(p *flatend.Provider, tx transaction.Transaction) {
 
 	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	log.Println("[SEND] [TXT] Sending Transaction to " + p.GetID().Pub.String() + " ip: " + p.GetID().Host.String())
-	if err != nil {
-		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
+	if err == nil {
+		log.Println("[SEND] [TXT] Sending Transaction to " + p.GetID().Pub.String() + " ip: " + p.GetID().Host.String())
+		go s.HandleCall(stream)
+
 	}
-	go s.HandleCall(stream)
 }
 
 func(s *Server)  BroadCastTX(tx transaction.Transaction) {
@@ -47,21 +48,20 @@ func(s *Server)  BroadCastTX(tx transaction.Transaction) {
 	request := append(CmdToBytes("tx"), payload...)
 
 	stream, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
-	if err != nil {
-		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
+	if err == nil {
+		log.Println("[SEND] [TXT] Broadcasting Transaction Out")
+		go s.HandleCall(stream)
 	}
-	log.Println("[SEND] [TXT] Broadcasting Transaction Out")
-	go s.HandleCall(stream)
+
 }
 
 func (s *Server) SendData(ctx *flatend.Context, data []byte) {
 
 	p := s.GetProviderFromID(&ctx.ID)
 	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
-	if err != nil {
-		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
+	if err == nil {
+		go s.HandleCall(stream)
 	}
-	go s.HandleCall(stream)
 }
 
 func (s *Server) BroadCastData(data []byte) {
@@ -139,7 +139,6 @@ func (s *Server)SendGetTxes(ctx *flatend.Context) {
 	request := append(CmdToBytes("gettxes"), payload...)
 
 	go s.SendData(ctx, request)
-	ctx.Write([]byte("exit"))
 	log.Println("[SEND] [GTXS] Requesting Transactions starting from: " + txPrev)
 }
 
@@ -159,10 +158,10 @@ func (s *Server) SendVersion(p *flatend.Provider) {
 	request := append(CmdToBytes("version"), payload...)
 
 	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
-	if err != nil {
-		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
+	if err == nil {
+		go s.HandleCall(stream)
+		log.Println("[SEND] [VERSION] Version Call")
 	}
-	go s.HandleCall(stream)
 
-	log.Println("[SEND] [VERSION] Version Call")
+	log.Println("[SEND] [VERSION] Call")
 }
