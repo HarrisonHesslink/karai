@@ -34,11 +34,11 @@ func(s *Server)  SendTx(p *flatend.Provider, tx transaction.Transaction) {
 	request := append(CmdToBytes("tx"), payload...)
 
 	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	log.Println("[SEND] [TXT] Sending Transaction to " + p.GetID().Pub.String() + " ip: " + p.GetID().Host.String())
 	if err != nil {
 		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
 	}
-	log.Println("[SEND] [TXT] Sending Transaction to " + p.GetID().Pub.String() + " ip: " + p.GetID().Host.String())
-	s.HandleCall(stream)
+	go s.HandleCall(stream)
 }
 
 func(s *Server)  BroadCastTX(tx transaction.Transaction) {

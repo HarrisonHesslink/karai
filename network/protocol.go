@@ -118,7 +118,7 @@ func (s *Server) LookForNodes() {
 		}
 
 		providers := s.node.ProvidersFor("karai-xeq")
-		//log.Println(strconv.Itoa(len(providers)))
+		log.Println(strconv.Itoa(len(providers)))
 		for _, provider := range providers {
 	
 				stream := s.SendVersion(provider)
@@ -127,7 +127,7 @@ func (s *Server) LookForNodes() {
 					s.pl.Count++
 				}
 	
-				s.HandleCall(stream)
+				go s.HandleCall(stream)
 		}
 
 		time.Sleep(1 * time.Minute)

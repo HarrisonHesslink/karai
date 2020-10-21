@@ -1,6 +1,7 @@
 package network
 
 import (	
+	
 	"bytes"
 	"encoding/gob"
 	"log"
@@ -11,6 +12,7 @@ import (
 	"github.com/harrisonhesslink/flatend"
 	"time"
 	"encoding/json"
+
 )
 func (s *Server) HandleAddr(request []byte) {
 	command := BytesToCmd(request[:commandLength])
@@ -81,8 +83,10 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
+
+	transactions := []transaction.Transaction{}
 	//Grab all first txes on epoc 
-	rows, err := db.Query("SELECT (*) FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time ASC")
+	rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time ASC")
 	if err != nil {
 		// handle this error better than this
 		panic(err)
@@ -90,23 +94,29 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	defer rows.Close()
 	for rows.Next() {
 		var this_tx transaction.Transaction
-		err = rows.Scan(&this_tx)
+		err = rows.StructScan(&this_tx)
 		if err != nil {
 			// handle this error
 			log.Panic(err)
 		}
-
-		if this_tx.Prev == last_hash {
-			s.SendTx(s.GetProviderFromID(&ctx.ID), this_tx);
-			last_hash = this_tx.Hash
-		}
+		transactions = append(transactions, this_tx)
 	}
 	// get any error encountered during iteration
 	err = rows.Err()
 	if err != nil {
 		log.Panic(err)
 	}
+
+	for _, tx := range transactions {
+		if tx.Prev == last_hash {
+			p := s.GetProviderFromID(&ctx.ID)
+
+			s.SendTx(p, tx);
+			last_hash = tx.Hash
+		}	
+	}
 	ctx.Write([]byte("exit"))
+
 }
 
 func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {
