@@ -55,7 +55,13 @@ func(s *Server)  BroadCastTX(tx transaction.Transaction) {
 }
 
 func (s *Server) SendData(ctx *flatend.Context, data []byte) {
-	ctx.Write(data)
+
+	p := s.GetProviderFromID(&ctx.ID)
+	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
+	if err != nil {
+		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
+	}
+	s.HandleCall(stream)
 }
 
 func (s *Server) BroadCastData(data []byte) {
@@ -133,6 +139,7 @@ func (s *Server)SendGetTxes(ctx *flatend.Context) {
 	request := append(CmdToBytes("gettxes"), payload...)
 
 	s.SendData(ctx, request)
+	ctx.Write([]byte("exit"))
 	log.Println("[SEND] [GTXS] Requesting Transactions starting from: " + txPrev)
 }
 

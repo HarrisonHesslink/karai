@@ -75,27 +75,38 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 		log.Panic(err)
 	}
 	log.Println("[RECV] [" + command + "] Get Tx from: " + payload.Top_hash)
+	last_hash := payload.Top_hash
 
-	top_hash, _  := s.Prtl.Dat.ReturnTopHash()
-	if top_hash != "" {
-		//somethin
-	}
-
-	if !s.Prtl.Dat.HaveTx(payload.Top_hash) {
-		//somethin
-	}
-
-	var tx_hash string 
 	db, connectErr := s.Prtl.Dat.Connect()
 	defer db.Close()
-
 	util.Handle("Error creating a DB connection: ", connectErr)
-	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_prev=$1 AND tx_type=$2",payload.Top_hash, "1").Scan(&tx_hash)
 
-	next_tx := s.Prtl.Dat.GetTransaction([]byte(tx_hash))
-	log.Println(tx_hash)
-	s.SendTx(s.GetProviderFromID(&ctx.ID), next_tx)
+	//Grab all first txes on epoc 
+	rows, err := db.Query("SELECT (*) FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time ASC")
+	if err != nil {
+		// handle this error better than this
+		panic(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var this_tx transaction.Transaction
+		err = rows.Scan(&this_tx)
+		if err != nil {
+			// handle this error
+			log.Panic(err)
+		}
 
+		if this_tx.Prev == last_hash {
+			s.SendTx(s.GetProviderFromID(&ctx.ID), this_tx);
+			last_hash = this_tx.Hash
+		}
+	}
+	// get any error encountered during iteration
+	err = rows.Err()
+	if err != nil {
+		log.Panic(err)
+	}
+	ctx.Write([]byte("exit"))
 }
 
 func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {

@@ -199,7 +199,6 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	s.Prtl.Dat.CommitDBTx(new_tx)
 
 	s.BroadCastTX(new_tx)
-
 }
 
 func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {
