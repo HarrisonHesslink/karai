@@ -175,8 +175,6 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 
 	new_tx := transaction.CreateTransaction("2", txPrev, req_string, txhash_on_epoc, txdata_on_epoc)
 
-	s.BroadCastTX(new_tx)
-
 	this_tx_data := transaction.Request_Data_TX{}
 	err = json.Unmarshal([]byte(new_tx.Data), &this_tx_data)
 	if err != nil {
@@ -203,6 +201,8 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 		i++
 		time.Sleep(5 * time.Second)
 	}
+	
+	s.BroadCastTX(new_tx)
 
 	s.Prtl.Dat.CommitDBTx(new_tx)
 }
