@@ -88,7 +88,6 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	//Grab all first txes on epoc 
 	rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time ASC")
 	if err != nil {
-		// handle this error better than this
 		panic(err)
 	}
 	defer rows.Close()
@@ -116,7 +115,6 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 		}	
 	}
 	ctx.Write([]byte("exit"))
-
 }
 
 func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {
@@ -231,17 +229,17 @@ func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {
 	command := BytesToCmd(req[:commandLength])
 	switch command {
 	case "addr":
-		s.HandleAddr(req)
+		go s.HandleAddr(req)
 	case "inv":
-		s.HandleInv(req)
+		go s.HandleInv(req)
 	 case "gettxes":
-	 	s.HandleGetTxes(ctx, req)
+	 	go s.HandleGetTxes(ctx, req)
 	 case "getdata":
-	 	s.HandleGetData(ctx, req)
+	 	go s.HandleGetData(ctx, req)
 	case "tx":
-		s.HandleTx(ctx, req)
+		go s.HandleTx(ctx, req)
 	case "version":
-		s.HandleVersion(ctx, req)
+		go s.HandleVersion(ctx, req)
 	}
 
 }
