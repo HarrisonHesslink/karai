@@ -110,7 +110,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 		if tx.Prev == last_hash {
 			p := s.GetProviderFromID(&ctx.ID)
 
-			s.SendTx(p, tx);
+			go s.SendTx(p, tx);
 			last_hash = tx.Hash
 		}	
 	}
@@ -218,7 +218,7 @@ func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {
 	}
 
 	if payload.TxSize > s.Prtl.Dat.GetDAGSize() {
-		s.SendGetTxes(ctx)
+		go s.SendGetTxes(ctx)
 	}
 
 	log.Println("[RECV] [" + command + "] Node has Num Tx: " + strconv.Itoa(payload.TxSize))
