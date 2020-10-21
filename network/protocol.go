@@ -73,7 +73,7 @@ func Protocol_Init(c *config.Config, s *Server) {
 		log.Panic(err)
 	}
 
-	go s.LookForNodes()
+	//go s.LookForNodes()
 
 	log.Println("Active Peer Count with streams: " + strconv.Itoa(s.pl.Count))
 
@@ -144,6 +144,7 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 
 	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 	log.Println("Last Consensus TX: " + txPrev)
+
 	var txhash_on_epoc []string
 	var txdata_on_epoc []string
 
@@ -173,7 +174,34 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	}
 
 	new_tx := transaction.CreateTransaction("2", txPrev, req_string, txhash_on_epoc, txdata_on_epoc)
-	log.Println(new_tx.Hash)
+
+	var this_tx_data transaction.Request_Data_TX
+	err = json.Unmarshal([]byte(new_tx.Data), &this_tx_data)
+	if err != nil {
+		// handle this error
+		log.Panic(err)
+	}
+
+	var txData string
+	i := 0
+	for i <= 10 {
+		_ = db.QueryRow("SELECT tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txData)
+
+		var last_consensus_data transaction.Request_Data_TX
+		err := json.Unmarshal([]byte(txData), &last_consensus_data)
+		if err != nil {
+			// handle this error
+			log.Panic(err)
+		}
+
+		if last_consensus_data.Height == this_tx_data.Height {
+			break;
+		}
+
+		i++
+		time.Sleep(5 * time.Second)
+	}
+
 	s.Prtl.Dat.CommitDBTx(new_tx)
 	s.BroadCastTX(new_tx)
 }
@@ -191,7 +219,7 @@ func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {
 
 	log.Println(txPrev)
 	new_tx := transaction.CreateTransaction("1", txPrev, req_string, []string{}, []string{})
-	log.Println(new_tx.Hash)
+		
 	s.Prtl.Dat.CommitDBTx(new_tx)
 	s.BroadCastTX(new_tx)
 }

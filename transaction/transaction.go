@@ -15,6 +15,7 @@ type Request_Data_TX struct {
 	Signature string `json:signature`
 	Data string`json:data`
 	Task string`json:task`
+	Height string `json:height`
 }
 
 type Request_Consensus_TX struct {
@@ -22,6 +23,7 @@ type Request_Consensus_TX struct {
 	Signature string `json:signature`
 	Data []string`json:data`
 	Task string`json:task`
+	Height string `json:height`
 }
 
 // Transaction This is the structure of the transaction
@@ -115,7 +117,7 @@ func CreateTransaction(txType, last_epoc_tx string, data []byte, txhash_on_epoc 
 			newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, newTx.Prev)
 			newTx.Subg = newTx.Hash
 		}
-		
+
 		return newTx
 	} else if newTx.Type == "1" {
 		

@@ -9,8 +9,10 @@ import (
 	"github.com/karai/go-karai/transaction"
 	"github.com/karai/go-karai/util"
 	"github.com/harrisonhesslink/flatend"
+	"time"
+	"encoding/json"
 )
-func (s Server) HandleAddr(request []byte) {
+func (s *Server) HandleAddr(request []byte) {
 	command := BytesToCmd(request[:commandLength])
 	var buff bytes.Buffer
 	var payload Addr
@@ -60,7 +62,7 @@ func (s Server) HandleInv(request []byte) {
 	}
 }
 
-func (s Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
+func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	command := BytesToCmd(request[:commandLength])
 
 	var buff bytes.Buffer
@@ -72,8 +74,9 @@ func (s Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	if err != nil {
 		log.Panic(err)
 	}
+	log.Println("[RECV] [" + command + "] Get Tx from: " + payload.Top_hash)
 
-	top_hash, top_id  := s.Prtl.Dat.ReturnTopHash()
+	top_hash, _  := s.Prtl.Dat.ReturnTopHash()
 	if top_hash != "" {
 		//somethin
 	}
@@ -81,18 +84,18 @@ func (s Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	if !s.Prtl.Dat.HaveTx(payload.Top_hash) {
 		//somethin
 	}
-	top_id++
 
-	var next_tx transaction.Transaction
+	var tx_hash string 
 	db, connectErr := s.Prtl.Dat.Connect()
 	defer db.Close()
-	util.Handle("Error creating a DB connection: ", connectErr)
-	_ = db.QueryRow("SELECT (*) FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE id=$1 ORDER BY tx_time DESC", top_id).Scan(&next_tx)
 
-	log.Println(next_tx.Hash)
+	util.Handle("Error creating a DB connection: ", connectErr)
+	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_prev=$1 AND tx_type=$2",payload.Top_hash, "1").Scan(&tx_hash)
+
+	next_tx := s.Prtl.Dat.GetTransaction([]byte(tx_hash))
+	log.Println(tx_hash)
 	s.SendTx(s.GetProviderFromID(&ctx.ID), next_tx)
 
-	log.Println("[RECV] [" + command + "] Get Txes from: " + ctx.ID.Pub.String())
 }
 
 func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {
@@ -133,13 +136,55 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	txData := payload.TX
 	tx := transaction.DeserializeTransaction(txData)
 
-	s.SendInv("tx", [][]byte{[]byte(tx.Hash)})		
+	log.Println("[RECV] [" + command + "] Transaction: " + tx.Hash)
 
-	if !s.Prtl.Dat.HaveTx(tx.Hash) {
-		s.Prtl.Dat.CommitDBTx(tx)
+	if tx.Type == "2" {
+		var txData string
+		db, connectErr := s.Prtl.Dat.Connect()
+		defer db.Close()
+		util.Handle("Error creating a DB connection: ", connectErr)
+
+		var this_tx_data transaction.Request_Data_TX
+		err := json.Unmarshal([]byte(tx.Data), &this_tx_data)
+		if err != nil {
+			// handle this error
+			log.Panic(err)
+		}
+
+		i := 0
+		for i <= 10 {
+			log.Println("[SELF] [" + command + "] Trying to add: " + tx.Hash)
+
+			_ = db.QueryRow("SELECT tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txData)
+
+			var last_consensus_data transaction.Request_Data_TX
+			err := json.Unmarshal([]byte(txData), &txData)
+			if err != nil {
+				// handle this error
+				log.Panic(err)
+			}
+
+			if last_consensus_data.Height == this_tx_data.Height {
+				if !s.Prtl.Dat.HaveTx(tx.Hash) {
+					s.Prtl.Dat.CommitDBTx(tx)
+				}
+				break;
+			}
+
+			i++
+			time.Sleep(5 * time.Second)
+		}
+
+	} else {
+		if !s.Prtl.Dat.HaveTx(tx.Hash) {
+			s.Prtl.Dat.CommitDBTx(tx)
+		}
 	}
 
-	log.Println("[RECV] [" + command + "] Handle Transaction: " + tx.Hash)
+
+
+	//s.SendInv("tx", [][]byte{[]byte(tx.Hash)})		
+
 }
 
 func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {

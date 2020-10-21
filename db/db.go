@@ -13,7 +13,7 @@ import (
 	config "github.com/karai/go-karai/configuration"
 	"database/sql"
 	"strconv"
-
+	"log"
 )
 
 type Database struct {
@@ -69,7 +69,7 @@ func (d Database) CreateRoot() error {
 	default:
 		//  fmt.Printf("Found %v transactions in the db.", count)
 		if count == 0 {
-			txTime := util.UnixTimeStampNano()
+			txTime := "1603203489229912200"
 			txType := "1"
 			txSubg := "0"
 			txPrnt := "0"
@@ -132,13 +132,14 @@ func (d Database) GetDAGSize() int {
 	return len(graph)
 }
 
-func (d Database) ReturnTopHash() (string, int) {
+func (d *Database) ReturnTopHash() (string, int) {
 	var txHash string
 	var id int
 	db, connectErr := d.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 	_ = db.QueryRow("SELECT tx_hash, id FROM " + d.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC LIMIT 1").Scan(&txHash, &id)
+	log.Println(txHash)
 	return txHash, id
 }
 
@@ -194,7 +195,7 @@ func (d Database) ReturnRangeOfTransactions(height int) [][]byte {
 	return txes
 }
 
-func (d Database) GetTransaction(hash []byte) transaction.Transaction {
+func (d *Database) GetTransaction(hash []byte) transaction.Transaction {
 	var txData string
 	var txSubg string
 	var txPrev string
@@ -210,7 +211,7 @@ func (d Database) GetTransaction(hash []byte) transaction.Transaction {
 	db, connectErr := d.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
-	_ = db.QueryRow("SELECT (tx_time, tx_type, tx_hash, tx_data, tx_prev, tx_epoc, tx_subg, tx_prnt, tx_mile, tx_lead ) FROM " + d.Cf.GetTableName() + " WHERE tx_hash=" + string(hash) + " LIMIT 1").Scan(&txTime, &txType, &txHash, &txData, &txPrev, &txEpoc, &txSubg, &txPrnt, &txMile, &txLead)
+	_ = db.QueryRow("SELECT (tx_time, tx_type, tx_hash, tx_data, tx_prev, tx_epoc, tx_subg, tx_prnt, tx_mile, tx_lead) FROM " + d.Cf.GetTableName() + " WHERE tx_hash=" + string(hash) + " LIMIT 1").Scan(&txTime, &txType, &txHash, &txData, &txPrev, &txEpoc, &txSubg, &txPrnt, &txMile, &txLead)
 
 	return transaction.Transaction{txTime, txType, txHash, txData, txPrev, txEpoc, txSubg, txPrnt, txMile, txLead}
 }
