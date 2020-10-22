@@ -214,7 +214,7 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 		
 		tx := transaction.DeserializeTransaction(tx_)
 
-		log.Println("[RECV] [" + command + "] Transaction: " + tx.Hash)
+		log.Println("[RECV] [" + command + "] Received " + strconv.Itoa(len(payload.Batch)) + " Transactions")
 
 
 		if s.Prtl.Dat.HaveTx(tx.Prev) {
