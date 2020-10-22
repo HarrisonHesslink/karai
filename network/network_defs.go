@@ -6,6 +6,7 @@ import (
 	"github.com/harrisonhesslink/flatend"
 	"github.com/lithdew/kademlia"
 	"github.com/karai/go-karai/transaction"
+	"github.com/gorilla/websocket"
 
 )
 const (
@@ -68,6 +69,7 @@ type Server struct {
 	pl *PeerList
 	ExternalIP string
 	ExternalPort int
+	Sockets []*websocket.Conn
 
 	signalChannel chan os.Signal
 }

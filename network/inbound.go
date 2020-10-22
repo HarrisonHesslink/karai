@@ -11,7 +11,7 @@ import (
 	"github.com/karai/go-karai/util"
 	"github.com/harrisonhesslink/flatend"
 	// "time"
-	// "encoding/json"
+	"encoding/json"
 
 )
 func (s *Server) HandleAddr(request []byte) {
@@ -220,6 +220,13 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 		if s.Prtl.Dat.HaveTx(tx.Prev) {
 			if !s.Prtl.Dat.HaveTx(tx.Hash) {
 				s.Prtl.Dat.CommitDBTx(tx)
+				json_tx, _ := json.Marshal(tx)
+				for _, conn := range s.Sockets {
+					if err := conn.WriteMessage(1, json_tx); err != nil {
+						log.Println(err)
+						return
+					}
+				}
 			}
 		}
 	}
@@ -249,6 +256,14 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	if s.Prtl.Dat.HaveTx(tx.Prev) {
 		if !s.Prtl.Dat.HaveTx(tx.Hash) {
 			s.Prtl.Dat.CommitDBTx(tx)
+
+			json_tx, _ := json.Marshal(tx)
+			for _, conn := range s.Sockets {
+				if err := conn.WriteMessage(1, json_tx); err != nil {
+					log.Println(err)
+					return
+				}
+			}
 		}
 	}
 		

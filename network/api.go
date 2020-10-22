@@ -9,9 +9,12 @@ import (
 	"github.com/karai/go-karai/transaction"
 	"github.com/karai/go-karai/util"
 	"encoding/json"
-	// "github.com/gorilla/websocket"
+	"github.com/gorilla/websocket"
 )
-
+var upgrader = websocket.Upgrader{
+    ReadBufferSize:  1024,
+    WriteBufferSize: 1024,
+}
 // restAPI() This is the main API that is activated when isCoord == true
 func (s *Server) RestAPI() {
 
@@ -44,6 +47,47 @@ func (s *Server) RestAPI() {
 	// Init API
 	r := mux.NewRouter()
 	api := r.PathPrefix("/api/v1").Subrouter()
+
+	api.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		upgrader.CheckOrigin = func(r *http.Request) bool { return true }
+
+		// upgrade this connection to a WebSocket
+		// connection
+		ws, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			log.Println(err)
+		}
+		db, connectErr := s.Prtl.Dat.Connect()
+		defer db.Close()
+		util.Handle("Error creating a DB connection: ", connectErr)
+
+		row3, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " ORDER BY tx_time ASC")
+		if err != nil {
+			panic(err)
+		}
+		defer row3.Close()
+		for row3.Next() {
+			var t2_tx transaction.Transaction
+			err = row3.StructScan(&t2_tx)
+			if err != nil {
+				// handle this error
+				log.Panic(err)
+			}
+
+			json_string, _ := json.Marshal(t2_tx)
+
+			err = ws.WriteMessage(1, json_string)
+			if err != nil {
+				log.Println(err)
+			}
+		}
+		// listen indefinitely for new messages coming
+		// through on our WebSocket connection
+		go s.reader(ws)
+
+	})
+
+	
 
 	// Home
 	//api.HandleFunc("/", home).Methods(http.MethodGet)
@@ -145,4 +189,23 @@ func (s *Server) RestAPI() {
 
 	// Serve via HTTP
 	http.ListenAndServe(":4203", handlers.CORS(headersCORS, originsCORS, methodsCORS)(api))
+}
+
+func (s * Server) reader(conn *websocket.Conn) {
+    for {
+    // read in a message
+        messageType, p, err := conn.ReadMessage()
+        if err != nil {
+            log.Println(err)
+            return
+        }
+    	// print out that message for clarity
+        log.Println(string(p))
+
+        if err := conn.WriteMessage(messageType, p); err != nil {
+            log.Println(err)
+            return
+        }
+
+    }
 }
