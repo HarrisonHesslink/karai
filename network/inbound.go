@@ -92,8 +92,10 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 
 
 		transactions := []transaction.Transaction{}
+		lhash := last_hash
+		hit := false
 		//Grab all first txes on epoc 
-		rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC")
+		rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time ASC")
 		if err != nil {
 			panic(err)
 		}
@@ -106,54 +108,55 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 				log.Panic(err)
 			}
 
-			//loop through to find contracts
-			if this_tx.Prnt != "" {
-				rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='3' AND tx_prnt=$1 ORDER BY tx_time DESC", this_tx.Prnt)
+			if lhash == this_tx.Hash {
+				log.Println("hit")
+				hit = true
+			}
+
+			if hit == true {
+				transactions = append(transactions, this_tx)
+
+				//loop through to find contracts
+				row2, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='3' AND tx_prnt=$1 ORDER BY tx_time ASC", this_tx.Hash)
 				if err != nil {
 					panic(err)
 				}
-				defer rows.Close()
-				for rows.Next() {
+				defer row2.Close()
+				for row2.Next() {
 					var t_tx transaction.Transaction
-					err = rows.StructScan(&this_tx)
+					err = row2.StructScan(&t_tx)
 					if err != nil {
 						// handle this error
 						log.Panic(err)
 					}
-
+					transactions = append(transactions, t_tx)
 					//loop through to find oracle data
-					if this_tx.Epoc != "" {
-						rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='2' AND tx_epoc=$1 ORDER BY tx_time DESC", this_tx.Epoc)
+						row3, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='2' AND tx_epoc=$1 ORDER BY tx_time ASC", t_tx.Epoc)
 						if err != nil {
 							panic(err)
 						}
-						defer rows.Close()
-						for rows.Next() {
+						defer row3.Close()
+						for row3.Next() {
 							var t2_tx transaction.Transaction
-							err = rows.StructScan(&this_tx)
+							err = row3.StructScan(&t2_tx)
 							if err != nil {
 								// handle this error
 								log.Panic(err)
 							}
 							transactions = append(transactions, t2_tx)
 						}
-						err = rows.Err()
+						err = row3.Err()
 						if err != nil {
 							log.Panic(err)
 						}
-					}
-
-					transactions = append(transactions, t_tx)
 				}
 				err = rows.Err()
 				if err != nil {
 					log.Panic(err)
-				}
+				}				
 			}
-			
-
-			transactions = append(transactions, this_tx)
 		}
+
 		// get any error encountered during iteration
 		err = rows.Err()
 		if err != nil {
@@ -161,11 +164,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 		}
 		var txes [][]byte
 		for _, tx := range transactions {
-			if tx.Prev == last_hash {
-				txes = append(txes, tx.Serialize())				
-				//go s.SendTx(p, tx);
-				//last_hash = tx.Hash
-			}	
+				txes = append(txes, tx.Serialize())
 		}
 
 		data := GOB_BATCH_TX{txes}
@@ -210,7 +209,7 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 	if err != nil {
 		log.Panic(err)
 	}
-
+	
 	for _, tx_ := range payload.Batch {
 		
 		tx := transaction.DeserializeTransaction(tx_)
