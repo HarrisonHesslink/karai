@@ -22,6 +22,9 @@ var magenta = "\033[0;35m"
 var cyan = "\033[0;36m"
 var white = "\033[0;37m"
 
+var Rcv = Brightyellow + "[RECV]" + Brightred
+var Send = cyan + "[SEND]" + Brightred
+
 func osCheck() {
 	if runtime.GOOS == "windows" {
 		nc = ""

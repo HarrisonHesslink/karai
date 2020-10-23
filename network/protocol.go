@@ -3,9 +3,9 @@ package network
 import (
 	// "encoding/hex"
 	"log"
-	//"github.com/karai/go-karai/db"
+	//"github.com/karai/go-karai/database"
 	config "github.com/karai/go-karai/configuration"
-	"github.com/karai/go-karai/db"
+	"github.com/karai/go-karai/database"
 	"github.com/harrisonhesslink/flatend"
 	"strconv"
 	"github.com/glendc/go-external-ip"
@@ -15,12 +15,12 @@ import (
 	"time"
 	"github.com/lithdew/kademlia"
 	"encoding/json"
-	// "github.com/gorilla/websocket"
+	//"github.com/gorilla/websocket"
 
 )
 
 func Protocol_Init(c *config.Config, s *Server) {
-	var d db.Database
+	var d database.Database
 	var p Protocol
 	var peer_list PeerList
 
@@ -144,7 +144,14 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	new_tx := transaction.CreateTransaction("2", txPrev, req_string, []string{}, []string{})
 
 	s.Prtl.Dat.CommitDBTx(new_tx)
+	json_tx, _ := json.Marshal(new_tx)
 
+	for _, conn := range s.Sockets {
+		if err := conn.WriteMessage(1, json_tx); err != nil {
+			log.Println(err)
+			return
+		}
+	}
 	s.BroadCastTX(new_tx)
 }
 
@@ -162,7 +169,13 @@ func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {
 	new_tx := transaction.CreateTransaction("1", txPrev, req_string, []string{}, []string{})
 		
 	s.Prtl.Dat.CommitDBTx(new_tx)
-	
+	json_string, _ := json.Marshal(new_tx)
+	for _, conn := range s.Sockets {
+		if err := conn.WriteMessage(1, json_string); err != nil {
+			log.Println(err)
+			return
+		}
+	}
 	s.BroadCastTX(new_tx)
 }
 
@@ -174,7 +187,7 @@ type Contract struct {
 func (s *Server) CreateContract(asset string, denom string) {
 	var txPrev string
 	contract := Contract{asset, denom}
-	json,_ := json.Marshal(contract)
+	json_contract,_ := json.Marshal(contract)
 
 	db, connectErr := s.Prtl.Dat.Connect()
 	defer db.Close()
@@ -182,28 +195,23 @@ func (s *Server) CreateContract(asset string, denom string) {
 
 	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
-	tx := transaction.CreateTransaction("3", txPrev, []byte(json), []string{}, []string{})
+	tx := transaction.CreateTransaction("3", txPrev, []byte(json_contract), []string{}, []string{})
 	log.Println("Created Contract " + tx.Hash[:8]+ ": " + asset + "/" + denom)
+
 	if !s.Prtl.Dat.HaveTx(tx.Hash) {
 		s.Prtl.Dat.CommitDBTx(tx)
+
+		json_tx,_ := json.Marshal(tx)
+
+		for _, conn := range s.Sockets {
+			if err := conn.WriteMessage(1, json_tx); err != nil {
+				log.Println(err)
+				return
+			}
+		}
+	
 		s.BroadCastTX(tx)
 	}
 
 }
-
-// func (s *Server) HandleAPISocket(c *websocket.Conn) {
-// 	for {
-// 		mt, message, err := c.ReadMessage()
-// 		if err != nil {
-// 			log.Println("read:", err)
-// 			break
-// 		}
-// 		log.Printf("recv: %s", message)
-// 		err = c.WriteMessage(mt, message)
-// 		if err != nil {
-// 			log.Println("write:", err)
-// 			break
-// 		}
-// 	}
-// }
 

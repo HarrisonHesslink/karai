@@ -12,10 +12,10 @@ import (
 	"strconv"
 )
 
-// // inputHandler This is a basic input loop that listens for
-// // a few words that correspond to functions in the app. When
-// // a command isn't understood, it displays the help menu and
-// // returns to listening to input.
+// inputHandler This is a basic input loop that listens for
+// a few words that correspond to functions in the app. When
+// a command isn't understood, it displays the help menu and
+// returns to listening to input.
 func inputHandler(s *network.Server/*keyCollection *ED25519Keys*/) {
 	reader := bufio.NewReader(os.Stdin)
 
@@ -89,7 +89,7 @@ func inputHandler(s *network.Server/*keyCollection *ED25519Keys*/) {
 					} else {
 						log.Println("Pair Not Supported! BTC")
 					}
-		
+
 			} else {
 				log.Println("Pair Not Supported! XEQ, XHV, LOKI, ETH, DOGE")
 

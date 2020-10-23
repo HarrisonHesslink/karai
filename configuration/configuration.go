@@ -1,42 +1,44 @@
 package configuration
 
 import (
-	"github.com/gorilla/websocket"
 	"encoding/json"
+	"github.com/gorilla/websocket"
 	//"io/ioutil"
 	"log"
 	"os"
 )
 
-type Config struct{
-	AppName string `json:"app_name"`
-	AppDev string `json:"app_dev"`
-	AppLicense string `json:"app_license"`
-	AppRepository string `json:"app_repository"`
-	AppURL string `json:"app_url"`
-	ConfigDir string `json:"config_dir"`
-	P2pConfigDir string `json:"p2p_config_dir"`
-	P2pWhitelistDir string `json:"p2p_whitelist_dir"`
-	P2pBlacklistDir string `json:"p2p_blacklist_dir"`
-	CertPathDir string `json:"cert_path_dir"`
-	CertPathSelfDir string `json:"cert_path_self_dir"`
-	CertPathRemote string `json:"cert_path_remote"`
-	PubKeyFilePath string `json:"pubkey_filepath"`
-	PrivKeyFilePath string `json:"privkey_filepath"`
+type Config struct {
+	AppName           string `json:"app_name"`
+	AppDev            string `json:"app_dev"`
+	AppLicense        string `json:"app_license"`
+	AppRepository     string `json:"app_repository"`
+	AppURL            string `json:"app_url"`
+	ConfigDir         string `json:"config_dir"`
+	P2pConfigDir      string `json:"p2p_config_dir"`
+	P2pWhitelistDir   string `json:"p2p_whitelist_dir"`
+	P2pBlacklistDir   string `json:"p2p_blacklist_dir"`
+	CertPathDir       string `json:"cert_path_dir"`
+	CertPathSelfDir   string `json:"cert_path_self_dir"`
+	CertPathRemote    string `json:"cert_path_remote"`
+	PubKeyFilePath    string `json:"pubkey_filepath"`
+	PrivKeyFilePath   string `json:"privkey_filepath"`
 	SignedKeyFilePath string `json:"signedkey_filepath"`
-	SelfCertFilePath string `json:"self_cert_filepath"`
-	PeeridPath string `json:"peerid_path"`
-	ChannelName string `json:"channel_name"`
-	ChannelDesc string `json:"channel_desc"`
-	ChannelCont string `json:"channel_cont"`
-	NodeKey string `json:"node_key"`
-	DbUser string `json:"db_user"`
-	DbName string `json:"db_name"`
-	DbSSL string `json:"db_SSL"`
-	KaraiAPIPort int `json:"karai_api_port"`
-	TableName string `json:"table_name"`
-	Lport int `json:"listen_port"`
-	WantsClean bool `json:"wants_clean"`
+	SelfCertFilePath  string `json:"self_cert_filepath"`
+	PeeridPath        string `json:"peerid_path"`
+	ChannelName       string `json:"channel_name"`
+	ChannelDesc       string `json:"channel_desc"`
+	ChannelCont       string `json:"channel_cont"`
+	NodeKey           string `json:"node_key"`
+	DbUser            string `json:"db_user"`
+	DbPassword        string `json:"db_password"`
+	DbName            string `json:"db_name"`
+	DbPort            string `json:"db_port"`
+	DbSSL             string `json:"db_SSL"`
+	KaraiAPIPort      int    `json:"karai_api_port"`
+	TableName         string `json:"table_name"`
+	Lport             int    `json:"listen_port"`
+	WantsClean        bool   `json:"wants_clean"`
 }
 
 // Attribution constants
@@ -52,18 +54,17 @@ const (
 // File & folder constants
 var (
 	configDir         string = ""
-	p2pConfigDir      = configDir + "/p2p"
-	p2pWhitelistDir   = p2pConfigDir + "/whitelist"
-	p2pBlacklistDir   = p2pConfigDir + "/blacklist"
-	certPathDir       = p2pConfigDir + "/cert"
-	certPathSelfDir   = certPathDir + "/self"
-	certPathRemote    = certPathDir + "/remote"
-	pubKeyFilePath    = certPathSelfDir + "/" + "pub.key"
-	privKeyFilePath   = certPathSelfDir + "/" + "priv.key"
-	signedKeyFilePath = certPathSelfDir + "/" + "signed.key"
-	selfCertFilePath  = certPathSelfDir + "/" + "self.cert"
-	peeridPath    = certPathSelfDir + "/" + "my_peerid.json"
-
+	p2pConfigDir             = configDir + "/p2p"
+	p2pWhitelistDir          = p2pConfigDir + "/whitelist"
+	p2pBlacklistDir          = p2pConfigDir + "/blacklist"
+	certPathDir              = p2pConfigDir + "/cert"
+	certPathSelfDir          = certPathDir + "/self"
+	certPathRemote           = certPathDir + "/remote"
+	pubKeyFilePath           = certPathSelfDir + "/" + "pub.key"
+	privKeyFilePath          = certPathSelfDir + "/" + "priv.key"
+	signedKeyFilePath        = certPathSelfDir + "/" + "signed.key"
+	selfCertFilePath         = certPathSelfDir + "/" + "self.cert"
+	peeridPath               = certPathSelfDir + "/" + "my_peerid.json"
 )
 
 // Channel values
@@ -71,7 +72,7 @@ const (
 	channelName string = "⏣ Equilibria"
 	channelDesc string = "This is an Equilibra task channel."
 	channelCont string = "harrison@equilibria.network"
-	nodeKey string = "TvzBcga1Kc1GJriZmNdXSR7axVd87k34kfmEtoN1Ua77iNyTKp8c3jBU7qfSRSATjoRVutoG87bD62jfY3F8AdCK1ETzHQk4B"
+	nodeKey     string = "TvzBcga1Kc1GJriZmNdXSR7axVd87k34kfmEtoN1Ua77iNyTKp8c3jBU7qfSRSATjoRVutoG87bD62jfY3F8AdCK1ETzHQk4B"
 )
 
 // Coordinator values
@@ -116,11 +117,11 @@ var (
 )
 
 var (
-	port int = 42001
-	target string = ""
-	insecure bool = true
-	seed int = 1241241254
-	db_name string = ""
+	port     int    = 42001
+	target   string = ""
+	insecure bool   = true
+	seed     int    = 1241241254
+	db_name  string = ""
 )
 
 var bootstrapPeers = []string{
@@ -203,7 +204,6 @@ func (c Config) GetListenPort() int {
 	return c.Lport
 }
 
-
 func (c Config) SetkaraiAPIPort(port int) {
 	c.Lport = port
 }
@@ -223,6 +223,3 @@ func (c Config) Setlport(port int) {
 func (c Config) SettableName(name string) {
 	c.TableName = name
 }
-
-
-

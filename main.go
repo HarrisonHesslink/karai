@@ -1,7 +1,8 @@
 package main
+
 import (
-	"github.com/karai/go-karai/network"
 	config "github.com/karai/go-karai/configuration"
+	"github.com/karai/go-karai/network"
 )
 
 // Hello Karai
