@@ -1,19 +1,19 @@
 package network
 
-import (	
-	
+import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
+	"github.com/harrisonhesslink/flatend"
 	"log"
 	"strconv"
 	//"io/ioutil"
 	"github.com/karai/go-karai/transaction"
 	"github.com/karai/go-karai/util"
-	"github.com/harrisonhesslink/flatend"
 	// "time"
-	// "encoding/json"
-
+	"encoding/json"
 )
+
 func (s *Server) HandleAddr(request []byte) {
 	command := BytesToCmd(request[:commandLength])
 	var buff bytes.Buffer
@@ -33,10 +33,8 @@ func (s *Server) HandleAddr(request []byte) {
 
 		}
 	}
-
-	log.Println("[RECV] [" + command + "] Known Nodes On Network: " + strconv.Itoa(len(KnownNodes)))	
+	fmt.Println("[RECV]" + " [" + command + "] Known Nodes On Network: " + strconv.Itoa(len(KnownNodes)))
 }
-
 
 func (s Server) HandleInv(request []byte) {
 	command := BytesToCmd(request[:commandLength])
@@ -60,7 +58,7 @@ func (s Server) HandleInv(request []byte) {
 			}
 		}
 
-		log.Println("[RECV] [" + command + "] [" + payload.Type + "] Inventory call: " + payload.AddrFrom + " Inventory Items: " + strconv.Itoa(len(payload.Items)))	
+		log.Println(util.Rcv + " [" + command + "] [" + payload.Type + "] Inventory call: " + payload.AddrFrom + " Inventory Items: " + strconv.Itoa(len(payload.Items)))
 	}
 }
 
@@ -76,20 +74,17 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	if err != nil {
 		log.Panic(err)
 	}
-	log.Println("[RECV] [" + command + "] Get Tx from: " + payload.Top_hash)
+	log.Println(util.Rcv + " [" + command + "] Get Tx from: " + payload.Top_hash)
 	last_hash := payload.Top_hash
-
 
 	if !s.Prtl.Dat.HaveTx(last_hash) {
 		//nothing
 
 	} else {
 
-
 		db, connectErr := s.Prtl.Dat.Connect()
 		defer db.Close()
 		util.Handle("Error creating a DB connection: ", connectErr)
-
 
 		transactions := []transaction.Transaction{}
 		lhash := last_hash
@@ -117,7 +112,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 				transactions = append(transactions, this_tx)
 
 				//loop through to find contracts
-				row2, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='3' AND tx_prnt=$1 ORDER BY tx_time ASC", this_tx.Hash)
+				row2, err := db.Queryx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_type='3' AND tx_prnt=$1 ORDER BY tx_time ASC", this_tx.Hash)
 				if err != nil {
 					panic(err)
 				}
@@ -131,29 +126,29 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 					}
 					transactions = append(transactions, t_tx)
 					//loop through to find oracle data
-						row3, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='2' AND tx_epoc=$1 ORDER BY tx_time ASC", t_tx.Epoc)
+					row3, err := db.Queryx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_type='2' AND tx_epoc=$1 ORDER BY tx_time ASC", t_tx.Epoc)
+					if err != nil {
+						panic(err)
+					}
+					defer row3.Close()
+					for row3.Next() {
+						var t2_tx transaction.Transaction
+						err = row3.StructScan(&t2_tx)
 						if err != nil {
-							panic(err)
-						}
-						defer row3.Close()
-						for row3.Next() {
-							var t2_tx transaction.Transaction
-							err = row3.StructScan(&t2_tx)
-							if err != nil {
-								// handle this error
-								log.Panic(err)
-							}
-							transactions = append(transactions, t2_tx)
-						}
-						err = row3.Err()
-						if err != nil {
+							// handle this error
 							log.Panic(err)
 						}
+						transactions = append(transactions, t2_tx)
+					}
+					err = row3.Err()
+					if err != nil {
+						log.Panic(err)
+					}
 				}
 				err = rows.Err()
 				if err != nil {
 					log.Panic(err)
-				}				
+				}
 			}
 		}
 
@@ -164,14 +159,14 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 		}
 		var txes [][]byte
 		for _, tx := range transactions {
-				txes = append(txes, tx.Serialize())
+			txes = append(txes, tx.Serialize())
 		}
 
 		data := GOB_BATCH_TX{txes}
 		payload := GobEncode(data)
 		request := append(CmdToBytes("batchtx"), payload...)
 
-		go s.SendData(ctx, request);
+		go s.SendData(ctx, request)
 	}
 }
 
@@ -194,7 +189,7 @@ func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {
 
 		//s.SendTx(s.GetProviderFromID(&ctx.ID), tx)
 	}
-	log.Println("[RECV] [" + command + "] Data Request from: " + ctx.ID.Pub.String())
+	log.Println(util.Rcv + " [" + command + "] Data Request from: " + ctx.ID.Pub.String())
 }
 
 func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
@@ -209,23 +204,28 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 	if err != nil {
 		log.Panic(err)
 	}
-	
+
 	for _, tx_ := range payload.Batch {
-		
+
 		tx := transaction.DeserializeTransaction(tx_)
 
-		log.Println("[RECV] [" + command + "] Received " + strconv.Itoa(len(payload.Batch)) + " Transactions")
-
+		log.Println(util.Rcv + " [" + command + "] Received " + strconv.Itoa(len(payload.Batch)) + " Transactions")
 
 		if s.Prtl.Dat.HaveTx(tx.Prev) {
 			if !s.Prtl.Dat.HaveTx(tx.Hash) {
 				s.Prtl.Dat.CommitDBTx(tx)
+				json_tx, _ := json.Marshal(tx)
+				for _, conn := range s.Sockets {
+					if err := conn.WriteMessage(1, json_tx); err != nil {
+						log.Println(err)
+						return
+					}
+				}
 			}
 		}
 	}
 
-
-	//s.SendInv("tx", [][]byte{[]byte(tx.Hash)})		
+	//s.SendInv("tx", [][]byte{[]byte(tx.Hash)})
 }
 
 func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
@@ -243,16 +243,21 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	txData := payload.TX
 	tx := transaction.DeserializeTransaction(txData)
 
-	log.Println("[RECV] [" + command + "] Transaction: " + tx.Hash)
-
+	log.Println(util.Rcv + " [" + command + "] Transaction: " + tx.Hash)
 
 	if s.Prtl.Dat.HaveTx(tx.Prev) {
 		if !s.Prtl.Dat.HaveTx(tx.Hash) {
 			s.Prtl.Dat.CommitDBTx(tx)
+
+			json_tx, _ := json.Marshal(tx)
+			for _, conn := range s.Sockets {
+				if err := conn.WriteMessage(1, json_tx); err != nil {
+					log.Println(err)
+					return
+				}
+			}
 		}
 	}
-		
-	
 
 	//s.SendInv("tx", [][]byte{[]byte(tx.Hash)})		
 
@@ -274,7 +279,7 @@ func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {
 		go s.SendGetTxes(ctx)
 	}
 
-	log.Println("[RECV] [" + command + "] Node has Num Tx: " + strconv.Itoa(payload.TxSize))
+	log.Println(util.Rcv + " [" + command + "] Node has Num Tx: " + strconv.Itoa(payload.TxSize))
 }
 
 func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {
@@ -285,10 +290,10 @@ func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {
 		go s.HandleAddr(req)
 	case "inv":
 		go s.HandleInv(req)
-	 case "gettxes":
-	 	go s.HandleGetTxes(ctx, req)
-	 case "getdata":
-	 	go s.HandleGetData(ctx, req)
+	case "gettxes":
+		go s.HandleGetTxes(ctx, req)
+	case "getdata":
+		go s.HandleGetData(ctx, req)
 	case "tx":
 		go s.HandleTx(ctx, req)
 	case "batchtx":

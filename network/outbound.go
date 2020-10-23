@@ -35,7 +35,7 @@ func(s *Server)  SendTx(p *flatend.Provider, tx transaction.Transaction) {
 
 	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	if err == nil {
-		log.Println("[SEND] [TXT] Sending Transaction to " + p.GetID().Pub.String() + " ip: " + p.GetID().Host.String())
+		log.Println(util.Send + " [TXT] Sending Transaction to " + p.GetID().Pub.String() + " ip: " + p.GetID().Host.String())
 		go s.HandleCall(stream)
 
 	}
@@ -48,7 +48,7 @@ func(s *Server)  BroadCastTX(tx transaction.Transaction) {
 
 	stream, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	if err == nil {
-		log.Println("[SEND] [TXT] Broadcasting Transaction Out")
+		log.Println(util.Send + " [TXT] Broadcasting Transaction Out")
 		go s.HandleCall(stream)
 	}
 
@@ -119,7 +119,7 @@ func (s *Server) SendInv( kind string, items [][]byte) {
 			if err != nil {
 				//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
 			}
-			log.Println("[SEND] [INV] Sending INV: " + strconv.Itoa(len(items)))
+			log.Println(util.Send + " [INV] Sending INV: " + strconv.Itoa(len(items)))
 			s.HandleCall(stream)
 	}
 }
@@ -138,7 +138,7 @@ func (s *Server)SendGetTxes(ctx *flatend.Context) {
 	request := append(CmdToBytes("gettxes"), payload...)
 
 	go s.SendData(ctx, request)
-	log.Println("[SEND] [GTXS] Requesting Transactions starting from: " + txPrev)
+	log.Println(util.Send + " [GTXS] Requesting Transactions starting from: " + txPrev)
 }
 
 // func (s Server) SendGetData(provider flatend.Provider, kind string, id []byte) {
@@ -159,7 +159,7 @@ func (s *Server) SendVersion(p *flatend.Provider) {
 	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	if err == nil {
 		go s.HandleCall(stream)
-		log.Println("[SEND] [VERSION] Call")
+		log.Println(util.Send + " [VERSION] Call")
 	}
 
 }

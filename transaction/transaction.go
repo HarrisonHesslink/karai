@@ -3,46 +3,12 @@ package transaction
 import (
 	"bytes"
 	"encoding/gob"
-	"log"
-	"github.com/karai/go-karai/util"
-	"golang.org/x/crypto/sha3"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/karai/go-karai/util"
+	"golang.org/x/crypto/sha3"
+	"log"
 )
-
-type Request_Data_TX struct {
-	Hash string `json:hash`
-	PubKey string `json:pub_key`
-	Signature string `json:signature`
-	Data string`json:data`
-	Task string`json:task`
-	Height string `json:height`
-	Source string `json:source`
-	Epoc string `json:epoc`
-}
-
-type Request_Consensus_TX struct {
-	Hash string `json:hash`
-	PubKey string `json:pub_key`
-	Signature string `json:signature`
-	Data []string`json:data`
-	Task string`json:task`
-	Height string `json:height`
-}
-
-// Transaction This is the structure of the transaction
-type Transaction struct {
-	Time string `json:"time" db:"tx_time"`
-	Type string `json:"type" db:"tx_type"`
-	Hash string `json:"hash" db:"tx_hash"`
-	Data string `json:"data" db:"tx_data"`
-	Prev string `json:"prev" db:"tx_prev"`
-	Epoc string `json:"epoc" db:"tx_epoc"`
-	Subg string `json:"subg" db:"tx_subg"`
-	Prnt string `json:"prnt" db:"tx_prnt"`
-	Mile bool   `json:"mile" db:"tx_mile"`
-	Lead bool   `json:"lead" db:"tx_lead"`
-}
 
 func (tx Transaction) Serialize() []byte {
 	var encoded bytes.Buffer
@@ -82,26 +48,25 @@ func CreateTransaction(txType, last_epoc_tx string, data []byte, txhash_on_epoc 
 
 		rct := Request_Data_TX{}
 		_ = json.Unmarshal(data, &rct)
-	
-		if (last_epoc_tx == "") {
+
+		if last_epoc_tx == "" {
 			newTx.Prev = rct.Epoc
 
 		} else {
 			newTx.Prev = last_epoc_tx
 		}
-			newTx.Time = util.UnixTimeStampNano()
-			newTx.Epoc = rct.Epoc
-			newTx.Mile = false
+		newTx.Time = util.UnixTimeStampNano()
+		newTx.Epoc = rct.Epoc
+		newTx.Mile = false
 
+		newTx.Prnt = newTx.Epoc
 
-			newTx.Prnt = newTx.Epoc
-				
-			newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, newTx.Prev)
-			newTx.Subg = newTx.Epoc		
+		newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, newTx.Prev)
+		newTx.Subg = newTx.Epoc
 
 		return newTx
 	} else if newTx.Type == "1" {
-		
+
 		parsePayload := json.Valid(data)
 		if !parsePayload {
 			newTx.Data = hex.EncodeToString(data)
