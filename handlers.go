@@ -6,7 +6,7 @@ package main
 // 	"net/http"
 // 	"strconv"
 // 	"database/sql"
-// 	karai_db "github.com/karai/go-karai/db"
+// 	karai_db "github.com/karai/go-karai/database"
 
 // )
 
@@ -47,30 +47,30 @@ package main
 // 	w.Write([]byte("{\"karai_version\": \"" + semverInfo() + "\"}"))
 // }
 
-// // returnTransactions This will print the contents of all of
-// // the trasnsactions in the graph as an array of JSON objects.
-// func returnNTransactions(w http.ResponseWriter, r *http.Request, number string) {
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.WriteHeader(http.StatusOK)
-// 	reportRequest("transactions/"+number, w, r)
-// 	db, connectErr := karai_db.connect()
-// 	defer db.Close()
-// 	handle("Error creating a DB connection: ", connectErr)
-// 	var graph []byte
-// 	var count int
-// 	_ = db.Get(&count, "SELECT COUNT(*) FROM transactions")
-// 	graph = loadGraphElementsArray(number)
-// 	w.Write([]byte(graph))
-
+// returnTransactions This will print the contents of all of
+// the trasnsactions in the graph as an array of JSON objects.
+//func returnNTransactions(w http.ResponseWriter, r *http.Request, number string) {
+//	w.Header().Set("Content-Type", "application/json")
+//	w.WriteHeader(http.StatusOK)
+//	reportRequest("transactions/"+number, w, r)
+//	database, connectErr := karai_db.connect()
+//	defer database.Close()
+//	handle("Error creating a DB connection: ", connectErr)
+//	var graph []byte
+//	var count int
+//	_ = database.Get(&count, "SELECT COUNT(*) FROM transactions")
+//	graph = loadGraphElementsArray(number)
+//	w.Write([]byte(graph))
+//}
 // }
 
 // // returnSingleTransaction This will print a single tx
 // func returnSingleTransaction(w http.ResponseWriter, r *http.Request, hash string) {
-// 	db, connectErr := karai_db.connect()
-// 	defer db.Close()
+// 	database, connectErr := karai_db.connect()
+// 	defer database.Close()
 // 	handle("Error creating a DB connection: ", connectErr)
 // 	var id int
-// 	errCount := db.Get(&id, "SELECT COUNT(*) FROM transactions WHERE tx_hash = $1", hash)
+// 	errCount := database.Get(&id, "SELECT COUNT(*) FROM transactions WHERE tx_hash = $1", hash)
 // 	handle("There was a problem counting the results: ", errCount)
 // 	idVal := 1
 // 	existEval := id == idVal
@@ -96,12 +96,12 @@ package main
 // 	w.WriteHeader(http.StatusOK)
 // 	reportRequest("Stats", w, r)
 
-// 	db, connectErr := karai_db.connect()
-// 	defer db.Close()
+// 	database, connectErr := karai_db.connect()
+// 	defer database.Close()
 // 	handle("Error creating a DB connection: ", connectErr)
 // 	wlPeerCount := countWhitelistPeers()
 // 	graph := []Transaction{}
-// 	_ = db.Select(&graph, "SELECT * FROM " + db_name)
+// 	_ = database.Select(&graph, "SELECT * FROM " + db_name)
 // 	numTx := len(graph)
 // 	version := semverInfo()
 // 	pkstring := keys.publicKey
@@ -112,13 +112,13 @@ package main
 // }
 
 // func getAllTxHashes() [][]byte {
-// 	db, connectErr := karai_db.connect()
-// 	defer db.Close()
+// 	database, connectErr := karai_db.connect()
+// 	defer database.Close()
 // 	handle("Error creating a DB connection: ", connectErr)
 
 // 	var txes [][]byte
 
-// 	rows, err := db.Query("SELECT tx_hash FROM " + db_name + " ORDER BY tx_time DESC LIMIT $1", 3)
+// 	rows, err := database.Query("SELECT tx_hash FROM " + db_name + " ORDER BY tx_time DESC LIMIT $1", 3)
 // 	if err != nil {
 // 		// handle this error better than this
 // 		panic(err)
@@ -146,11 +146,11 @@ package main
 // func loadGraphElementsArray(number string) []byte {
 // 	amount, _ := strconv.Atoi(number)
 // 	if amount <= 300 {
-// 		db, connectErr := karai_db-db.connect()
-// 		defer db.Close()
+// 		database, connectErr := karai_db-database.connect()
+// 		defer database.Close()
 // 		handle("Error creating a DB connection: ", connectErr)
 // 		graph := []Transaction{}
-// 		err := db.Select(&graph, "SELECT * FROM " + db_name + " ORDER BY tx_time DESC LIMIT $1", number)
+// 		err := database.Select(&graph, "SELECT * FROM " + db_name + " ORDER BY tx_time DESC LIMIT $1", number)
 // 		graphJSON, _ := json.MarshalIndent(&graph, "", "  ")
 // 		switch {
 // 		case err != nil:
@@ -162,11 +162,11 @@ package main
 // 	} else {
 // 		// if they request more than 300, return 300
 // 		number = "300"
-// 		db, connectErr := karai_db.connect()
-// 		defer db.Close()
+// 		database, connectErr := karai_db.connect()
+// 		defer database.Close()
 // 		handle("Error creating a DB connection: ", connectErr)
 // 		graph := []Transaction{}
-// 		err := db.Select(&graph, "SELECT * FROM " + db_name + " ORDER BY tx_time DESC LIMIT $1", number)
+// 		err := database.Select(&graph, "SELECT * FROM " + db_name + " ORDER BY tx_time DESC LIMIT $1", number)
 // 		graphJSON, _ := json.MarshalIndent(&graph, "", "  ")
 // 		switch {
 // 		case err != nil:

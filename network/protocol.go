@@ -3,9 +3,9 @@ package network
 import (
 	// "encoding/hex"
 	"log"
-	//"github.com/karai/go-karai/db"
+	//"github.com/karai/go-karai/database"
 	config "github.com/karai/go-karai/configuration"
-	"github.com/karai/go-karai/db"
+	"github.com/karai/go-karai/database"
 	"github.com/harrisonhesslink/flatend"
 	"strconv"
 	"github.com/glendc/go-external-ip"
@@ -214,20 +214,4 @@ func (s *Server) CreateContract(asset string, denom string) {
 	}
 
 }
-
-// func (s *Server) HandleAPISocket(c *websocket.Conn) {
-// 	for {
-// 		mt, message, err := c.ReadMessage()
-// 		if err != nil {
-// 			log.Println("read:", err)
-// 			break
-// 		}
-// 		log.Printf("recv: %s", message)
-// 		err = c.WriteMessage(mt, message)
-// 		if err != nil {
-// 			log.Println("write:", err)
-// 			break
-// 		}
-// 	}
-// }
 

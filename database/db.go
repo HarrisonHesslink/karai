@@ -30,7 +30,7 @@ type Graph struct {
 
 // connect will create an active DB connection
 func (d Database) Connect() (*sqlx.DB, error) {
-	connectParams := fmt.Sprintf("user=%s dbname=%s sslmode=%s password=test", d.Cf.GetDBUser(), d.Cf.GetDBName(), d.Cf.GetDBSSL())
+	connectParams := fmt.Sprintf("user=%s host=localhost port=%s dbname=%s sslmode=%s password=%s", d.Cf.GetDBUser(), d.Cf.DbPort, d.Cf.GetDBName(), d.Cf.GetDBSSL(), d.Cf.DbPassword)
 	db, err := sqlx.Connect("postgres", connectParams)
 	util.Handle("Error creating a DB connection: ", err)
 	return db, err
