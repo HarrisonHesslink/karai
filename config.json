@@ -29,4 +29,4 @@
     "table_name":"transactions",
     "listen_port":0,
     "wants_clean":false
- }
+}

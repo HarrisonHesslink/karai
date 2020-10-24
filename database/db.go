@@ -121,6 +121,7 @@ func (d Database) GetPrevHash() transaction.Transaction {
 
 	return transaction.Transaction{txTime, txType, txHash, txData, txPrev, txEpoc, txSubg, txPrnt, txMile, txLead}
 }
+
 func (d *Database) GetDAGSize() int {
     db, connectErr := d.Connect()
     defer db.Close()
