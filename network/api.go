@@ -94,7 +94,7 @@ func (s *Server) RestAPI() {
 		}
 
 		var transactions []transaction.Transaction
-		rows, _ := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + queryExtension)
+		rows, _ := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + queryExtension + " ORDER BY tx_time DESC")
 		defer rows.Close()
 		x := 1
 		for rows.Next() {
