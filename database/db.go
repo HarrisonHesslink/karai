@@ -36,12 +36,12 @@ func (d Database) Connect() (*sqlx.DB, error) {
 	return db, err
 }
 
-func (d Database) DB_init() {
+func (d *Database) DB_init() {
 	d.CreateTables()
 	d.CreateRoot()
 }
 
-func (d Database) CreateTables() {
+func (d *Database) CreateTables() {
 	db, connectErr := d.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
@@ -126,7 +126,7 @@ func (d Database) GetDAGSize() int {
 	db, connectErr := d.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
-	rows, err := db.Queryx("SELECT * FROM " +  d.Cf.GetTableName())
+	rows, err := db.Queryx("SELECT * FROM " + d.Cf.GetTableName())
 	if err != nil {
 		log.Println(err.Error())
 	}
@@ -136,6 +136,21 @@ func (d Database) GetDAGSize() int {
 		x++
 	}
 	return x
+}
+func (d *Database) GetDAGSize() int {
+    db, connectErr := d.Connect()
+    defer db.Close()
+    util.Handle("Error creating a DB connection: ", connectErr)
+    rows, err := db.Queryx("SELECT * FROM " +  d.Cf.GetTableName())
+    if err != nil {
+        log.Println(err.Error())
+    }
+    defer rows.Close()
+    x := 0
+    for rows.Next() {
+        x++
+    }
+    return x
 }
 
 func (d *Database) ReturnTopHash() (string, int) {

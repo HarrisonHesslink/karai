@@ -1,5 +1,4 @@
 package main
-
 import (
 	"flag"
 	config "github.com/karai/go-karai/configuration"
