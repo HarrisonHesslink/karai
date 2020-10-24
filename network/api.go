@@ -97,15 +97,11 @@ func (s *Server) RestAPI() {
 		}
 
 		var transactions []transaction.Transaction
-		rows, _ := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + queryExtension + " ORDER BY tx_time DESC")
+		rows, _ := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + queryExtension)
 		defer rows.Close()
 		x := 1
 		for rows.Next() {
 			var thisTx transaction.Transaction
-			err = rows.Scan(
-				&thisTx.Time, &thisTx.Type, &thisTx.Hash, &thisTx.Data, &thisTx.Prev,
-				&thisTx.Epoc, &thisTx.Subg, &thisTx.Prnt, &thisTx.Mile, &thisTx.Lead,
-			)
 			err = rows.StructScan(&thisTx)
 			if err != nil {
 				log.Panic(err)
