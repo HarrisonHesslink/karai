@@ -2,7 +2,7 @@ package transaction
 
 type Request_Oracle_Data struct {
 	Hash      string `json:"hash"`
-	PubKey    string `json:"pub_key"`
+	PubKey    string `json:"pubkey"`
 	Signature string `json:"signature"`
 	Data      string `json:"data"`
 	Task      string `json:"task"`
@@ -13,7 +13,7 @@ type Request_Oracle_Data struct {
 
 type Request_Consensus struct {
 	Hash      string   `json:"hash"`
-	PubKey    string   `json:"pub_key"`
+	PubKey    string   `json:"pubkey"`
 	Signature string   `json:"signature"`
 	Data      []string `json:"data"`
 	Task      string   `json:"task"`
