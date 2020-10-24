@@ -1,6 +1,5 @@
 package network
 import (
-	"os"
 	"github.com/karai/go-karai/database"
 	config "github.com/karai/go-karai/configuration"
 	"github.com/harrisonhesslink/flatend"
@@ -33,6 +32,7 @@ type GOB_TX struct {
 
 type GOB_BATCH_TX struct {
 	Batch [][]byte
+	TotalSent int
 }
 
 type GetTxes struct {
@@ -71,7 +71,9 @@ type Server struct {
 	ExternalPort int
 	Sockets []*websocket.Conn
 
-	signalChannel chan os.Signal
+
+	sync bool
+	tx_need int
 }
 
 type Protocol struct {
@@ -91,4 +93,9 @@ type PeerList struct {
 
 type ArrayTX struct {
 	Txes []transaction.Transaction`json:txes`
+}
+
+type ErrorJson struct {
+	Message string`json:message`
+	Error bool `json:is_error`
 }

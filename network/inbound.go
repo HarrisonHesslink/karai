@@ -11,57 +11,12 @@ import (
 	"github.com/karai/go-karai/transaction"
 	"github.com/karai/go-karai/util"
 	// "time"
-	"encoding/json"
+	//"encoding/json"
 )
 
-func (s *Server) HandleAddr(request []byte) {
-	command := BytesToCmd(request[:commandLength])
-	var buff bytes.Buffer
-	var payload Addr
-
-	buff.Write(request[commandLength:])
-	dec := gob.NewDecoder(&buff)
-	err := dec.Decode(&payload)
-	if err != nil {
-		log.Panic(err)
-
-	}
-
-	for _, n := range payload.AddrList {
-		if !stringInSlice(n, KnownNodes) {
-			KnownNodes = append(KnownNodes, n)
-
-		}
-	}
-	fmt.Println("[RECV]" + " [" + command + "] Known Nodes On Network: " + strconv.Itoa(len(KnownNodes)))
-}
-
-func (s Server) HandleInv(request []byte) {
-	command := BytesToCmd(request[:commandLength])
-	var buff bytes.Buffer
-	var payload Inv
-
-	buff.Write(request[commandLength:])
-	dec := gob.NewDecoder(&buff)
-	err := dec.Decode(&payload)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	if payload.Type == "tx" {
-		txesInTransit = payload.Items
-
-		for _, byte_data := range payload.Items {
-			have_tx := s.Prtl.Dat.HaveTx(string(byte_data))
-			if !have_tx && len(byte_data) > 0 {
-				//s.SendGetData(payload.AddrFrom, "tx", byte_data)
-			}
-		}
-
-		log.Println(util.Rcv + " [" + command + "] [" + payload.Type + "] Inventory call: " + payload.AddrFrom + " Inventory Items: " + strconv.Itoa(len(payload.Items)))
-	}
-}
-
+/*
+This function handles request for transactions. It takes a top consensus tx hash. 100 txes per batch
+*/
 func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	command := BytesToCmd(request[:commandLength])
 
@@ -158,15 +113,18 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 			log.Panic(err)
 		}
 		var txes [][]byte
-		for _, tx := range transactions {
+		for i, tx := range transactions {
+			
 			txes = append(txes, tx.Serialize())
+			if (i % 100) == 0 {
+				data := GOB_BATCH_TX{txes, len(transactions)}
+				payload := GobEncode(data)
+				request := append(CmdToBytes("batchtx"), payload...)
+		
+				go s.SendData(ctx, request)
+				txes =  nil
+			}
 		}
-
-		data := GOB_BATCH_TX{txes}
-		payload := GobEncode(data)
-		request := append(CmdToBytes("batchtx"), payload...)
-
-		go s.SendData(ctx, request)
 	}
 }
 
@@ -193,39 +151,36 @@ func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {
 }
 
 func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
-	command := BytesToCmd(request[:commandLength])
+	if s.sync == false {
+		command := BytesToCmd(request[:commandLength])
 
-	var buff bytes.Buffer
-	var payload GOB_BATCH_TX
+		var buff bytes.Buffer
+		var payload GOB_BATCH_TX
 
-	buff.Write(request[commandLength:])
-	dec := gob.NewDecoder(&buff)
-	err := dec.Decode(&payload)
-	if err != nil {
-		log.Panic(err)
-	}
+		buff.Write(request[commandLength:])
+		dec := gob.NewDecoder(&buff)
+		err := dec.Decode(&payload)
+		if err != nil {
+			log.Panic(err)
+		}
 
-	for _, tx_ := range payload.Batch {
+		for _, tx_ := range payload.Batch {
 
-		tx := transaction.DeserializeTransaction(tx_)
-
-		log.Println(util.Rcv + " [" + command + "] Received " + strconv.Itoa(len(payload.Batch)) + " Transactions")
-
-		if s.Prtl.Dat.HaveTx(tx.Prev) {
-			if !s.Prtl.Dat.HaveTx(tx.Hash) {
-				s.Prtl.Dat.CommitDBTx(tx)
-				json_tx, _ := json.Marshal(tx)
-				for _, conn := range s.Sockets {
-					if err := conn.WriteMessage(1, json_tx); err != nil {
-						log.Println(err)
-						return
-					}
+			tx := transaction.DeserializeTransaction(tx_)
+			if s.Prtl.Dat.HaveTx(tx.Prev) {
+				if !s.Prtl.Dat.HaveTx(tx.Hash) {
+					s.Prtl.Dat.CommitDBTx(tx)
 				}
 			}
 		}
+		percentage_float := float64(payload.TotalSent) / float64(s.tx_need) * 100
+		percentage_string := fmt.Sprintf("%.2f", percentage_float)
+		log.Println(util.Rcv + " [" + command + "] Received Transactions. Sync %:" + percentage_string + "[" + strconv.Itoa(payload.TotalSent) + "/" + strconv.Itoa(s.tx_need) + "]")
+		if payload.TotalSent == s.tx_need {
+			s.tx_need = 0
+			s.sync = false
+		}
 	}
-
-	//s.SendInv("tx", [][]byte{[]byte(tx.Hash)})
 }
 
 func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
@@ -248,19 +203,8 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	if s.Prtl.Dat.HaveTx(tx.Prev) {
 		if !s.Prtl.Dat.HaveTx(tx.Hash) {
 			s.Prtl.Dat.CommitDBTx(tx)
-
-			json_tx, _ := json.Marshal(tx)
-			for _, conn := range s.Sockets {
-				if err := conn.WriteMessage(1, json_tx); err != nil {
-					log.Println(err)
-					return
-				}
-			}
 		}
 	}
-
-	//s.SendInv("tx", [][]byte{[]byte(tx.Hash)})		
-
 }
 
 func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {
@@ -276,7 +220,11 @@ func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {
 	}
 
 	if payload.TxSize > s.Prtl.Dat.GetDAGSize() {
-		go s.SendGetTxes(ctx)
+		//lock in the first node
+		if s.sync == false {
+			go s.SendGetTxes(ctx)
+			s.sync = true
+		}
 	}
 
 	log.Println(util.Rcv + " [" + command + "] Node has Num Tx: " + strconv.Itoa(payload.TxSize))
@@ -286,10 +234,6 @@ func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {
 
 	command := BytesToCmd(req[:commandLength])
 	switch command {
-	case "addr":
-		go s.HandleAddr(req)
-	case "inv":
-		go s.HandleInv(req)
 	case "gettxes":
 		go s.HandleGetTxes(ctx, req)
 	case "getdata":
@@ -303,3 +247,4 @@ func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {
 	}
 
 }
+

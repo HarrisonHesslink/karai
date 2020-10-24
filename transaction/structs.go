@@ -1,8 +1,8 @@
 package transaction
 
-type Request_Data_TX struct {
+type Request_Oracle_Data struct {
 	Hash      string `json:"hash"`
-	PubKey    string `json:"pub_key"`
+	PubKey    string `json:"pubkey"`
 	Signature string `json:"signature"`
 	Data      string `json:"data"`
 	Task      string `json:"task"`
@@ -11,9 +11,9 @@ type Request_Data_TX struct {
 	Epoc      string `json:"epoc"`
 }
 
-type Request_Consensus_TX struct {
+type Request_Consensus struct {
 	Hash      string   `json:"hash"`
-	PubKey    string   `json:"pub_key"`
+	PubKey    string   `json:"pubkey"`
 	Signature string   `json:"signature"`
 	Data      []string `json:"data"`
 	Task      string   `json:"task"`
@@ -33,3 +33,9 @@ type Transaction struct {
 	Mile bool   `json:"mile" db:"tx_mile"`
 	Lead bool   `json:"lead" db:"tx_lead"`
 }
+
+type Request_Contract struct {
+	Asset string`json:asset`
+	Denom string`json:denom`
+}
+

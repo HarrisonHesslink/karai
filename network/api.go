@@ -102,10 +102,6 @@ func (s *Server) RestAPI() {
 		x := 1
 		for rows.Next() {
 			var thisTx transaction.Transaction
-			err = rows.Scan(
-				&thisTx.Time, &thisTx.Type, &thisTx.Hash, &thisTx.Data, &thisTx.Prev,
-				&thisTx.Epoc, &thisTx.Subg, &thisTx.Prnt, &thisTx.Mile, &thisTx.Lead,
-			)
 			err = rows.StructScan(&thisTx)
 			if err != nil {
 				log.Panic(err)
@@ -121,88 +117,89 @@ func (s *Server) RestAPI() {
 	}).Methods("GET")
 
 	api.HandleFunc("/new_tx", func(w http.ResponseWriter, r *http.Request) {
-		var req transaction.Request_Data_TX
-		err := json.NewDecoder(r.Body).Decode(&req)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-		log.Println("We are data boy")
+		if s.sync == false {
 
-		go s.NewDataTxFromCore(req)
+			var req transaction.Request_Oracle_Data
+			err := json.NewDecoder(r.Body).Decode(&req)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			log.Println("We are data boy")
+			log.Println(req)
+
+			if (req.PubKey != "" && req.Signature != "" && req.Hash != "" && req.Task != "" && req.Data != "" && req.Height != "" && req.Source != "" && req.Epoc != "") {
+				go s.NewDataTxFromCore(req)
+			}
+		}
+		r.Body.Close()
 	}).Methods("POST")
 
 	api.HandleFunc("/get_contracts", func(w http.ResponseWriter, r *http.Request) {
+		if s.sync == false {
 
-		db, connectErr := s.Prtl.Dat.Connect()
-		defer db.Close()
-		util.Handle("Error creating a DB connection: ", connectErr)
+			db, connectErr := s.Prtl.Dat.Connect()
+			defer db.Close()
+			util.Handle("Error creating a DB connection: ", connectErr)
 
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		// reportRequest("transactions/"+hash, w, r)
-		transactions := []transaction.Transaction{}
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			// reportRequest("transactions/"+hash, w, r)
+			transactions := []transaction.Transaction{}
 
-		rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='3' ORDER BY tx_time DESC")
-		if err != nil {
-			panic(err)
-		}
-		defer rows.Close()
-		for rows.Next() {
-			var thisTx transaction.Transaction
-			err = rows.StructScan(&thisTx)
+			rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='3' ORDER BY tx_time DESC")
 			if err != nil {
-				// handle this error
+				panic(err)
+			}
+			defer rows.Close()
+			for rows.Next() {
+				var thisTx transaction.Transaction
+				err = rows.StructScan(&thisTx)
+				if err != nil {
+					// handle this error
+					log.Panic(err)
+				}
+				transactions = append(transactions, thisTx)
+			}
+			// get any error encountered during iteration
+			err = rows.Err()
+			if err != nil {
 				log.Panic(err)
 			}
-			transactions = append(transactions, thisTx)
-		}
-		// get any error encountered during iteration
-		err = rows.Err()
-		if err != nil {
-			log.Panic(err)
+
+			json, _ := json.Marshal(ArrayTX{transactions})
+			w.Write(json)
+		} else {
+			errorMSG := ErrorJson{"Not Done Syncing", false}
+			errorJson, _ := json.Marshal(errorMSG)
+
+			w.Write(errorJson)
 		}
 
-		json, _ := json.Marshal(ArrayTX{transactions})
-
-		w.Write(json)
 	}).Methods("GET")
 
 	api.HandleFunc("/new_consensus_tx", func(w http.ResponseWriter, r *http.Request) {
-		var req transaction.Request_Consensus_TX
-		// Try to decode the request body into the struct. If there is an error,
-		// respond to the client with the error message and a 400 status code.
-		err := json.NewDecoder(r.Body).Decode(&req)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
+		if s.sync == false {
+			var req transaction.Request_Consensus
+			// Try to decode the request body into the struct. If there is an error,
+			// respond to the client with the error message and a 400 status code.
+			err := json.NewDecoder(r.Body).Decode(&req)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			log.Println("We are consensus man")
+
+			if (req.PubKey != "" && req.Signature != "" && req.Hash != "" && req.Task != "" && len(req.Data) > 0 && req.Height != "") {
+				go s.NewConsensusTXFromCore(req)
+			}
 		}
-
-		log.Println("We are consensus man")
-
-		go s.NewConsensusTXFromCore(req)
+		r.Body.Close()
 	}).Methods("POST")
 
 	// Serve via HTTP
 	log.Println("TX API listening on [::]:4203")
 	http.ListenAndServe(":4203", handlers.CORS(headersCORS, originsCORS, methodsCORS)(api))
-}
-
-func (s *Server) reader(conn *websocket.Conn) {
-	for {
-		// read in a message
-		messageType, p, err := conn.ReadMessage()
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		// print out that message for clarity
-		log.Println(string(p))
-
-		if err := conn.WriteMessage(messageType, p); err != nil {
-			log.Println(err)
-			return
-		}
-
-	}
 }
