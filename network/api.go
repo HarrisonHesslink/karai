@@ -77,9 +77,8 @@ func (s *Server) RestAPI() {
 		if err != nil {
 			txQuery = qry
 			if txQuery == "all" || txQuery == "nondatatxs" {
-				if txQuery == "all" {
-					numOfTxs = 1000000000
-				}
+				numOfTxs = 1000000000
+				
 			}
 		}
 		w.Header().Set("Content-Type", "application/json")
