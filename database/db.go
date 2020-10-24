@@ -137,21 +137,6 @@ func (d Database) GetDAGSize() int {
 	}
 	return x
 }
-func (d *Database) GetDAGSize() int {
-    db, connectErr := d.Connect()
-    defer db.Close()
-    util.Handle("Error creating a DB connection: ", connectErr)
-    rows, err := db.Queryx("SELECT * FROM " +  d.Cf.GetTableName())
-    if err != nil {
-        log.Println(err.Error())
-    }
-    defer rows.Close()
-    x := 0
-    for rows.Next() {
-        x++
-    }
-    return x
-}
 
 func (d *Database) ReturnTopHash() (string, int) {
 	var txHash string

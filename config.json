@@ -24,12 +24,9 @@
     "db_password": "postgres",
     "db_name":"postgres",
     "db_port": "5433",
-    "db_password": "test",
-    "db_name":"postgres",
-    "db_port": "5432",
     "db_SSL":"disable",
     "karai_api_port":0,
     "table_name":"transactions",
     "listen_port":0,
     "wants_clean":false
- }
+}
