@@ -50,38 +50,28 @@ func Protocol_Init(c *config.Config, s *Server) {
 		SecretKey:  flatend.GenerateSecretKey(),
 		Services: map[string]flatend.Handler{
 			"karai-xeq": func(ctx *flatend.Context) {
-
 				req, err := ioutil.ReadAll(ctx.Body)
 				if err != nil {
 					log.Panic(err)
 				}
-
-
-			
 				go s.HandleConnection(req, ctx)
 			},
 		},
 	}
+
 	defer s.node.Shutdown()
 
 	err = s.node.Start(s.ExternalIP)
 
-	go s.node.Probe("167.172.156.118:4201")
+	if s.ExternalIP != "167.172.156.118:4201" {
+		go s.node.Probe("167.172.156.118:4201")
+	}
 
 	if err != nil {
 		log.Println("Unable to connect")
 	}
 
 	go s.LookForNodes()
-
-	log.Println("Active Peer Count with streams: " + strconv.Itoa(s.pl.Count))
-
-	// for _, provider := range providers {
-	// 	_, err := provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
-	// 	if err != nil {
-	// 		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
-	// 	}
-	// }
 
 	select {}
 }
@@ -106,31 +96,27 @@ func (s *Server) GetProviderFromID(id  *kademlia.ID) *flatend.Provider {
 
 func (s *Server) LookForNodes() {
 	for {
-		new_ids := s.node.Bootstrap()
+		if s.pl.Count < 9 {
+			new_ids := s.node.Bootstrap()
 
-		//probe new nodes
+			//probe new nodes
 
-		for _, peer := range new_ids {
-			log.Println(peer.Host.String() + ":" + strconv.Itoa(int(peer.Port)))
-			s.node.Probe(peer.Host.String() + ":" + strconv.Itoa(int(peer.Port)))
-		}
+			for _, peer := range new_ids {
+				s.node.Probe(peer.Host.String() + ":" + strconv.Itoa(int(peer.Port)))
+			}
 
-		providers := s.node.ProvidersFor("karai-xeq")
-		//log.Println(strconv.Itoa(len(providers)))
-		for _, provider := range providers {
-	
-				s.SendVersion(provider)
-				if s.pl.Count < 9 {
-					s.pl.Peers = append(s.pl.Peers, Peer{provider.GetID(), provider})
-					s.pl.Count++
-				}	
+			providers := s.node.ProvidersFor("karai-xeq")
+			//log.Println(strconv.Itoa(len(providers)))
+			for _, provider := range providers {
+					go s.SendVersion(provider)
+			}
 		}
 
 		time.Sleep(1 * time.Minute)
 	}
 }
 
-func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
+func (s *Server) NewDataTxFromCore(req transaction.Request_Oracle_Data) {
 	req_string, _ := json.Marshal(req)
 
 	var txPrev string
@@ -143,19 +129,13 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Data_TX) {
 	
 	new_tx := transaction.CreateTransaction("2", txPrev, req_string, []string{}, []string{})
 
-	s.Prtl.Dat.CommitDBTx(new_tx)
-	json_tx, _ := json.Marshal(new_tx)
-
-	for _, conn := range s.Sockets {
-		if err := conn.WriteMessage(1, json_tx); err != nil {
-			log.Println(err)
-			return
-		}
+	if !s.Prtl.Dat.HaveTx(new_tx.Hash) {
+		go s.Prtl.Dat.CommitDBTx(new_tx)
+		go s.BroadCastTX(new_tx)
 	}
-	s.BroadCastTX(new_tx)
 }
 
-func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {
+func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus) {
 	req_string, _ := json.Marshal(req)
 
 	var txPrev string
@@ -167,26 +147,15 @@ func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus_TX) {
 	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
 	new_tx := transaction.CreateTransaction("1", txPrev, req_string, []string{}, []string{})
-		
-	s.Prtl.Dat.CommitDBTx(new_tx)
-	json_string, _ := json.Marshal(new_tx)
-	for _, conn := range s.Sockets {
-		if err := conn.WriteMessage(1, json_string); err != nil {
-			log.Println(err)
-			return
-		}
+	if !s.Prtl.Dat.HaveTx(new_tx.Hash) {
+		go s.Prtl.Dat.CommitDBTx(new_tx)
+		go s.BroadCastTX(new_tx)
 	}
-	s.BroadCastTX(new_tx)
-}
-
-type Contract struct {
-	Asset string`json:asset`
-	Denom string`json:denom`
 }
 
 func (s *Server) CreateContract(asset string, denom string) {
 	var txPrev string
-	contract := Contract{asset, denom}
+	contract := transaction.Request_Contract{asset, denom}
 	json_contract,_ := json.Marshal(contract)
 
 	db, connectErr := s.Prtl.Dat.Connect()
@@ -196,22 +165,79 @@ func (s *Server) CreateContract(asset string, denom string) {
 	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
 	tx := transaction.CreateTransaction("3", txPrev, []byte(json_contract), []string{}, []string{})
-	log.Println("Created Contract " + tx.Hash[:8]+ ": " + asset + "/" + denom)
 
 	if !s.Prtl.Dat.HaveTx(tx.Hash) {
-		s.Prtl.Dat.CommitDBTx(tx)
+		go s.Prtl.Dat.CommitDBTx(tx) 
+		go s.BroadCastTX(tx)
+	}
+	log.Println("Created Contract " + tx.Hash[:8]+ ": " + asset + "/" + denom)
+}
 
-		json_tx,_ := json.Marshal(tx)
+/*
 
-		for _, conn := range s.Sockets {
-			if err := conn.WriteMessage(1, json_tx); err != nil {
-				log.Println(err)
-				return
-			}
-		}
-	
-		s.BroadCastTX(tx)
+CheckNode checks if a node should be able to put data on the contract takes a Transaction
+
+*/
+func (s *Server) CheckNode(tx transaction.Transaction) bool {
+
+	checks_out := false
+	var hash string
+	var tx_data string
+
+	db, connectErr := s.Prtl.Dat.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
+
+	_ = db.QueryRow("SELECT tx_hash, tx_data FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' && tx_epoc=$1 ORDER BY tx_time DESC", tx.Epoc).Scan(&hash, &tx_data)
+
+	if hash != "" {
+		checks_out = true
 	}
 
+	var last_consensus transaction.Request_Consensus
+	err := json.Unmarshal([]byte(tx_data), &last_consensus)
+	if err != nil {
+		//unable to parse last consensus ? this should never happen
+		log.Println("Failed to Parse Last Consensus TX on Cehck")
+		return false
+	}
+
+	//get interface for checks [Request_Consensus, Request_Oracle_Data, Request_Contract]
+
+	result := tx.ParseInterface()
+	if result == nil {
+		return false
+	}
+
+	switch v := result.(type) {
+	case transaction.Request_Consensus:
+		isFound := false
+		for _, key := range last_consensus.Data {
+			if key == v.PubKey {
+				isFound = true
+				break
+			}
+		}
+
+		if !isFound {
+			return false
+		}
+
+		
+
+
+		// here v has type T
+		break;
+	case transaction.Request_Oracle_Data:
+		// here v has type S
+		break;
+	case transaction.Request_Contract:
+		break;
+	default:
+		return false;
+	}
+
+	return checks_out
 }
+
 
