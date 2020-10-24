@@ -22,14 +22,14 @@ type Request_Consensus_TX struct {
 
 // Transaction This is the structure of the transaction
 type Transaction struct {
-	Time string `json:"time" database:"tx_time"`
-	Type string `json:"type" database:"tx_type"`
-	Hash string `json:"hash" database:"tx_hash"`
-	Data string `json:"data" database:"tx_data"`
-	Prev string `json:"prev" database:"tx_prev"`
-	Epoc string `json:"epoc" database:"tx_epoc"`
-	Subg string `json:"subg" database:"tx_subg"`
-	Prnt string `json:"prnt" database:"tx_prnt"`
-	Mile bool   `json:"mile" database:"tx_mile"`
-	Lead bool   `json:"lead" database:"tx_lead"`
+	Time string `json:"time" db:"tx_time"`
+	Type string `json:"type" db:"tx_type"`
+	Hash string `json:"hash" db:"tx_hash"`
+	Data string `json:"data" db:"tx_data"`
+	Prev string `json:"prev" db:"tx_prev"`
+	Epoc string `json:"epoc" db:"tx_epoc"`
+	Subg string `json:"subg" db:"tx_subg"`
+	Prnt string `json:"prnt" db:"tx_prnt"`
+	Mile bool   `json:"mile" db:"tx_mile"`
+	Lead bool   `json:"lead" db:"tx_lead"`
 }

@@ -20,7 +20,7 @@ import (
 )
 
 func Protocol_Init(c *config.Config, s *Server) {
-	var d db.Database
+	var d database.Database
 	var p Protocol
 	var peer_list PeerList
 

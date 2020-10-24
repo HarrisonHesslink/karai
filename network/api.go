@@ -94,7 +94,7 @@ func (s *Server) RestAPI() {
 
 	api.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		response, err := json.Marshal(map[string]bool{"status":true})
+		response, err := json.Marshal(map[string]bool{"status": true})
 		if err != nil {
 			log.Println(err.Error())
 		}
@@ -115,7 +115,7 @@ func (s *Server) RestAPI() {
 		numOfTxs, err := strconv.Atoi(qry)
 		if err != nil {
 			txQuery = qry
-			if txQuery == "all" {
+			if txQuery == "all" || txQuery == "nondatatxs" {
 				numOfTxs = 1000000000
 			}
 		}
@@ -130,6 +130,9 @@ func (s *Server) RestAPI() {
 		var queryExtension string
 		if txQuery != "" && txQuery != "all" {
 			queryExtension = fmt.Sprintf(` WHERE tx_hash = '%s'`, txQuery)
+		}
+		if txQuery == "nondatatxs" {
+			queryExtension = " WHERE tx_type = '1' OR tx_type = '3'"
 		}
 
 		var transactions []transaction.Transaction

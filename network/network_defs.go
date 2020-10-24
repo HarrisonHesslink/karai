@@ -75,7 +75,7 @@ type Server struct {
 }
 
 type Protocol struct {
-	Dat *db.Database
+	Dat *database.Database
 }
 
 type Peer struct {

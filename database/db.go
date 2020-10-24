@@ -1,4 +1,4 @@
-package db
+package database
 
 import (
 	"crypto/sha512"
@@ -126,9 +126,16 @@ func (d Database) GetDAGSize() int {
 	db, connectErr := d.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
-	graph := []transaction.Transaction{}
-	_ = db.Select(&graph, "SELECT * FROM " + d.Cf.GetTableName())
-	return len(graph)
+	rows, err := db.Queryx("SELECT * FROM " +  d.Cf.GetTableName())
+	if err != nil {
+		log.Println(err.Error())
+	}
+	defer rows.Close()
+	x := 0
+	for rows.Next() {
+		x++
+	}
+	return x
 }
 
 func (d *Database) ReturnTopHash() (string, int) {
