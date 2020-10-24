@@ -3,6 +3,9 @@ import (
 	"flag"
 	config "github.com/karai/go-karai/configuration"
 )
+
+//parseFlags This evaluates the flags used when the program was run
+//and assigns the values of those flags according to sane defaults.
 func flags(c *config.Config) {
 	// // flag.StringVar(&c.matrixToken, "matrixToken", "", "Matrix homeserver token")
 	// // flag.StringVar(&c.matrixURL, "matrixURL", "", "Matrix homeserver URL")
