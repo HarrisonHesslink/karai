@@ -29,7 +29,7 @@ type Graph struct {
 }
 
 // connect will create an active DB connection
-func (d Database) Connect() (*sqlx.DB, error) {
+func (d *Database) Connect() (*sqlx.DB, error) {
 	connectParams := fmt.Sprintf("user=%s host=localhost port=%s dbname=%s sslmode=%s password=%s", d.Cf.GetDBUser(), d.Cf.DbPort, d.Cf.GetDBName(), d.Cf.GetDBSSL(), d.Cf.DbPassword)
 	db, err := sqlx.Connect("postgres", connectParams)
 	util.Handle("Error creating a DB connection: ", err)
@@ -122,20 +122,20 @@ func (d Database) GetPrevHash() transaction.Transaction {
 	return transaction.Transaction{txTime, txType, txHash, txData, txPrev, txEpoc, txSubg, txPrnt, txMile, txLead}
 }
 
-func (d Database) GetDAGSize() int {
-	db, connectErr := d.Connect()
-	defer db.Close()
-	util.Handle("Error creating a DB connection: ", connectErr)
-	rows, err := db.Queryx("SELECT * FROM " + d.Cf.GetTableName())
-	if err != nil {
-		log.Println(err.Error())
-	}
-	defer rows.Close()
-	x := 0
-	for rows.Next() {
-		x++
-	}
-	return x
+func (d *Database) GetDAGSize() int {
+    db, connectErr := d.Connect()
+    defer db.Close()
+    util.Handle("Error creating a DB connection: ", connectErr)
+    rows, err := db.Queryx("SELECT * FROM " +  d.Cf.GetTableName())
+    if err != nil {
+        log.Println(err.Error())
+    }
+    defer rows.Close()
+    x := 0
+    for rows.Next() {
+        x++
+    }
+    return x
 }
 
 func (d *Database) ReturnTopHash() (string, int) {
