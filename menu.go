@@ -3,13 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"os"
-	"strings"
 	"github.com/karai/go-karai/network"
-
-//"time"
 	"log"
+	"os"
 	"strconv"
+	"strings"
 )
 
 // inputHandler This is a basic input loop that listens for
