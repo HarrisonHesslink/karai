@@ -1,16 +1,16 @@
 package network
 
 import (
-	"fmt"
-	"net/http"
-	"strconv"
-
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/karai/go-karai/transaction"
 	"github.com/karai/go-karai/util"
+	"net/http"
+	"strconv"
+	"strings"
 	//"strconv"
 	"log"
 )
@@ -70,21 +70,33 @@ func (s *Server) RestAPI() {
 	// 	returnStatsWeb(w, r, keyCollection)
 	// }).Methods(http.MethodGet)
 
-	api.HandleFunc("/transactions/{txs}", func(w http.ResponseWriter, r *http.Request) {
-		txQuery := ""
+	api.HandleFunc("/transactions/{type}/{txs}", func(w http.ResponseWriter, r *http.Request) {
+		var txQuery string
 		qry := mux.Vars(r)["txs"]
 		numOfTxs, err := strconv.Atoi(qry)
 		if err != nil {
 			txQuery = qry
-			if txQuery == "all" || txQuery == "nondatatxs" {
-				numOfTxs = 1000000000
-			}
+			numOfTxs = 1000000000
 		}
+
+		_type := mux.Vars(r)["type"]
+		if _type != "asc" && _type != "desc" && _type != "contract" {
+			res, _ := json.Marshal(map[string]bool{"status": false})
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write(res)
+			return
+		}
+
+		order := " ORDER BY tx_time " + strings.ToUpper(_type)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
+
 		db, err := s.Prtl.Dat.Connect()
 		if err != nil {
+			res, _ := json.Marshal(map[string]bool{"status": false})
 			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write(res)
+			return
 		}
 		defer db.Close()
 
@@ -95,9 +107,13 @@ func (s *Server) RestAPI() {
 		if txQuery == "nondatatxs" {
 			queryExtension = " WHERE tx_type = '1' OR tx_type = '3'"
 		}
+		if _type == "contract" {
+			queryExtension = fmt.Sprintf(" WHERE tx_subg = '%s'", qry)
+			order = ""
+		}
 
 		var transactions []transaction.Transaction
-		rows, _ := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + queryExtension)
+		rows, _ := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + queryExtension + order)
 		defer rows.Close()
 		x := 1
 		for rows.Next() {
