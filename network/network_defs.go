@@ -37,6 +37,10 @@ type GOB_BATCH_TX struct {
 
 type GetTxes struct {
 	Top_hash string
+	FillData bool
+
+	//contract has keytype and top data hash as value
+	Contracts map[string]string
 }
 
 type GetData struct {
