@@ -124,7 +124,7 @@ func (s *Server) SendInv( kind string, items [][]byte) {
 	}
 }
 
-func (s *Server)SendGetTxes(ctx *flatend.Context, fill bool) {
+func (s *Server)SendGetTxes(ctx *flatend.Context, fill bool, contracts map[string]string) {
 	
 	var txPrev string
 
@@ -133,7 +133,6 @@ func (s *Server)SendGetTxes(ctx *flatend.Context, fill bool) {
 	util.Handle("Error creating a DB connection: ", connectErr)
 
 	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
-	var contracts map[string]string
 	payload := GobEncode(GetTxes{txPrev, fill, contracts})
 	request := append(CmdToBytes("gettxes"), payload...)
 

@@ -205,17 +205,31 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 			log.Panic(err)
 		}
 
+		db, connectErr := s.Prtl.Dat.Connect()
+		defer db.Close()
+		util.Handle("Error creating a DB connection: ", connectErr)
+
+		var txPrev string
+		_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+
+		var need_fill bool
 		for _, tx_ := range payload.Batch {
 
 			tx := transaction.DeserializeTransaction(tx_)
 
-			log.Println(tx.Hash)
+			if tx.Hash == txPrev {
+				need_fill = true
+			}
 
 			if s.Prtl.Dat.HaveTx(tx.Prev) {
 				if !s.Prtl.Dat.HaveTx(tx.Hash) {
 					s.Prtl.Dat.CommitDBTx(tx)
 				}
 			}
+		}
+
+		if need_fill {
+			go s.SendGetTxes(ctx, true, s.GetContractMap())
 		}
 
 		percentage_float := float64(payload.TotalSent) / float64(s.tx_need) * 100
@@ -300,7 +314,7 @@ func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {
 	if payload.TxSize > s.Prtl.Dat.GetDAGSize() {
 		//lock in the first node
 		if s.sync == false {
-			go s.SendGetTxes(ctx, false)
+			go s.SendGetTxes(ctx, false, map[string]string{})
 			s.sync = true
 			s.tx_need = payload.TxSize - s.Prtl.Dat.GetDAGSize()
 		}
