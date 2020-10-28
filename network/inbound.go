@@ -44,7 +44,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 			db, connectErr := s.Prtl.Dat.Connect()
 			defer db.Close()
 			util.Handle("Error creating a DB connection: ", connectErr)
-
+			log.Println(strconv.Itoa(len(payload.Contracts)))
 			for key, value := range payload.Contracts {
 					//loop through to find oracle data
 					row3, err := db.Queryx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_type='2' AND tx_epoc=$1 ORDER BY tx_time DESC", key)
@@ -59,8 +59,8 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 							// handle this error
 							log.Panic(err)
 						}
-						log.Println(t2_tx.Hash + " " + t2_tx.Type)
-
+						//log.Println(value)
+						log.Println(value)
 						if value == t2_tx.Hash {
 							row3.Close()
 							break
@@ -265,7 +265,7 @@ func (s *Server) GetContractMap() map[string]string {
 			log.Panic(err)
 		}
 		var data_prev string
-		_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&data_prev)
+		_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='2' AND tx_epoc=$1 ORDER BY tx_time DESC", this_tx).Scan(&data_prev)
 		Contracts[this_tx.Hash] = data_prev
 	}
 	err = row3.Err()
