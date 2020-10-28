@@ -249,6 +249,8 @@ func (s *Server) GetContractMap() map[string]string {
 	util.Handle("Error creating a DB connection: ", connectErr)
 
 	var Contracts map[string]string
+	Contracts = make(map[string]string)
+
 	//loop through to find oracle data
 	row3, err := db.Queryx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_type='3' ORDER BY tx_time DESC")
 	if err != nil {
@@ -313,8 +315,9 @@ func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {
 
 	if payload.TxSize > s.Prtl.Dat.GetDAGSize() {
 		//lock in the first node
+		var contracts map[string]string
 		if s.sync == false {
-			go s.SendGetTxes(ctx, false, map[string]string{})
+			go s.SendGetTxes(ctx, false, contracts )
 			s.sync = true
 			s.tx_need = payload.TxSize - s.Prtl.Dat.GetDAGSize()
 		}
