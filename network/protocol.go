@@ -112,7 +112,7 @@ func (s *Server) LookForNodes() {
 			}
 		}
 
-		time.Sleep(1 * time.Minute)
+		time.Sleep(30 * time.Second)
 	}
 }
 
