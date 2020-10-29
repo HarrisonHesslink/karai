@@ -37,3 +37,4 @@ builds/
 *.key
 *.iml
 *.xml
+config.json

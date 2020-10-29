@@ -152,6 +152,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 		}
 
 		var txes [][]byte
+
 		for i := len(transactions)-1; i >= 0; i-- {
 			
 			txes = append(txes, transactions[i].Serialize())
@@ -190,6 +191,7 @@ func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {
 }
 
 func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
+
 	if s.sync == true {
 		command := BytesToCmd(request[:commandLength])
 
@@ -229,7 +231,6 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 		if need_fill {
 			go s.SendGetTxes(ctx, true, s.GetContractMap())
 		}
-
 		percentage_float := float64(payload.TotalSent) / float64(s.tx_need) * 100
 		percentage_string := fmt.Sprintf("%.2f", percentage_float)
 		log.Println(util.Rcv + " [" + command + "] Received Transactions. Sync %:" + percentage_string + "[" + strconv.Itoa(payload.TotalSent) + "/" + strconv.Itoa(s.tx_need) + "]")
@@ -313,6 +314,7 @@ func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {
 
 	if payload.TxSize > s.Prtl.Dat.GetDAGSize() {
 		//lock in the first node
+
 		var contracts map[string]string
 		if s.sync == false {
 			go s.SendGetTxes(ctx, false, contracts )
