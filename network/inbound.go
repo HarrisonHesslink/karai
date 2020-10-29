@@ -152,12 +152,10 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 		}
 
 		var txes [][]byte
-		log.Println("Sending txes: " + strconv.Itoa(len(transactions)))
 		for i := len(transactions)-1; i >= 0; i-- {
 			
 			txes = append(txes, transactions[i].Serialize())
 			if (i % 100) == 0 {
-				log.Println("Sending: " + strconv.Itoa(len(txes)))
 				data := GOB_BATCH_TX{txes, len(transactions)}
 				payload := GobEncode(data)
 				request := append(CmdToBytes("batchtx"), payload...)
@@ -322,6 +320,7 @@ func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {
 			s.tx_need = payload.TxSize - s.Prtl.Dat.GetDAGSize()
 		}
 	}
+	s.sync = false
 
 	log.Println(util.Rcv + " [" + command + "] Node has Num Tx: " + strconv.Itoa(payload.TxSize))
 }
