@@ -178,7 +178,8 @@ func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {
 	dec := gob.NewDecoder(&buff)
 	err := dec.Decode(&payload)
 	if err != nil {
-		log.Panic(err)
+		log.Println("Unable to decode")
+		return
 	}
 
 	if payload.Type == "tx" {
@@ -202,7 +203,8 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 		dec := gob.NewDecoder(&buff)
 		err := dec.Decode(&payload)
 		if err != nil {
-			log.Panic(err)
+			log.Println("Unable to decode")
+			return
 		}
 
 		db, connectErr := s.Prtl.Dat.Connect()
@@ -286,7 +288,8 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	dec := gob.NewDecoder(&buff)
 	err := dec.Decode(&payload)
 	if err != nil {
-		log.Panic(err)
+		log.Println("Unable to decode")
+		return
 	}
 	txData := payload.TX
 	tx := transaction.DeserializeTransaction(txData)
@@ -303,28 +306,58 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {
 	command := BytesToCmd(request[:commandLength])
 	var buff bytes.Buffer
-	var payload Version
+	var payload SyncCall
 
 	buff.Write(request[commandLength:])
 	dec := gob.NewDecoder(&buff)
 	err := dec.Decode(&payload)
 	if err != nil {
-		log.Panic(err)
+		log.Println("Unable to decode")
+		return
 	}
 
-	if payload.TxSize > s.Prtl.Dat.GetDAGSize() {
-		//lock in the first node
+	var txPrev string
+	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='2' AND tx_epoc=$1 ORDER BY tx_time DESC", this_tx).Scan(&data_prev)
 
-		var contracts map[string]string
-		if s.sync == false {
-			go s.SendGetTxes(ctx, false, contracts )
-			s.sync = true
-			s.tx_need = payload.TxSize - s.Prtl.Dat.GetDAGSize()
+	if txPrev == ""
+	{
+		return
+	}
+
+	var request_contracts map[string]string
+
+	if payload.TopHash == txPrev {
+		//okay, our v1 txes are all synced, lets check v2/v3
+		var our_contracts map[string]string
+		our_contracts = GetContractMap()
+
+		request_contracts = make(map[string]string)
+
+		for contract_hash, top_hash := range payload.Contracts {
+
+			if our_contract_hash, ok := our_contracts[contract_hash]; !ok {
+				//does not have v3 tx so add it to request payload
+				request_contracts[contract_hash] = top_hash
+				continue;
+			}
+
+			if !containsValue(our_contracts, top_hash) {
+				if !s.Prtl.Dat.HaveTx(top_hash) {
+					//we shouldn't have this tx 
+					request_contracts[contract_hash] = top_hash
+					continue;
+				}
+			}
+
 		}
+	
+		go s.SendGetTxes(ctx, true, request_contracts)
+	} else {
+		//get v1
+		go s.SendGetTxes(ctx, false, request_contracts)
 	}
-	s.sync = false
 
-	log.Println(util.Rcv + " [" + command + "] Node has Num Tx: " + strconv.Itoa(payload.TxSize))
+	log.Println(util.Rcv + " [" + command + "]")
 }
 
 func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {

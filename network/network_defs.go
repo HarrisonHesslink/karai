@@ -55,10 +55,9 @@ type Inv struct {
 	Items    [][]byte
 }
 
-type Version struct {
-	Version    int
-	TxSize int
-	AddrFrom   string
+type SyncCall struct {
+	TopHash string
+	Contracts map[string]string
 }
 
 type NewPeer struct {
@@ -75,13 +74,21 @@ type Server struct {
 	ExternalPort int
 	Sockets []*websocket.Conn
 
-
-	sync bool
-	tx_need int
 }
 
 type Protocol struct {
 	Dat *database.Database
+	Sync	*Syncer
+}
+
+type Syncer struct {
+	//contracts = map[key = contract hash], value = top tx hash of data point
+	Contracts map[string]string
+
+	Last_tx int
+	Synced bool
+	Connected bool
+	Tx_need int
 }
 
 type Peer struct {
