@@ -265,7 +265,7 @@ func (s *Server) GetContractMap() map[string]string {
 			log.Panic(err)
 		}
 		var data_prev string
-		_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " tx_epoc=$1 ORDER BY tx_time DESC", this_tx).Scan(&data_prev)
+		_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_epoc=$1 ORDER BY tx_time DESC", this_tx).Scan(&data_prev)
 		Contracts[this_tx.Hash] = data_prev
 	}
 	err = row3.Err()
