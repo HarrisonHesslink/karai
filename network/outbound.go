@@ -149,9 +149,17 @@ func (s *Server)SendGetTxes(ctx *flatend.Context, fill bool, contracts map[strin
 // }
 
 func (s *Server) SendVersion(p *flatend.Provider) {
-	numTx := s.Prtl.Dat.GetDAGSize()
 
-	payload := GobEncode(Version{version, numTx, s.ExternalIP})
+	db, connectErr := s.Prtl.Dat.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
+
+	var txPrev string
+	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+
+	contracts := s.GetContractMap()
+
+	payload := GobEncode(SyncCall{txPrev, contracts})
 
 	request := append(CmdToBytes("version"), payload...)
 

@@ -64,7 +64,7 @@ func stringInSlice(a string, list []string) bool {
     return false
 }
 
-func containsValue(m map[K]T, v T) bool {
+func containsValue(m map[string]string, v string) bool {
 	for _, x := range m {
 		if x == v {
 			return true

@@ -24,7 +24,10 @@ func Protocol_Init(c *config.Config, s *Server) {
 	var p Protocol
 	var peer_list PeerList
 	var sync Syncer
-	s.sync = &sync
+	sync.Connected = false
+	sync.Synced = false
+
+	p.Sync = &sync
 
 	s.pl = &peer_list
 	d.Cf = c
@@ -38,8 +41,7 @@ func Protocol_Init(c *config.Config, s *Server) {
 
 	go s.RestAPI()
 
-	s.sync.Connected = false
-	s.sync.Synced = false
+
 
   	consensus := externalip.DefaultConsensus(nil, nil)
     // Get your IP,
@@ -55,7 +57,7 @@ func Protocol_Init(c *config.Config, s *Server) {
 		SecretKey:  flatend.GenerateSecretKey(),
 		Services: map[string]flatend.Handler{
 			"karai-xeq": func(ctx *flatend.Context) {
-				if s.sync.Connected == true {
+				if s.Prtl.Sync.Connected == true {
 					req, err := ioutil.ReadAll(ctx.Body)
 					if err != nil {
 						log.Panic(err)
@@ -72,7 +74,7 @@ func Protocol_Init(c *config.Config, s *Server) {
 
 	if s.ExternalIP != "167.172.156.118:4201" {
 		s.node.Probe("167.172.156.118:4201")
-		s.sync.Connected = true
+		s.Prtl.Sync.Connected = true
 	}
 
 	if err != nil {

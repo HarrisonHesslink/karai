@@ -3,7 +3,7 @@ package network
 import (
 	"bytes"
 	"encoding/gob"
-	"fmt"
+	// "fmt"
 	"github.com/harrisonhesslink/flatend"
 	"log"
 	"strconv"
@@ -192,8 +192,6 @@ func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {
 }
 
 func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
-
-	if s.sync == true {
 		command := BytesToCmd(request[:commandLength])
 
 		var buff bytes.Buffer
@@ -214,14 +212,9 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 		var txPrev string
 		_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
-		var need_fill bool
 		for _, tx_ := range payload.Batch {
 
 			tx := transaction.DeserializeTransaction(tx_)
-
-			if tx.Hash == txPrev {
-				need_fill = true
-			}
 
 			if s.Prtl.Dat.HaveTx(tx.Prev) {
 				if !s.Prtl.Dat.HaveTx(tx.Hash) {
@@ -230,17 +223,17 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 			}
 		}
 
-		if need_fill {
-			go s.SendGetTxes(ctx, true, s.GetContractMap())
-		}
-		percentage_float := float64(payload.TotalSent) / float64(s.tx_need) * 100
-		percentage_string := fmt.Sprintf("%.2f", percentage_float)
-		log.Println(util.Rcv + " [" + command + "] Received Transactions. Sync %:" + percentage_string + "[" + strconv.Itoa(payload.TotalSent) + "/" + strconv.Itoa(s.tx_need) + "]")
-		if payload.TotalSent == s.tx_need {
-			s.tx_need = 0
-			s.sync = false
-		}
-	}
+		// if need_fill {
+		// 	go s.SendGetTxes(ctx, true, s.GetContractMap())
+		// }
+
+		// percentage_float := float64(payload.TotalSent) / float64(s.tx_need) * 100
+		// percentage_string := fmt.Sprintf("%.2f", percentage_float)
+		log.Println(util.Rcv + " [" + command + "] Received Transactions)")//. Sync %:" + percentage_string + "[" + strconv.Itoa(payload.TotalSent) + "/" + strconv.Itoa(s.tx_need) + "]")
+		// if payload.TotalSent == s.tx_need {
+		// 	s.tx_need = 0
+		// 	s.sync = false
+		// }
 }
 
 func (s *Server) GetContractMap() map[string]string {
@@ -316,11 +309,14 @@ func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {
 		return
 	}
 
-	var txPrev string
-	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='2' AND tx_epoc=$1 ORDER BY tx_time DESC", this_tx).Scan(&data_prev)
+	db, connectErr := s.Prtl.Dat.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
 
-	if txPrev == ""
-	{
+	var txPrev string
+	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+
+	if txPrev == "" {
 		return
 	}
 
@@ -329,13 +325,13 @@ func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {
 	if payload.TopHash == txPrev {
 		//okay, our v1 txes are all synced, lets check v2/v3
 		var our_contracts map[string]string
-		our_contracts = GetContractMap()
+		our_contracts = s.GetContractMap()
 
 		request_contracts = make(map[string]string)
 
 		for contract_hash, top_hash := range payload.Contracts {
 
-			if our_contract_hash, ok := our_contracts[contract_hash]; !ok {
+			if _, ok := our_contracts[contract_hash]; !ok {
 				//does not have v3 tx so add it to request payload
 				request_contracts[contract_hash] = top_hash
 				continue;
