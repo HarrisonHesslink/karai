@@ -30,6 +30,12 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 		log.Println("ERROR HandleGetTxs: Failed to decode payload", err)
 		return
 	}
+
+	for key, value := range payload.Contracts {
+		log.Println ("Contract: " + key + " Top Hash: " + value)
+	}
+
+
 	log.Println(util.Rcv + " [" + command + "] Get Tx from: " + payload.Top_hash)
 	last_hash := payload.Top_hash
 	transactions := []transaction.Transaction{}
@@ -259,7 +265,7 @@ func (s *Server) GetContractMap() map[string]string {
 			log.Panic(err)
 		}
 		var data_prev string
-		_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='2' AND tx_epoc=$1 ORDER BY tx_time DESC", this_tx).Scan(&data_prev)
+		_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " tx_epoc=$1 ORDER BY tx_time DESC", this_tx).Scan(&data_prev)
 		Contracts[this_tx.Hash] = data_prev
 	}
 	err = row3.Err()
@@ -347,6 +353,10 @@ func (s *Server) HandleVersion(ctx *flatend.Context, request []byte) {
 
 		}
 	
+		for key, value := range request_contracts {
+			log.Println ("Contract: " + key + " Top Hash: " + value)
+		}
+
 		go s.SendGetTxes(ctx, true, request_contracts)
 	} else {
 		//get v1
