@@ -163,23 +163,26 @@ func filterOracleDataMap(contract_map map[string][]transaction.Request_Oracle_Da
 func calcMedian(floats []float32) float32 {
 
 	float32Values := floats
-	float32AsFloat64Values := make([]float64, len(floats))
+	if len(float32Values) > 0 {
+		float32AsFloat64Values := make([]float64, len(floats))
 
-	for i, val := range float32Values {
-		float32AsFloat64Values[i] = float64(val)
+		for i, val := range float32Values {
+			float32AsFloat64Values[i] = float64(val)
+		}
+
+		sort.Float64s(float32AsFloat64Values)
+		
+		for i, val := range float32AsFloat64Values {
+			float32Values[i] = float32(val)
+		}
+		
+		mnum := len(float32Values) / 2
+
+		if len(float32Values) % 2 == 0 {
+			return float32Values[mnum]
+		}
+
+		return (float32Values[mnum-1] + float32Values[mnum]) / 2
 	}
-
-	sort.Float64s(float32AsFloat64Values)
-	
-	for i, val := range float32AsFloat64Values {
-		float32Values[i] = float32(val)
-	}
-	
-	mnum := len(float32Values) / 2
-
-	if len(float32Values) % 2 == 0 {
-		return float32Values[mnum]
-	}
-
-	return (float32Values[mnum-1] + float32Values[mnum]) / 2
+	return 0
 }
