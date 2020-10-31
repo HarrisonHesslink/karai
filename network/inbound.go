@@ -58,7 +58,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 
 					if value == t2_tx.Hash {
 						row3.Close()
-						continue
+						break
 					}
 
 					transactions = append(transactions, t2_tx)
