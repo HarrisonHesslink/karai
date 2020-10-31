@@ -161,13 +161,10 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 		defer db.Close()
 		util.Handle("Error creating a DB connection: ", connectErr)
 
-		var txPrev string
-		_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
-
 		for _, tx_ := range payload.Batch {
 
 			tx := transaction.DeserializeTransaction(tx_)
-
+			log.Println(tx.Hash)
 			if s.Prtl.Dat.HaveTx(tx.Prev) {
 				if !s.Prtl.Dat.HaveTx(tx.Hash) {
 					s.Prtl.Dat.CommitDBTx(tx)
