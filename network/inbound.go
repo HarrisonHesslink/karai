@@ -164,8 +164,8 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 		for _, tx_ := range payload.Batch {
 
 			tx := transaction.DeserializeTransaction(tx_)
-			log.Println(tx.Hash)
-			log.Println(tx.Prev)
+			log.Println("Hash: " + tx.Hash)
+			log.Println("Prev: " + tx.Prev)
 
 			if s.Prtl.Dat.HaveTx(tx.Prev) {
 				if !s.Prtl.Dat.HaveTx(tx.Hash) {
