@@ -254,7 +254,7 @@ func (s *Server) HandleSyncCall(ctx *flatend.Context, request []byte) {
 			if !containsValue(our_contracts, top_hash) {
 				if !s.Prtl.Dat.HaveTx(top_hash) {
 					//we shouldn't have this tx 
-					request_contracts[contract_hash] = top_hash
+					request_contracts[contract_hash] = our_contracts[contract_hash]
 					continue;
 				}
 			}
