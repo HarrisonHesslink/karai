@@ -41,7 +41,6 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 		log.Println(util.Rcv + " [" + command + "] Get Contracts and Data")
 
 		for key, value := range payload.Contracts {
-				var contract_tx transaction.Transaction
 
 				//loop through to find oracle data
 				row3, err := db.Queryx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_type='2' AND tx_epoc=$1 ORDER BY tx_time DESC", key)
@@ -70,7 +69,8 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 				}
 
 				if value == "need" {
-					_ = db.QueryRowx("SELECT (*) FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_hash=$1", key).StructScan(&contract_tx)
+					var contract_tx transaction.Transaction
+					_ = db.QueryRowx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_hash=$1", key).StructScan(&contract_tx)
 					transactions = append(transactions, contract_tx)
 					continue
 				}
@@ -106,7 +106,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	var txes [][]byte
 
 	log.Println(strconv.Itoa(len(transactions)))
-	for i := len(transactions)-1; i >= 0; i-- {
+	for i := len(transactions) - 1; i >= 0; i-- {
 		
 		txes = append(txes, transactions[i].Serialize())
 		if (i % 100) == 0 {
@@ -180,7 +180,7 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 
 		// percentage_float := float64(payload.TotalSent) / float64(s.tx_need) * 100
 		// percentage_string := fmt.Sprintf("%.2f", percentage_float)
-		log.Println(util.Rcv + " [" + command + "] Received Transactions)")//. Sync %:" + percentage_string + "[" + strconv.Itoa(payload.TotalSent) + "/" + strconv.Itoa(s.tx_need) + "]")
+		log.Println(util.Rcv + " [" + command + "] Received Transactions: " + stconv.Itoa(len(payload.Batch)))//. Sync %:" + percentage_string + "[" + strconv.Itoa(payload.TotalSent) + "/" + strconv.Itoa(s.tx_need) + "]")
 		// if payload.TotalSent == s.tx_need {
 		// 	s.tx_need = 0
 		// 	s.sync = false
