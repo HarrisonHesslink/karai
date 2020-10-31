@@ -90,14 +90,14 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 				err = rows.StructScan(&this_tx)
 				if err != nil {
 					log.Println("Error query")
-					return
+					break
 				}
 
 				log.Println(this_tx.Hash)
 
 				if this_tx.Hash == payload.Top_hash {
 					rows.Close()
-					return
+					break
 				}
 
 				transactions = append(transactions, this_tx)
