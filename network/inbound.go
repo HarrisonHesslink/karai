@@ -79,7 +79,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	} else {
 		log.Println(util.Rcv + " [" + command + "] Get Tx from: " + payload.Top_hash)
 
-		if s.Prtl.Dat.HaveTx(payload.Top_hash) {d
+		if s.Prtl.Dat.HaveTx(payload.Top_hash) {
 			rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC")
 			if err != nil {
 				log.Println("Error query")
