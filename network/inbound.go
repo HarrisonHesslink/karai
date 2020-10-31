@@ -207,6 +207,7 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	if s.Prtl.Dat.HaveTx(tx.Prev) {
 		if !s.Prtl.Dat.HaveTx(tx.Hash) {
 			s.Prtl.Dat.CommitDBTx(tx)
+			s.BroadCastTX(tx)
 		}
 	}
 }

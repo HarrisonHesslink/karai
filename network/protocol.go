@@ -24,11 +24,11 @@ func Protocol_Init(c *config.Config, s *Server) {
 	var p Protocol
 	var peer_list PeerList
 	var sync Syncer
+
 	sync.Connected = false
 	sync.Synced = false
 
 	p.Sync = &sync
-
 	s.pl = &peer_list
 	d.Cf = c
 	s.cf = c
