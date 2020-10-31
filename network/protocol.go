@@ -73,7 +73,7 @@ func Protocol_Init(c *config.Config, s *Server) {
 	err = s.node.Start(s.ExternalIP)
 	s.node.Probe("167.172.156.118:4201")
 	s.node.Probe("157.230.91.2:4201")
-
+	s.node.Probe(":4201")
 	s.Prtl.Sync.Connected = true
 	
 
@@ -280,6 +280,10 @@ func (s *Server) GetContractMap() map[string]string {
 	err = rows.Err()
 	if err != nil {
 		log.Panic(err)
+	}
+
+	for key, value := range Contracts {
+		log.Println("Contract Hash: " + key + " Last Data Hash: " + value)
 	}
 
 	return Contracts
