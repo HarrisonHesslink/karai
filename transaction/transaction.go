@@ -171,3 +171,24 @@ func hashTransaction(txTime, txType, txData, txPrev string) string {
 
 	return txHash
 }
+
+
+func CreateTrustedTransaction(prev string, trusted_data Trusted_Data) Transaction {
+	var new_tx Transaction
+	td, err := json.Marshal(trusted_data)
+	if err != nil {
+		log.Println("Unable to create string from data")
+		return Transaction{}
+	}
+	new_tx.Data = string(td)
+	new_tx.Type = "2"
+	new_tx.Time = util.UnixTimeStampNano()
+	new_tx.Prev = prev
+	new_tx.Epoc = trusted_data.TrustedData[0].Epoc
+	new_tx.Subg = new_tx.Epoc
+	new_tx.Prnt = ""
+	new_tx.Lead = false
+	new_tx.Mile = false
+	new_tx.Hash = hashTransaction(new_tx.Time, new_tx.Type, new_tx.Data, prev)
+	return new_tx
+}

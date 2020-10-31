@@ -54,6 +54,20 @@ func(s *Server)  BroadCastTX(tx transaction.Transaction) {
 
 }
 
+
+func(s *Server)  BroadCastOracleData(oracle_data transaction.Request_Oracle_Data) {
+	data := GOB_ORACLE_DATA{oracle_data}
+	payload := GobEncode(data)
+	request := append(CmdToBytes("data"), payload...)
+
+	stream, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	if err == nil {
+		log.Println(util.Send + " [DATA] Broadcasting Oracle Data Out")
+		go s.HandleCall(stream)
+	}
+
+}
+
 func (s *Server) SendData(ctx *flatend.Context, data []byte) {
 
 	p := s.GetProviderFromID(&ctx.ID)
@@ -139,7 +153,7 @@ func (s *Server)SendGetTxes(ctx *flatend.Context, fill bool, contracts map[strin
 	request := append(CmdToBytes("gettxes"), payload...)
 
 	go s.SendData(ctx, request)
-	
+
 	if !fill {
 		log.Println(util.Send + " [GTXS] Requesting Transactions starting from: " + txPrev)
 	} else {

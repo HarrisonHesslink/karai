@@ -26,6 +26,10 @@ type Addr struct {
 	AddrList []string
 }
 
+type GOB_ORACLE_DATA struct {
+	Oracle_Data transaction.Request_Oracle_Data
+}
+
 type GOB_TX struct {
 	TX   []byte
 }
@@ -79,6 +83,15 @@ type Server struct {
 type Protocol struct {
 	Dat *database.Database
 	Sync	*Syncer
+	Mempool *MemPool
+
+	ConsensusNode string
+	LastConsensusNode string
+	MyNodeKey string
+}
+
+type MemPool struct {
+	Transactions []transaction.Request_Oracle_Data
 }
 
 type Syncer struct {

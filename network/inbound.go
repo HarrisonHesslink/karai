@@ -11,7 +11,7 @@ import (
 	"github.com/karai/go-karai/transaction"
 	"github.com/karai/go-karai/util"
 	// "time"
-	//"encoding/json"
+	"encoding/json"
 )
 
 /*
@@ -200,14 +200,55 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	txData := payload.TX
 	tx := transaction.DeserializeTransaction(txData)
 
-	log.Println(util.Rcv + " [" + command + "] Transaction: " + tx.Hash)
+	if tx.Type == "1" {
+		var consensus_data transaction.Request_Consensus
+		err := json.Unmarshal([]byte(tx.Data), &consensus_data)
+		if err != nil {	return }
 
-	if s.Prtl.Dat.HaveTx(tx.Prev) {
-		if !s.Prtl.Dat.HaveTx(tx.Hash) {
-			s.Prtl.Dat.CommitDBTx(tx)
-			s.BroadCastTX(tx)
+		s.Prtl.ConsensusNode = consensus_data.PubKey
+
+		if s.Prtl.Dat.HaveTx(tx.Prev) {
+			if !s.Prtl.Dat.HaveTx(tx.Hash) {
+				s.Prtl.Dat.CommitDBTx(tx)
+				s.BroadCastTX(tx)
+			}
+		}
+
+		if s.Prtl.LastConsensusNode == s.Prtl.MyNodeKey {
+			height, _ := strconv.Atoi(consensus_data.Height)
+			s.CreateTrustedData(strconv.Itoa(height - 1))
+		}
+
+	} else {
+		if s.Prtl.Dat.HaveTx(tx.Prev) {
+			if !s.Prtl.Dat.HaveTx(tx.Hash) {
+				s.Prtl.Dat.CommitDBTx(tx)
+				s.BroadCastTX(tx)
+			}
 		}
 	}
+
+	log.Println(util.Rcv + " [" + command + "] Transaction: " + tx.Hash)
+
+}
+
+func (s *Server) HandleData(ctx *flatend.Context, request []byte) {
+	command := BytesToCmd(request[:commandLength])
+
+	var buff bytes.Buffer
+	var payload GOB_ORACLE_DATA
+
+	buff.Write(request[commandLength:])
+	dec := gob.NewDecoder(&buff)
+	err := dec.Decode(&payload)
+	if err != nil {
+		log.Println("Unable to decode")
+		return
+	}
+
+	s.Prtl.Mempool.Transactions = append(s.Prtl.Mempool.Transactions, payload.Oracle_Data)
+
+	log.Println(util.Rcv + " [" + command + "] Oracle Data: " + payload.Oracle_Data.Hash)
 }
 
 func (s *Server) HandleSyncCall(ctx *flatend.Context, request []byte) {
@@ -279,6 +320,8 @@ func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {
 		go s.HandleGetData(ctx, req)
 	case "tx":
 		go s.HandleTx(ctx, req)
+	case "data":
+		go s.HandleData(ctx, req)
 	case "batchtx":
 		go s.HandleBatchTx(ctx, req)
 	case "version":

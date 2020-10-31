@@ -24,9 +24,10 @@ func Protocol_Init(c *config.Config, s *Server) {
 	var p Protocol
 	var peer_list PeerList
 	var sync Syncer
-
+	var mempool MemPool
 	sync.Connected = false
 	sync.Synced = false
+	p.Mempool = &mempool
 
 	p.Sync = &sync
 	s.pl = &peer_list
@@ -40,8 +41,6 @@ func Protocol_Init(c *config.Config, s *Server) {
 	d.DB_init()
 
 	go s.RestAPI()
-
-
 
   	consensus := externalip.DefaultConsensus(nil, nil)
     // Get your IP,
@@ -128,26 +127,24 @@ func (s *Server) LookForNodes() {
 }
 
 func (s *Server) NewDataTxFromCore(req transaction.Request_Oracle_Data) {
-	req_string, _ := json.Marshal(req)
 
-	var txPrev string
-
-	db, connectErr := s.Prtl.Dat.Connect()
-	defer db.Close()
-	util.Handle("Error creating a DB connection: ", connectErr)
-
-	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='2' AND tx_epoc=$1 ORDER BY tx_time DESC", req.Epoc).Scan(&txPrev)
-	
-	new_tx := transaction.CreateTransaction("2", txPrev, req_string, []string{}, []string{})
-
-	if !s.Prtl.Dat.HaveTx(new_tx.Hash) {
-		go s.Prtl.Dat.CommitDBTx(new_tx)
-		go s.BroadCastTX(new_tx)
+	if s.Prtl.MyNodeKey == "" {
+		s.Prtl.MyNodeKey = req.PubKey
 	}
+
+	s.Prtl.Mempool.Transactions = append(s.Prtl.Mempool.Transactions, req)
+
+	go s.BroadCastOracleData(req)
 }
 
 func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus) {
 	req_string, _ := json.Marshal(req)
+
+	if s.Prtl.MyNodeKey == "" {
+		s.Prtl.MyNodeKey = req.PubKey
+	}
+
+	s.Prtl.ConsensusNode = req.PubKey
 
 	var txPrev string
 
@@ -288,4 +285,32 @@ func (s *Server) GetContractMap() map[string]string {
 
 	return Contracts
 }
+func (s *Server) CreateTrustedData(block_height string) {
+
+	db, connectErr := s.Prtl.Dat.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
+
+	contract_data_map := s.sortOracleDataMap(block_height)
+	
+	filtered_data_map, trusted_data_map := filterOracleDataMap(contract_data_map)
+
+	for _, contract_array := range filtered_data_map {
+		var prev string
+		_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Epoc).Scan(&prev)
+
+		if prev == "" {
+			return
+		}
+
+
+		trusted_data := transaction.Trusted_Data{contract_array, trusted_data_map[contract_array[0].Epoc]}
+
+		new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
+
+		go s.Prtl.Dat.CommitDBTx(new_tx) 		
+		go s.BroadCastTX(new_tx)
+	}
+}
+
 

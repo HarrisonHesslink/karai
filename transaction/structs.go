@@ -39,3 +39,7 @@ type Request_Contract struct {
 	Denom string`json:denom`
 }
 
+type Trusted_Data struct {
+	TrustedData []Request_Oracle_Data `json:"trusted_data"`
+	TrustedAnswer float32`json:trusted_answer`
+}
