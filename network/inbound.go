@@ -180,7 +180,7 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 
 		// percentage_float := float64(payload.TotalSent) / float64(s.tx_need) * 100
 		// percentage_string := fmt.Sprintf("%.2f", percentage_float)
-		log.Println(util.Rcv + " [" + command + "] Received Transactions: " + stconv.Itoa(len(payload.Batch)))//. Sync %:" + percentage_string + "[" + strconv.Itoa(payload.TotalSent) + "/" + strconv.Itoa(s.tx_need) + "]")
+		log.Println(util.Rcv + " [" + command + "] Received Transactions: " + strconv.Itoa(len(payload.Batch)))//. Sync %:" + percentage_string + "[" + strconv.Itoa(payload.TotalSent) + "/" + strconv.Itoa(s.tx_need) + "]")
 		// if payload.TotalSent == s.tx_need {
 		// 	s.tx_need = 0
 		// 	s.sync = false
