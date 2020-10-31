@@ -93,8 +93,6 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 					break
 				}
 
-				log.Println(this_tx.Hash)
-
 				if this_tx.Hash == payload.Top_hash {
 					rows.Close()
 					break

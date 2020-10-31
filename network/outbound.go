@@ -138,6 +138,11 @@ func (s *Server)SendGetTxes(ctx *flatend.Context, fill bool, contracts map[strin
 	payload := GobEncode(GetTxes{txPrev, fill, contracts})
 	request := append(CmdToBytes("gettxes"), payload...)
 
+	for key, value := range contracts {
+		log.Println("Contract Hash: " + key + " Top-Hash: " + value)
+	}
+
+
 	go s.SendData(ctx, request)
 	if fill {
 		log.Println(util.Send + " [GTXS] Requesting Transactions starting from: " + txPrev)
