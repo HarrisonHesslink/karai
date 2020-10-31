@@ -57,9 +57,11 @@ func(s *Server)  BroadCastTX(tx transaction.Transaction) {
 func (s *Server) SendData(ctx *flatend.Context, data []byte) {
 
 	p := s.GetProviderFromID(&ctx.ID)
-	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
-	if err == nil {
-		go s.HandleCall(stream)
+	if p != nil {
+		stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
+		if err == nil {
+			go s.HandleCall(stream)
+		}
 	}
 }
 
