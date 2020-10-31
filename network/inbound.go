@@ -31,9 +31,9 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 		return
 	}
 
-	for key, value := range payload.Contracts {
-		log.Println ("Contract: " + key + " Top Hash: " + value)
-	}
+	// for key, value := range payload.Contracts {
+	// 	log.Println ("Contract: " + key + " Top Hash: " + value)
+	// }
 
 
 	log.Println(util.Rcv + " [" + command + "] Get Tx from: " + payload.Top_hash)
@@ -241,41 +241,6 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 		// 	s.sync = false
 		// }
 }
-
-func (s *Server) GetContractMap() map[string]string {
-
-	db, connectErr := s.Prtl.Dat.Connect()
-	defer db.Close()
-	util.Handle("Error creating a DB connection: ", connectErr)
-
-	var Contracts map[string]string
-	Contracts = make(map[string]string)
-
-	//loop through to find oracle data
-	row3, err := db.Queryx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_type='3' ORDER BY tx_time DESC")
-	if err != nil {
-		panic(err)
-	}
-	defer row3.Close()
-	for row3.Next() {
-		var this_tx transaction.Transaction
-		err = row3.StructScan(&this_tx)
-		if err != nil {
-			// handle this error
-			log.Panic(err)
-		}
-		var data_prev string
-		_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_epoc=$1 ORDER BY tx_time DESC", this_tx).Scan(&data_prev)
-		Contracts[this_tx.Hash] = data_prev
-	}
-	err = row3.Err()
-	if err != nil {
-		log.Panic(err)
-	}
-
-	return Contracts
-}
-
 
 func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	command := BytesToCmd(request[:commandLength])

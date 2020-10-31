@@ -250,4 +250,37 @@ func (s *Server) CheckNode(tx transaction.Transaction) bool {
 	return checks_out
 }
 
+func (s *Server) GetContractMap() map[string]string {
+
+	db, connectErr := s.Prtl.Dat.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
+
+	var Contracts map[string]string
+	Contracts = make(map[string]string)
+
+	//loop through to find oracle data
+	rows, err := db.Queryx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_type='3' ORDER BY tx_time DESC")
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var this_tx transaction.Transaction
+		err = rows.StructScan(&this_tx)
+		if err != nil {
+			// handle this error
+			log.Panic(err)
+		}
+		var data_prev string
+		_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_epoc=$1 ORDER BY tx_time DESC", this_tx.Hash).Scan(&data_prev)
+		Contracts[this_tx.Hash] = data_prev
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Panic(err)
+	}
+
+	return Contracts
+}
 
