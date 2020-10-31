@@ -247,7 +247,7 @@ func (s *Server) HandleData(ctx *flatend.Context, request []byte) {
 		return
 	}
 
-	if !s.inMempool(req.Hash) {
+	if !s.inMempool(payload.Oracle_Data.Hash) {
 		s.Prtl.Mempool.Transactions = append(s.Prtl.Mempool.Transactions, payload.Oracle_Data)
 	}
 	log.Println(util.Rcv + " [" + command + "] Oracle Data: " + payload.Oracle_Data.Hash)

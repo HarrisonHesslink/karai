@@ -70,7 +70,7 @@ func stringInSlice(a string, list []string) bool {
 
 func (s *Server) inMempool(tx_hash string) bool {
     for _, b := range s.Prtl.Mempool.Transactions {
-        if tx.Hash == tx_hash {
+        if b.Hash == tx_hash {
             return true
         }
     }
