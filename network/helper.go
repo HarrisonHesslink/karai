@@ -163,7 +163,7 @@ func filterOracleDataMap(contract_map map[string][]transaction.Request_Oracle_Da
 func calcMedian(floats []float32) float32 {
 	log.Println(strconv.Itoa(len(floats)))
 	float32Values := floats
-	if len(float32Values) > 0 {
+	if len(float32Values) > 1 {
 		float32AsFloat64Values := make([]float64, len(floats))
 
 		for i, val := range float32Values {
