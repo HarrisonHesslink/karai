@@ -306,7 +306,7 @@ func (s *Server) CreateTrustedData(block_height string) {
 		trusted_data := transaction.Trusted_Data{contract_array, trusted_data_map[contract_array[0].Epoc]}
 
 		new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
-
+		log.Println(new_tx.Hash)
 		go s.Prtl.Dat.CommitDBTx(new_tx) 		
 		go s.BroadCastTX(new_tx)
 	}
