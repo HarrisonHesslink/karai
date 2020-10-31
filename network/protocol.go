@@ -131,8 +131,9 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Oracle_Data) {
 	if s.Prtl.MyNodeKey == "" {
 		s.Prtl.MyNodeKey = req.PubKey
 	}
-
-	s.Prtl.Mempool.Transactions = append(s.Prtl.Mempool.Transactions, req)
+	if !s.inMempool(req.Hash) {
+		s.Prtl.Mempool.Transactions = append(s.Prtl.Mempool.Transactions, req)
+	}
 
 	go s.BroadCastOracleData(req)
 }

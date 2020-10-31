@@ -215,6 +215,7 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 		}
 
 		if s.Prtl.LastConsensusNode == s.Prtl.MyNodeKey {
+			log.Println("YES")
 			height, _ := strconv.Atoi(consensus_data.Height)
 			s.CreateTrustedData(strconv.Itoa(height - 1))
 		}
@@ -246,8 +247,9 @@ func (s *Server) HandleData(ctx *flatend.Context, request []byte) {
 		return
 	}
 
-	s.Prtl.Mempool.Transactions = append(s.Prtl.Mempool.Transactions, payload.Oracle_Data)
-
+	if !s.inMempool(req.Hash) {
+		s.Prtl.Mempool.Transactions = append(s.Prtl.Mempool.Transactions, payload.Oracle_Data)
+	}
 	log.Println(util.Rcv + " [" + command + "] Oracle Data: " + payload.Oracle_Data.Hash)
 }
 

@@ -68,6 +68,15 @@ func stringInSlice(a string, list []string) bool {
     return false
 }
 
+func (s *Server) inMempool(tx_hash string) bool {
+    for _, b := range s.Prtl.Mempool.Transactions {
+        if tx.Hash == tx_hash {
+            return true
+        }
+    }
+    return false
+}
+
 func containsValue(m map[string]string, v string) bool {
 	for _, x := range m {
 		if x == v {
