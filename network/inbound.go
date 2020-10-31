@@ -244,6 +244,7 @@ func (s *Server) HandleSyncCall(ctx *flatend.Context, request []byte) {
 
 		for contract_hash, top_hash := range payload.Contracts {
 			log.Println(contract_hash)
+			log.Println(our_contracts[contract_hash])
 			if _, ok := our_contracts[contract_hash]; !ok {
 				//does not have v3 tx so add it to request payload
 				request_contracts[contract_hash] = "need"
