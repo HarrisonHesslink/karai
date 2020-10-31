@@ -166,7 +166,6 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 		for _, tx_ := range payload.Batch {
 
 			tx := transaction.DeserializeTransaction(tx_)
-
 			if s.Prtl.Dat.HaveTx(tx.Prev) {
 				if !s.Prtl.Dat.HaveTx(tx.Hash) {
 					s.Prtl.Dat.CommitDBTx(tx)

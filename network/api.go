@@ -133,7 +133,7 @@ func (s *Server) RestAPI() {
 	}).Methods("GET")
 
 	api.HandleFunc("/new_tx", func(w http.ResponseWriter, r *http.Request) {
-		if s.Prtl.Sync.Connected == false {
+		if s.Prtl.Sync.Connected {
 
 			var req transaction.Request_Oracle_Data
 			err := json.NewDecoder(r.Body).Decode(&req)
@@ -153,7 +153,7 @@ func (s *Server) RestAPI() {
 	}).Methods("POST")
 
 	api.HandleFunc("/get_contracts", func(w http.ResponseWriter, r *http.Request) {
-		if s.Prtl.Sync.Connected == false {
+		if s.Prtl.Sync.Connected {
 
 			db, connectErr := s.Prtl.Dat.Connect()
 			defer db.Close()
@@ -196,7 +196,7 @@ func (s *Server) RestAPI() {
 	}).Methods("GET")
 
 	api.HandleFunc("/new_consensus_tx", func(w http.ResponseWriter, r *http.Request) {
-		if s.Prtl.Sync.Connected == false {
+		if s.Prtl.Sync.Connected {
 			var req transaction.Request_Consensus
 			// Try to decode the request body into the struct. If there is an error,
 			// respond to the client with the error message and a 400 status code.
