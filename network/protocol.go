@@ -283,7 +283,7 @@ func (s *Server) GetContractMap() map[string]string {
 	}
 
 	for key, value := range Contracts {
-		log.Println("Contract Hash: " + key + " Last Data Hash: " + value)
+		log.Println("Contract Hash: " + key[:8] + " Last Data Hash: " + value[:8])
 	}
 
 	return Contracts
