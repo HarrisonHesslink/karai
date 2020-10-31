@@ -205,6 +205,12 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 		err := json.Unmarshal([]byte(tx.Data), &consensus_data)
 		if err != nil {	return }
 
+
+		if s.Prtl.ConsensusNode == s.Prtl.MyNodeKey {
+			height, _ := strconv.Atoi(consensus_data.Height)
+			go s.CreateTrustedData(strconv.Itoa(height - 1))
+		}
+
 		s.Prtl.ConsensusNode = consensus_data.PubKey
 
 		if s.Prtl.Dat.HaveTx(tx.Prev) {
@@ -214,11 +220,6 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 			}
 		}
 
-		if s.Prtl.LastConsensusNode == s.Prtl.MyNodeKey {
-			log.Println("YES")
-			height, _ := strconv.Atoi(consensus_data.Height)
-			s.CreateTrustedData(strconv.Itoa(height - 1))
-		}
 
 	} else {
 		if s.Prtl.Dat.HaveTx(tx.Prev) {
