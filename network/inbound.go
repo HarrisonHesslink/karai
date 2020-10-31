@@ -77,35 +77,35 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 			}
 
 	} else {
-
 		log.Println(util.Rcv + " [" + command + "] Get Tx from: " + payload.Top_hash)
 
-		rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC")
-		if err != nil {
-			log.Println("Error query")
-			return
-		}
-		for rows.Next() {
-			var this_tx transaction.Transaction
-			err = rows.StructScan(&this_tx)
+		if s.Prtl.Dat.HaveTx(payload.Top_hash) {
+			rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC")
 			if err != nil {
 				log.Println("Error query")
 				return
 			}
+			for rows.Next() {
+				var this_tx transaction.Transaction
+				err = rows.StructScan(&this_tx)
+				if err != nil {
+					log.Println("Error query")
+					return
+				}
 
-			if this_tx.Hash == payload.Top_hash {
-				rows.Close()
-				return
+				if this_tx.Hash == payload.Top_hash {
+					rows.Close()
+					return
+				}
+
+				transactions = append(transactions, this_tx)
 			}
-
-			transactions = append(transactions, this_tx)
 		}
 
 	}
 
 	var txes [][]byte
 
-	log.Println(strconv.Itoa(len(transactions)))
 	for i := len(transactions) - 1; i >= 0; i-- {
 		
 		txes = append(txes, transactions[i].Serialize())
@@ -164,8 +164,6 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 		for _, tx_ := range payload.Batch {
 
 			tx := transaction.DeserializeTransaction(tx_)
-			log.Println("Hash: " + tx.Hash)
-			log.Println("Prev: " + tx.Prev)
 
 			if s.Prtl.Dat.HaveTx(tx.Prev) {
 				if !s.Prtl.Dat.HaveTx(tx.Hash) {
@@ -238,7 +236,7 @@ func (s *Server) HandleSyncCall(ctx *flatend.Context, request []byte) {
 
 	var request_contracts map[string]string
 
-	if payload.TopHash == txPrev {
+	if s.Prtl.Dat.HaveTx(payload.TopHash) {
 		//okay, our v1 txes are all synced, lets check v2/v3
 		var our_contracts map[string]string
 		our_contracts = s.GetContractMap()
