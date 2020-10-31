@@ -280,10 +280,6 @@ func (s *Server) GetContractMap() map[string]string {
 		log.Panic(err)
 	}
 
-	for key, value := range Contracts {
-		log.Println("Contract Hash: " + key[:8] + " Last Data Hash: " + value[:8])
-	}
-
 	return Contracts
 }
 func (s *Server) CreateTrustedData(block_height string) {
@@ -295,6 +291,8 @@ func (s *Server) CreateTrustedData(block_height string) {
 	contract_data_map := s.sortOracleDataMap(block_height)
 	
 	filtered_data_map, trusted_data_map := filterOracleDataMap(contract_data_map)
+
+	log.Println("Creating Trust Data TX")
 
 	for _, contract_array := range filtered_data_map {
 		var prev string

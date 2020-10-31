@@ -281,9 +281,7 @@ func (s *Server) HandleSyncCall(ctx *flatend.Context, request []byte) {
 	}
 
 	var request_contracts map[string]string
-	log.Println(payload.TopHash)
 	if s.Prtl.Dat.HaveTx(payload.TopHash) {
-		log.Println("have")
 		//okay, our v1 txes are all synced, lets check v2/v3
 		our_contracts := s.GetContractMap()
 
