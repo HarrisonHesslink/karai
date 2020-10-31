@@ -72,7 +72,7 @@ func Protocol_Init(c *config.Config, s *Server) {
 
 	err = s.node.Start(s.ExternalIP)
 
-	if s.ExternalIP != "167.172.156.118:4201" {
+	if s.ExternalIP != "167.172.156.118" {
 		s.node.Probe("167.172.156.118:4201")
 		s.Prtl.Sync.Connected = true
 	}

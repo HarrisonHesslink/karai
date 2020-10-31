@@ -142,9 +142,6 @@ func (s *Server) RestAPI() {
 				return
 			}
 
-			log.Println("We are data boy")
-			log.Println(req)
-
 			if (req.PubKey != "" && req.Signature != "" && req.Hash != "" && req.Task != "" && req.Data != "" && req.Height != "" && req.Source != "" && req.Epoc != "") {
 				go s.NewDataTxFromCore(req)
 			}
@@ -205,8 +202,6 @@ func (s *Server) RestAPI() {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-
-			log.Println("We are consensus man")
 
 			if (req.PubKey != "" && req.Signature != "" && req.Hash != "" && req.Task != "" && len(req.Data) > 0 && req.Height != "") {
 				go s.NewConsensusTXFromCore(req)

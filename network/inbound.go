@@ -105,7 +105,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	}
 
 	var txes [][]byte
-	log.Println(strconv.Itoa(len(transactions)))
+
 	for i := len(transactions) - 1; i >= 0; i-- {
 		
 		txes = append(txes, transactions[i].Serialize())
