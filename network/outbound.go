@@ -137,7 +137,11 @@ func (s *Server)SendGetTxes(ctx *flatend.Context, fill bool, contracts map[strin
 	request := append(CmdToBytes("gettxes"), payload...)
 
 	go s.SendData(ctx, request)
-	log.Println(util.Send + " [GTXS] Requesting Transactions starting from: " + txPrev)
+	if fill {
+		log.Println(util.Send + " [GTXS] Requesting Transactions starting from: " + txPrev)
+	} else {
+		log.Println(util.Send + " [GTXS] Requesting Contracts and Data")
+	}
 }
 
 // func (s Server) SendGetData(provider flatend.Provider, kind string, id []byte) {
