@@ -91,9 +91,11 @@ func (s *Server) HandleCall(stream *flatend.Stream) {
 
 func (s *Server) GetProviderFromID(id  *kademlia.ID) *flatend.Provider {
 	providers := s.node.ProvidersFor("karai-xeq")
-	for _, provider := range providers {
-		if provider.GetID().Pub.String() == id.Pub.String(){
-			return provider
+	if providers != nil  && len(providers) > 0 {
+		for _, provider := range providers {
+			if provider.GetID().Pub.String() == id.Pub.String(){
+				return provider
+			}
 		}
 	}
 	return nil
@@ -138,7 +140,7 @@ func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus) {
 	if s.Prtl.MyNodeKey == "" {
 		s.Prtl.MyNodeKey = req.PubKey
 	}
-
+	log.Println(req.PubKey)
 	s.Prtl.ConsensusNode = req.PubKey
 
 	var txPrev string
