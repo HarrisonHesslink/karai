@@ -38,8 +38,6 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 	transactions := []transaction.Transaction{}
 
 	if payload.FillData {
-		log.Println(util.Rcv + " [" + command + "] Get Contracts and Data")
-
 		for key, value := range payload.Contracts {
 
 				//loop through to find oracle data
@@ -77,7 +75,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 			}
 
 	} else {
-		util.Success_log(" [" + command + "] Get Tx from: " + payload.Top_hash)
+		util.Success_log(util.Rcv + " [" + command + "] Get Tx from: " + payload.Top_hash)
 
 		if s.Prtl.Dat.HaveTx(payload.Top_hash) {
 			rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC")
@@ -140,7 +138,7 @@ func (s *Server) HandleGetData(ctx *flatend.Context, request []byte) {
 
 		//s.SendTx(s.GetProviderFromID(&ctx.ID), tx)
 	}
-	util.Success_log(" [" + command + "] Data Request from: " + ctx.ID.Pub.String())
+	util.Success_log(util.Rcv + " [" + command + "] Data Request from: " + ctx.ID.Pub.String())
 }
 
 func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
@@ -166,7 +164,9 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 			tx := transaction.DeserializeTransaction(tx_)
 			if s.Prtl.Dat.HaveTx(tx.Prev) {
 				if !s.Prtl.Dat.HaveTx(tx.Hash) {
+					s.Prtl.Dat.Mutex.Lock()
 					s.Prtl.Dat.CommitDBTx(tx)
+					s.Prtl.Dat.Mutex.Unlock()
 				}
 			}
 		}
@@ -177,7 +177,7 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 
 		// percentage_float := float64(payload.TotalSent) / float64(s.tx_need) * 100
 		// percentage_string := fmt.Sprintf("%.2f", percentage_float)
-		util.Success_log(" [" + command + "] Received Transactions: " + strconv.Itoa(len(payload.Batch)))//. Sync %:" + percentage_string + "[" + strconv.Itoa(payload.TotalSent) + "/" + strconv.Itoa(s.tx_need) + "]")
+		util.Success_log(util.Rcv + " [" + command + "] Received Transactions: " + strconv.Itoa(len(payload.Batch)))//. Sync %:" + percentage_string + "[" + strconv.Itoa(payload.TotalSent) + "/" + strconv.Itoa(s.tx_need) + "]")
 		// if payload.TotalSent == s.tx_need {
 		// 	s.tx_need = 0
 		// 	s.sync = false
@@ -215,7 +215,9 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 
 		if s.Prtl.Dat.HaveTx(tx.Prev) {
 			if !s.Prtl.Dat.HaveTx(tx.Hash) {
-				go s.Prtl.Dat.CommitDBTx(tx)
+				s.Prtl.Dat.Mutex.Lock()
+				s.Prtl.Dat.CommitDBTx(tx)
+				s.Prtl.Dat.Mutex.Unlock()
 				go s.BroadCastTX(tx)
 			}
 		}
@@ -224,13 +226,15 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	} else {
 		if s.Prtl.Dat.HaveTx(tx.Prev) {
 			if !s.Prtl.Dat.HaveTx(tx.Hash) {
-				go s.Prtl.Dat.CommitDBTx(tx)
+				s.Prtl.Dat.Mutex.Lock()
+				s.Prtl.Dat.CommitDBTx(tx)
+				s.Prtl.Dat.Mutex.Unlock()
 				go s.BroadCastTX(tx)
 			}
 		}
 	}
 
-	log.Println(util.Rcv + " [" + command + "] Transaction: " + tx.Hash)
+	util.Success_log(util.Rcv + " [" + command + "] Transaction: " + tx.Hash)
 }
 
 func (s *Server) HandleData(ctx *flatend.Context, request []byte) {
@@ -249,7 +253,7 @@ func (s *Server) HandleData(ctx *flatend.Context, request []byte) {
 
 	if s.Prtl.Mempool.addOracleData(payload.Oracle_Data) {
 		go s.BroadCastOracleData(payload.Oracle_Data)
-		util.Success_log(" [" + command + "] Oracle Data: " + payload.Oracle_Data.Hash)
+		util.Success_log(util.Rcv + " [" + command + "] Oracle Data: " + payload.Oracle_Data.Hash)
 	}
 }
 
@@ -307,7 +311,7 @@ func (s *Server) HandleSyncCall(ctx *flatend.Context, request []byte) {
 		go s.SendGetTxes(ctx, false, request_contracts)
 	}
 
-	util.Success_log(" [" + command + "]")
+	util.Success_log( util.Rcv + " [" + command + "]")
 }
 
 func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {

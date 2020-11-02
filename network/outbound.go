@@ -5,7 +5,6 @@ import (
 	"github.com/karai/go-karai/util"
 	"github.com/harrisonhesslink/flatend"
 	"bytes"
-	"log"
 	//"math/rand"
 	//"time"
 	"strconv"
@@ -35,7 +34,7 @@ func(s *Server)  SendTx(p *flatend.Provider, tx transaction.Transaction) {
 
 	_, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	if err == nil {
-		log.Println(util.Send + " [TXT] Sending Transaction to " + p.GetID().Pub.String() + " ip: " + p.GetID().Host.String())
+		util.Success_log(util.Send + " [TXT] Sending Transaction to " + p.GetID().Pub.String() + " ip: " + p.GetID().Host.String())
 	}
 }
 
@@ -46,7 +45,7 @@ func(s *Server)  BroadCastTX(tx transaction.Transaction) {
 
 	_, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	if err == nil {
-		log.Println(util.Send + " [TXT] Broadcasting Transaction Out")
+		util.Success_log(util.Send + " [TXT] Broadcasting Transaction Out")
 	}
 
 }
@@ -59,7 +58,7 @@ func(s *Server)  BroadCastOracleData(oracle_data transaction.Request_Oracle_Data
 
 	_, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	if err == nil {
-		log.Println(util.Send + " [DATA] Broadcasting Oracle Data Out")
+		util.Success_log(util.Send + " [DATA] Broadcasting Oracle Data Out")
 	}
 
 }
@@ -77,7 +76,6 @@ func (s *Server) SendData(ctx *flatend.Context, data []byte) {
 
 func (s *Server) BroadCastData(data []byte) {
 	providers := s.node.ProvidersFor("karai-xeq")
-	log.Println(strconv.Itoa(len(providers)))
 	for _, provider := range providers {
 		_, err := provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
 		if err != nil {
@@ -131,7 +129,7 @@ func (s *Server) SendInv( kind string, items [][]byte) {
 			if err != nil {
 				//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
 			}
-			log.Println(util.Send + " [INV] Sending INV: " + strconv.Itoa(len(items)))
+			util.Success_log(util.Send + " [INV] Sending INV: " + strconv.Itoa(len(items)))
 			s.HandleCall(stream)
 	}
 }
@@ -151,9 +149,9 @@ func (s *Server)SendGetTxes(ctx *flatend.Context, fill bool, contracts map[strin
 	go s.SendData(ctx, request)
 
 	if !fill {
-		log.Println(util.Send + " [GTXS] Requesting Transactions starting from: " + txPrev)
+		util.Success_log(util.Send + " [GTXS] Requesting Transactions starting from: " + txPrev)
 	} else {
-		log.Println(util.Send + " [GTXS] Requesting Contracts and Data")
+		util.Success_log(util.Send + " [GTXS] Requesting Contracts and Data")
 	}
 }
 
@@ -183,7 +181,7 @@ func (s *Server) SendVersion(p *flatend.Provider) {
 	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	if err == nil {
 		go s.HandleCall(stream)
-		log.Println(util.Send + " [VERSION] Call")
+		util.Success_log(util.Send + " [VERSION] Call")
 	}
 
 }

@@ -13,6 +13,7 @@ import (
 	config "github.com/karai/go-karai/configuration"
 	"strconv"
 	"log"
+	"sync"
 )
 
 type Database struct {
@@ -20,7 +21,9 @@ type Database struct {
 	thisSubgraph          string 
 	thisSubgraphShortName string 
 	poolInterval          int  
-	txCount               int   
+	txCount               int  
+	
+	Mutex 				  sync.Mutex
 }
 
 
