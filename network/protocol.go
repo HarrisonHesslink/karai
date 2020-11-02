@@ -20,25 +20,20 @@ import (
 )
 
 func Protocol_Init(c *config.Config, s *Server) {
-	var d database.Database
 	var p Protocol
 	var peer_list PeerList
 	var sync Syncer
-	var mempool MemPool
 	sync.Connected = false
 	sync.Synced = false
-	p.Mempool = &mempool
 
 	p.Sync = &sync
 	s.pl = &peer_list
-	d.Cf = c
 	s.cf = c
 
-	p.Dat = &d
+	p.Dat = database.NewDataBase(c)
+	p.Mempool = NewMemPool()
 
 	s.Prtl = &p
-
-	d.DB_init()
 
 	go s.RestAPI()
 

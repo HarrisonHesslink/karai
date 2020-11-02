@@ -23,9 +23,22 @@ type Database struct {
 	txCount               int   
 }
 
+
+
+
 // Graph is a collection of transactions
 type Graph struct {
 	Transactions []transaction.Transaction `json:"transactions"`
+}
+
+
+func NewDataBase(c *config.Config) *Database {
+	d := new(Database)
+	d.Cf = c
+
+	d.DB_init()
+
+	return d
 }
 
 // connect will create an active DB connection

@@ -6,6 +6,13 @@ import (
 	"strconv"
 )
 
+
+func NewMemPool() *MemPool {
+	m := new(MemPool)
+	m.transactions_map = make(map[string]int)
+	return m
+}
+
 //sorts oracle map
 func (m *MemPool) SortOracleDataMap(block_height string) map[string][]transaction.Request_Oracle_Data {
 	contract_data_map := make(map[string][]transaction.Request_Oracle_Data)
