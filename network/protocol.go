@@ -153,9 +153,7 @@ func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus) {
 
 	new_tx := transaction.CreateTransaction("1", txPrev, req_string, []string{}, []string{})
 	if !s.Prtl.Dat.HaveTx(new_tx.Hash) {
-		s.Prtl.Dat.Mutex.Lock()
-		s.Prtl.Dat.CommitDBTx(new_tx)
-		s.Prtl.Dat.Mutex.Unlock()		
+		go s.Prtl.Dat.CommitDBTx(new_tx)
 		go s.BroadCastTX(new_tx)
 	}
 }
@@ -174,9 +172,7 @@ func (s *Server) CreateContract(asset string, denom string) {
 	tx := transaction.CreateTransaction("3", txPrev, []byte(json_contract), []string{}, []string{})
 
 	if !s.Prtl.Dat.HaveTx(tx.Hash) {
-		s.Prtl.Dat.Mutex.Lock()
-		s.Prtl.Dat.CommitDBTx(tx)
-		s.Prtl.Dat.Mutex.Unlock()
+		go s.Prtl.Dat.CommitDBTx(tx)
 		go s.BroadCastTX(tx)
 	}
 	log.Println("Created Contract " + tx.Hash[:8]+ ": " + asset + "/" + denom)
@@ -311,9 +307,7 @@ func (s *Server) CreateTrustedData(block_height string) {
 
 		new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
 
-		s.Prtl.Dat.Mutex.Lock()
-		s.Prtl.Dat.CommitDBTx(new_tx)
-		s.Prtl.Dat.Mutex.Unlock()
+		go s.Prtl.Dat.CommitDBTx(new_tx)
 		go s.BroadCastTX(new_tx)
 	}
 }

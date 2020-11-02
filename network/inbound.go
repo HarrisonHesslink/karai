@@ -164,9 +164,7 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 			tx := transaction.DeserializeTransaction(tx_)
 			if s.Prtl.Dat.HaveTx(tx.Prev) {
 				if !s.Prtl.Dat.HaveTx(tx.Hash) {
-					s.Prtl.Dat.Mutex.Lock()
-					s.Prtl.Dat.CommitDBTx(tx)
-					s.Prtl.Dat.Mutex.Unlock()
+					go s.Prtl.Dat.CommitDBTx(tx)
 				}
 			}
 		}
@@ -215,9 +213,7 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 
 		if s.Prtl.Dat.HaveTx(tx.Prev) {
 			if !s.Prtl.Dat.HaveTx(tx.Hash) {
-				s.Prtl.Dat.Mutex.Lock()
-				s.Prtl.Dat.CommitDBTx(tx)
-				s.Prtl.Dat.Mutex.Unlock()
+				go s.Prtl.Dat.CommitDBTx(tx)
 				go s.BroadCastTX(tx)
 			}
 		}
@@ -226,9 +222,7 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	} else {
 		if s.Prtl.Dat.HaveTx(tx.Prev) {
 			if !s.Prtl.Dat.HaveTx(tx.Hash) {
-				s.Prtl.Dat.Mutex.Lock()
-				s.Prtl.Dat.CommitDBTx(tx)
-				s.Prtl.Dat.Mutex.Unlock()
+				go s.Prtl.Dat.CommitDBTx(tx)
 				go s.BroadCastTX(tx)
 			}
 		}
