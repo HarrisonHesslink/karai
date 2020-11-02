@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 	config"github.com/karai/go-karai/configuration"
+	"log"
 )
 
 // ascii Splash logo. We used to have a package for this
@@ -213,4 +214,21 @@ func cleanData(c *config.Config) {
 		fmt.Printf(Brightyellow+"\nCerts clear: %s"+white, Brightgreen+"✔️")
 
 	}
+}
+
+//move to maybe logger package
+func Success_log(msg string) {
+	log.Println(Brightgreen + msg + white)
+}
+
+func Error_log(msg string) {
+	log.Println(Brightred + msg + white)
+}
+
+func Warning_log(msg string) {
+	log.Println(Brightyellow + msg + white)
+}
+
+func Success_log_array(msg string) {
+	log.Print(Brightgreen + msg + white)
 }

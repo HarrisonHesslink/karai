@@ -68,15 +68,6 @@ func stringInSlice(a string, list []string) bool {
     return false
 }
 
-func (s *Server) inMempool(tx_hash string) bool {
-    for _, b := range s.Prtl.Mempool.Transactions {
-        if b.Hash == tx_hash {
-            return true
-        }
-    }
-    return false
-}
-
 func containsValue(m map[string]string, v string) bool {
 	for _, x := range m {
 		if x == v {
@@ -86,17 +77,6 @@ func containsValue(m map[string]string, v string) bool {
 	return false
 }
 
-//sorts oracle map
-func (s *Server) sortOracleDataMap(block_height string) map[string][]transaction.Request_Oracle_Data {
-	contract_data_map := make(map[string][]transaction.Request_Oracle_Data)
-
-	for _, oracle_data := range s.Prtl.Mempool.Transactions {
-		if oracle_data.Height == block_height {
-			contract_data_map[oracle_data.Epoc] = append(contract_data_map[oracle_data.Epoc], oracle_data)
-		}
-	}
-	return contract_data_map
-}
 
 //gets mean, standard deviation on a array of floats
 func stdevData(oracle_array []float32) (float32, float32) {
@@ -140,24 +120,6 @@ func isOneDev(price, stdev, mean float32) bool {
 //removes 
 func remove(slice []transaction.Request_Oracle_Data, index int) []transaction.Request_Oracle_Data {
     return append(slice[:index], slice[index+1:]...)
-}
-
-func filterOracleDataMap(contract_map map[string][]transaction.Request_Oracle_Data) (map[string][]transaction.Request_Oracle_Data, map[string]float32) {
-	contract_data_map := make(map[string][]transaction.Request_Oracle_Data)
-	trusted_answer_data_map := make(map[string]float32)
-	for _, oracle_array := range contract_map {
-		floats := stringsToFloats(oracle_array)
-
-		stdev, mean := stdevData(floats)
-
-		for i, contract_data := range oracle_array {
-			if !isOneDev(floats[i], stdev, mean) {
-				contract_data_map[contract_data.Epoc] = append(contract_data_map[contract_data.Epoc], contract_data)
-			} 
-		}
-		trusted_answer_data_map[oracle_array[0].Epoc] = calcMedian(floats)
-	}
-	return contract_data_map, trusted_answer_data_map
 }
 
 func calcMedian(floats []float32) float32 {

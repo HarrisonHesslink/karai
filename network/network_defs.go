@@ -91,7 +91,9 @@ type Protocol struct {
 }
 
 type MemPool struct {
-	Transactions []transaction.Request_Oracle_Data
+	transactions []transaction.Request_Oracle_Data
+	// tx_hash -> block height
+	transactions_map map[string]int
 }
 
 type Syncer struct {

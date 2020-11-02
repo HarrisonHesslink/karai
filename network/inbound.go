@@ -248,12 +248,10 @@ func (s *Server) HandleData(ctx *flatend.Context, request []byte) {
 		return
 	}
 
-	if !s.inMempool(payload.Oracle_Data.Hash) {
-		s.Prtl.Mempool.Transactions = append(s.Prtl.Mempool.Transactions, payload.Oracle_Data)
+	if s.Prtl.Mempool.addOracleData(payload.Oracle_Data) {
 		go s.BroadCastOracleData(payload.Oracle_Data)
+		log.Println(util.Rcv + " [" + command + "] Oracle Data: " + payload.Oracle_Data.Hash)
 	}
-
-	log.Println(util.Rcv + " [" + command + "] Oracle Data: " + payload.Oracle_Data.Hash)
 }
 
 func (s *Server) HandleSyncCall(ctx *flatend.Context, request []byte) {

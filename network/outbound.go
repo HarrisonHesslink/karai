@@ -33,11 +33,9 @@ func(s *Server)  SendTx(p *flatend.Provider, tx transaction.Transaction) {
 	payload := GobEncode(data)
 	request := append(CmdToBytes("tx"), payload...)
 
-	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	_, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	if err == nil {
 		log.Println(util.Send + " [TXT] Sending Transaction to " + p.GetID().Pub.String() + " ip: " + p.GetID().Host.String())
-		go s.HandleCall(stream)
-
 	}
 }
 
@@ -46,10 +44,9 @@ func(s *Server)  BroadCastTX(tx transaction.Transaction) {
 	payload := GobEncode(data)
 	request := append(CmdToBytes("tx"), payload...)
 
-	stream, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	_, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	if err == nil {
 		log.Println(util.Send + " [TXT] Broadcasting Transaction Out")
-		go s.HandleCall(stream)
 	}
 
 }
@@ -60,10 +57,9 @@ func(s *Server)  BroadCastOracleData(oracle_data transaction.Request_Oracle_Data
 	payload := GobEncode(data)
 	request := append(CmdToBytes("data"), payload...)
 
-	stream, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	_, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	if err == nil {
 		log.Println(util.Send + " [DATA] Broadcasting Oracle Data Out")
-		go s.HandleCall(stream)
 	}
 
 }

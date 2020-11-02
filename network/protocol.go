@@ -131,11 +131,10 @@ func (s *Server) NewDataTxFromCore(req transaction.Request_Oracle_Data) {
 	if s.Prtl.MyNodeKey == "" {
 		s.Prtl.MyNodeKey = req.PubKey
 	}
-	if !s.inMempool(req.Hash) {
-		s.Prtl.Mempool.Transactions = append(s.Prtl.Mempool.Transactions, req)
-	}
 
-	go s.BroadCastOracleData(req)
+	if s.Prtl.Mempool.addOracleData(req) {
+		go s.BroadCastOracleData(req)
+	}
 }
 
 func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus) {
@@ -288,13 +287,17 @@ func (s *Server) CreateTrustedData(block_height string) {
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
-	contract_data_map := s.sortOracleDataMap(block_height)
+	contract_data_map := s.Prtl.Mempool.SortOracleDataMap(block_height)
 	
-	filtered_data_map, trusted_data_map := filterOracleDataMap(contract_data_map)
+	filtered_data_map, trusted_data_map := FilterOracleDataMap(contract_data_map)
 
 	log.Println("Creating Trust Data TX")
 
 	for _, contract_array := range filtered_data_map {
+
+
+		log.Println("Size of contract_array: " + strconv.Itoa( len(contract_array)) )
+
 		var prev string
 		_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Epoc).Scan(&prev)
 
@@ -306,7 +309,7 @@ func (s *Server) CreateTrustedData(block_height string) {
 		trusted_data := transaction.Trusted_Data{contract_array, trusted_data_map[contract_array[0].Epoc]}
 
 		new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
-		log.Println(new_tx.Hash)
+
 		go s.Prtl.Dat.CommitDBTx(new_tx) 		
 		go s.BroadCastTX(new_tx)
 	}

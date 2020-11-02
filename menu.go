@@ -72,9 +72,7 @@ func inputHandler(s *network.Server/*keyCollection *ED25519Keys*/) {
 		} else if strings.Compare("close", text) == 0 {
 			// menuExit()
 		} else if strings.Compare("mempool", text) == 0 {
-			for _, tx := range s.Prtl.Mempool.Transactions{
-				log.Println(tx.Hash)
-			}
+			s.Prtl.Mempool.PrintMemPool()
 		} else if strings.HasPrefix(text, "create_contract ") {
 			strings.TrimPrefix(text, "create_contract ")
 			args := strings.Fields(text)
