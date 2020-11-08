@@ -174,7 +174,7 @@ func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus) {
 //CreateContract make new contract uploaded fron config.json
 func (s *Server) CreateContract() {
 	var txPrev string
-	file, _ := ioutil.ReadFile("config.json")
+	file, _ := ioutil.ReadFile("contract.json")
 
 	data := contract.Contract{}
 
