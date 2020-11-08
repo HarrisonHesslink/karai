@@ -136,25 +136,25 @@ func (s *Server) LookForNodes() {
 	}
 }
 
-func (s *Server) NewDataTxFromCore(req transaction.Request_Oracle_Data) {
+func (s *Server) NewDataTxFromCore(req transaction.NewBlock) {
 
 	if s.Prtl.MyNodeKey == "" {
-		s.Prtl.MyNodeKey = req.PubKey
+		s.Prtl.MyNodeKey = req.Pubkey
 	}
 
-	if s.Prtl.Mempool.addOracleData(req) {
-		go s.BroadCastOracleData(req)
-	}
+	// if s.Prtl.Mempool.addOracleData() {
+	// 	go s.BroadCastOracleData(req)
+	// }
 }
 
-func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus) {
+func (s *Server) NewConsensusTXFromCore(req transaction.NewBlock) {
 	req_string, _ := json.Marshal(req)
 
 	if s.Prtl.MyNodeKey == "" {
-		s.Prtl.MyNodeKey = req.PubKey
+		s.Prtl.MyNodeKey = req.Pubkey
 	}
-	log.Println(req.PubKey)
-	s.Prtl.ConsensusNode = req.PubKey
+	log.Println(req.Pubkey)
+	s.Prtl.ConsensusNode = req.Pubkey
 
 	var txPrev string
 

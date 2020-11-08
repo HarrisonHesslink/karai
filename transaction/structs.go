@@ -11,6 +11,14 @@ type Request_Oracle_Data struct {
 	Epoc      string `json:"epoc"`
 }
 
+type NewBlock struct {
+	Hash   string `json:"hash"`
+	Pubkey string `json:"pubkey"`
+	Height string `json:"height"`
+	Nodes  string `json:"nodes"`
+	Leader bool   `json:"leader"`
+}
+
 type Request_Consensus struct {
 	Hash      string   `json:"hash"`
 	PubKey    string   `json:"pubkey"`
