@@ -3,6 +3,7 @@ module github.com/karai/go-karai
 go 1.14
 
 require (
+	github.com/Jeffail/gabs v1.4.0
 	github.com/glendc/go-external-ip v0.0.0-20200601212049-c872357d968e
 	github.com/go-sql-driver/mysql v1.5.0 // indirect
 	github.com/gorilla/handlers v1.4.2
