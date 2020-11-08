@@ -35,11 +35,11 @@ type Transaction struct {
 }
 
 type Request_Contract struct {
-	Asset string`json:asset`
-	Denom string`json:denom`
+	Asset string `json:asset`
+	Denom string `json:denom`
 }
 
 type Trusted_Data struct {
-	TrustedData []Request_Oracle_Data `json:"trusted_data"`
-	TrustedAnswer float32`json:trusted_answer`
+	TrustedData   []Request_Oracle_Data `json:"trusted_data"`
+	TrustedAnswer float32               `json:trusted_answer`
 }

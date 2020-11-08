@@ -1,14 +1,15 @@
 package network
 
 import (
-"fmt"
-"bytes"
-"encoding/gob"
-"log"
-"math"
-"github.com/karai/go-karai/transaction"
-"strconv"
-"sort"
+	"bytes"
+	"encoding/gob"
+	"fmt"
+	"log"
+	"math"
+	"sort"
+	"strconv"
+
+	"github.com/karai/go-karai/transaction"
 )
 
 func CmdToBytes(cmd string) []byte {
@@ -60,12 +61,12 @@ func NodeIsKnown(addr string) bool {
 }
 
 func stringInSlice(a string, list []string) bool {
-    for _, b := range list {
-        if b == a {
-            return true
-        }
-    }
-    return false
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
 func containsValue(m map[string]string, v string) bool {
@@ -77,22 +78,20 @@ func containsValue(m map[string]string, v string) bool {
 	return false
 }
 
-
 //gets mean, standard deviation on a array of floats
 func stdevData(oracle_array []float32) (float32, float32) {
 	var stdev, mean, sum float32
 	for _, price := range oracle_array {
-		sum += price		
+		sum += price
 	}
 
 	mean = sum / float32(len(oracle_array))
 
 	for _, val := range oracle_array {
-		stdev += float32(math.Pow(float64(val - mean), 2))
+		stdev += float32(math.Pow(float64(val-mean), 2))
 	}
 
-	stdev = float32(math.Sqrt(float64(stdev/ float32(len(oracle_array)))   ))
-
+	stdev = float32(math.Sqrt(float64(stdev / float32(len(oracle_array)))))
 
 	return stdev, mean
 }
@@ -108,18 +107,19 @@ func stringsToFloats(oracle_array []transaction.Request_Oracle_Data) []float32 {
 	return floats
 }
 
-//Checks if price is one deviation away 
+//Checks if price is one deviation away
 func isOneDev(price, stdev, mean float32) bool {
 
-	if price >= (stdev - mean) && price <= (stdev + mean) {
+	if price >= (stdev-mean) && price <= (stdev+mean) {
 		return true
 	}
 
 	return false
 }
-//removes 
+
+//removes
 func remove(slice []transaction.Request_Oracle_Data, index int) []transaction.Request_Oracle_Data {
-    return append(slice[:index], slice[index+1:]...)
+	return append(slice[:index], slice[index+1:]...)
 }
 
 func calcMedian(floats []float32) float32 {
@@ -133,14 +133,14 @@ func calcMedian(floats []float32) float32 {
 		}
 
 		sort.Float64s(float32AsFloat64Values)
-		
+
 		for i, val := range float32AsFloat64Values {
 			float32Values[i] = float32(val)
 		}
-		
+
 		mnum := len(float32Values) / 2
 
-		if len(float32Values) % 2 == 0 {
+		if len(float32Values)%2 == 0 {
 			return float32Values[mnum]
 		}
 

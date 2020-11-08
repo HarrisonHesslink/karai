@@ -4,12 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"regexp"
 	"strconv"
 	"time"
-	config"github.com/karai/go-karai/configuration"
-	"log"
+
+	config "github.com/karai/go-karai/configuration"
 )
 
 // ascii Splash logo. We used to have a package for this
@@ -101,7 +102,7 @@ func createDirIfItDontExist(dir string) {
 
 // checkDirs Check if directory exists
 func checkDirs(c *config.Config) {
-	fmt.Printf("\n" + c.GetConfigDir());
+	fmt.Printf("\n" + c.GetConfigDir())
 	createDirIfItDontExist(c.GetConfigDir())
 	createDirIfItDontExist(c.Getp2pConfigDir())
 	createDirIfItDontExist(c.Getp2pWhitelistDir())

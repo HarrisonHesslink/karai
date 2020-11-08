@@ -2,7 +2,9 @@ package configuration
 
 import (
 	"encoding/json"
+
 	"github.com/gorilla/websocket"
+
 	//"io/ioutil"
 	"log"
 	"os"

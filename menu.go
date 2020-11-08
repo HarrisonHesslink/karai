@@ -3,18 +3,19 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/karai/go-karai/network"
 	"log"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/karai/go-karai/network"
 )
 
 // inputHandler This is a basic input loop that listens for
 // a few words that correspond to functions in the app. When
 // a command isn't understood, it displays the help menu and
 // returns to listening to input.
-func inputHandler(s *network.Server/*keyCollection *ED25519Keys*/) {
+func inputHandler(s *network.Server /*keyCollection *ED25519Keys*/) {
 	reader := bufio.NewReader(os.Stdin)
 
 	//fmt.Printf("\n\n%v%v%v\n", white+"Type '", brightgreen+"menu", white+"' to view a list of commands")
@@ -28,18 +29,18 @@ func inputHandler(s *network.Server/*keyCollection *ED25519Keys*/) {
 		text, _ := reader.ReadString('\n')
 		text = strings.TrimSpace(text)
 		if strings.Compare("help", text) == 0 {
-		//	menu()
+			//	menu()
 		} else if strings.Compare("?", text) == 0 {
 			//menu()
 		} else if strings.Compare("peer", text) == 0 {
-		//	fmt.Printf(brightcyan + "Peer ID: ")
-		//	fmt.Printf(cyan+"%s\n", keyCollection.publicKey)
+			//	fmt.Printf(brightcyan + "Peer ID: ")
+			//	fmt.Printf(cyan+"%s\n", keyCollection.publicKey)
 		} else if strings.Compare("menu", text) == 0 {
 			//menu()
 		} else if strings.Compare("version", text) == 0 {
 			//menuVersion()
 		} else if strings.Compare("license", text) == 0 {
-		//	printLicense()
+			//	printLicense()
 		} else if strings.Compare("dag", text) == 0 {
 			count := s.Prtl.Dat.GetDAGSize()
 			log.Println("Txes: " + strconv.Itoa(count))
@@ -79,9 +80,9 @@ func inputHandler(s *network.Server/*keyCollection *ED25519Keys*/) {
 			if args[1] == "XHV" || args[1] == "XEQ" || args[1] == "LOKI" || args[1] == "ETH" || args[1] == "DOGE" || args[1] == "XMR" {
 				if args[2] == "BTC" {
 					go s.CreateContract(args[1], args[2])
-					} else {
-						log.Println("Pair Not Supported! BTC")
-					}
+				} else {
+					log.Println("Pair Not Supported! BTC")
+				}
 
 			} else {
 				log.Println("Pair Not Supported! XEQ, XHV, LOKI, ETH, DOGE")

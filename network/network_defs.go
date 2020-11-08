@@ -1,13 +1,14 @@
 package network
-import (
-	"github.com/karai/go-karai/database"
-	config "github.com/karai/go-karai/configuration"
-	"github.com/harrisonhesslink/flatend"
-	"github.com/lithdew/kademlia"
-	"github.com/karai/go-karai/transaction"
-	"github.com/gorilla/websocket"
 
+import (
+	"github.com/gorilla/websocket"
+	"github.com/harrisonhesslink/flatend"
+	config "github.com/karai/go-karai/configuration"
+	"github.com/karai/go-karai/database"
+	"github.com/karai/go-karai/transaction"
+	"github.com/lithdew/kademlia"
 )
+
 const (
 	protocol      = "tcp"
 	version       = 1
@@ -15,11 +16,11 @@ const (
 )
 
 var (
-	nodeAddress     string
-	mineAddress     string
-	KnownNodes      = []string{"127.0.0.1:3001"}
+	nodeAddress   string
+	mineAddress   string
+	KnownNodes    = []string{"127.0.0.1:3001"}
 	txesInTransit = [][]byte{}
-	txSize int
+	txSize        int
 )
 
 type Addr struct {
@@ -31,11 +32,11 @@ type GOB_ORACLE_DATA struct {
 }
 
 type GOB_TX struct {
-	TX   []byte
+	TX []byte
 }
 
 type GOB_BATCH_TX struct {
-	Batch [][]byte
+	Batch     [][]byte
 	TotalSent int
 }
 
@@ -60,34 +61,33 @@ type Inv struct {
 }
 
 type SyncCall struct {
-	TopHash string
+	TopHash   string
 	Contracts map[string]string
 }
 
 type NewPeer struct {
 	AddrFrom string
-	NewPeer string
+	NewPeer  string
 }
 
-type Server struct { 
-	Prtl *Protocol
-	cf *config.Config
-	node *flatend.Node
-	pl *PeerList
-	ExternalIP string
+type Server struct {
+	Prtl         *Protocol
+	cf           *config.Config
+	node         *flatend.Node
+	pl           *PeerList
+	ExternalIP   string
 	ExternalPort int
-	Sockets []*websocket.Conn
-
+	Sockets      []*websocket.Conn
 }
 
 type Protocol struct {
-	Dat *database.Database
-	Sync	*Syncer
+	Dat     *database.Database
+	Sync    *Syncer
 	Mempool *MemPool
 
-	ConsensusNode string
+	ConsensusNode     string
 	LastConsensusNode string
-	MyNodeKey string
+	MyNodeKey         string
 }
 
 type MemPool struct {
@@ -100,28 +100,28 @@ type Syncer struct {
 	//contracts = map[key = contract hash], value = top tx hash of data point
 	Contracts map[string]string
 
-	Last_tx int
-	Synced bool
+	Last_tx   int
+	Synced    bool
 	Connected bool
-	Tx_need int
+	Tx_need   int
 }
 
 type Peer struct {
-	ID *kademlia.ID
+	ID       *kademlia.ID
 	Provider *flatend.Provider
 }
 
 type PeerList struct {
 	Peers []Peer
 
-	Count int 
+	Count int
 }
 
 type ArrayTX struct {
-	Txes []transaction.Transaction`json:txes`
+	Txes []transaction.Transaction `json:txes`
 }
 
 type ErrorJson struct {
-	Message string`json:message`
-	Error bool `json:is_error`
+	Message string `json:message`
+	Error   bool   `json:is_error`
 }

@@ -1,14 +1,16 @@
 package network
 
 import (
+	"bytes"
+
+	"github.com/harrisonhesslink/flatend"
 	"github.com/karai/go-karai/transaction"
 	"github.com/karai/go-karai/util"
-	"github.com/harrisonhesslink/flatend"
-	"bytes"
+
 	//"math/rand"
 	//"time"
-	"strconv"
 	"io/ioutil"
+	"strconv"
 	//"github.com/lithdew/kademlia"
 )
 
@@ -27,7 +29,7 @@ import (
 // 	s.SendData(address, request)
 // }
 
-func(s *Server)  SendTx(p *flatend.Provider, tx transaction.Transaction) {
+func (s *Server) SendTx(p *flatend.Provider, tx transaction.Transaction) {
 	data := GOB_TX{tx.Serialize()}
 	payload := GobEncode(data)
 	request := append(CmdToBytes("tx"), payload...)
@@ -38,7 +40,7 @@ func(s *Server)  SendTx(p *flatend.Provider, tx transaction.Transaction) {
 	}
 }
 
-func(s *Server)  BroadCastTX(tx transaction.Transaction) {
+func (s *Server) BroadCastTX(tx transaction.Transaction) {
 	data := GOB_TX{tx.Serialize()}
 	payload := GobEncode(data)
 	request := append(CmdToBytes("tx"), payload...)
@@ -50,8 +52,7 @@ func(s *Server)  BroadCastTX(tx transaction.Transaction) {
 
 }
 
-
-func(s *Server)  BroadCastOracleData(oracle_data transaction.Request_Oracle_Data) {
+func (s *Server) BroadCastOracleData(oracle_data transaction.Request_Oracle_Data) {
 	data := GOB_ORACLE_DATA{oracle_data}
 	payload := GobEncode(data)
 	request := append(CmdToBytes("data"), payload...)
@@ -119,23 +120,23 @@ func (s *Server) BroadCastData(data []byte) {
 // 	}
 // }
 
-func (s *Server) SendInv( kind string, items [][]byte) {
+func (s *Server) SendInv(kind string, items [][]byte) {
 	inventory := Inv{nodeAddress, kind, items}
 	payload := GobEncode(inventory)
 	request := append(CmdToBytes("inv"), payload...)
 
 	for _, p := range s.pl.Peers {
-			stream, err := p.Provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
-			if err != nil {
-				//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
-			}
-			util.Success_log(util.Send + " [INV] Sending INV: " + strconv.Itoa(len(items)))
-			s.HandleCall(stream)
+		stream, err := p.Provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+		if err != nil {
+			//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
+		}
+		util.Success_log(util.Send + " [INV] Sending INV: " + strconv.Itoa(len(items)))
+		s.HandleCall(stream)
 	}
 }
 
-func (s *Server)SendGetTxes(ctx *flatend.Context, fill bool, contracts map[string]string) {
-	
+func (s *Server) SendGetTxes(ctx *flatend.Context, fill bool, contracts map[string]string) {
+
 	var txPrev string
 
 	db, connectErr := s.Prtl.Dat.Connect()

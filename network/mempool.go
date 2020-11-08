@@ -1,11 +1,11 @@
 package network
 
 import (
+	"strconv"
+
 	"github.com/karai/go-karai/transaction"
 	"github.com/karai/go-karai/util"
-	"strconv"
 )
-
 
 func NewMemPool() *MemPool {
 	m := new(MemPool)
@@ -39,21 +39,21 @@ func (m *MemPool) addOracleData(tx transaction.Request_Oracle_Data) bool {
 
 	m.transactions = append(m.transactions, tx)
 	m.transactions_map[tx.Hash] = (len(m.transactions) - 1)
-	
+
 	return true
 }
 
 func (m *MemPool) removeOracleData(tx_hash string) bool {
 
 	remove(m.transactions, m.transactions_map[tx_hash])
-	
+
 	return true
 }
 
 func (m *MemPool) PrintMemPool() {
 	for _, data := range m.transactions {
 
-		util.Success_log_array("Hash: " + data.Hash[:8] + " For Height: " +  data.Height)
+		util.Success_log_array("Hash: " + data.Hash[:8] + " For Height: " + data.Height)
 	}
 	util.Success_log("Printed: " + strconv.Itoa(len(m.transactions)) + " in oracle data mempool")
 }
@@ -73,7 +73,7 @@ func FilterOracleDataMap(contract_map map[string][]transaction.Request_Oracle_Da
 		for i, contract_data := range oracle_array {
 			if !isOneDev(floats[i], stdev, mean) {
 				contract_data_map[contract_data.Epoc] = append(contract_data_map[contract_data.Epoc], contract_data)
-			} 
+			}
 		}
 		trusted_answer_data_map[oracle_array[0].Epoc] = calcMedian(floats)
 	}
@@ -81,10 +81,10 @@ func FilterOracleDataMap(contract_map map[string][]transaction.Request_Oracle_Da
 }
 
 func (m *MemPool) InMempool(tx_hash string) bool {
-    for _, compare := range m.transactions {
-        if compare.Hash == tx_hash {
-            return true
-        }
-    }
-    return false
+	for _, compare := range m.transactions {
+		if compare.Hash == tx_hash {
+			return true
+		}
+	}
+	return false
 }

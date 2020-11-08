@@ -5,9 +5,10 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
+	"log"
+
 	"github.com/karai/go-karai/util"
 	"golang.org/x/crypto/sha3"
-	"log"
 )
 
 func (tx *Transaction) Serialize() []byte {
@@ -26,7 +27,7 @@ func (tx *Transaction) ParseInterface() interface{} {
 	if tx.Type == "1" {
 		var tx_data Request_Consensus
 
-		err := json.Unmarshal([]byte(tx.Data),&tx_data)
+		err := json.Unmarshal([]byte(tx.Data), &tx_data)
 		if err != nil {
 			log.Println("Unable to parse tx data")
 			return nil
@@ -35,7 +36,7 @@ func (tx *Transaction) ParseInterface() interface{} {
 		return tx_data
 	} else if tx.Type == "2" {
 		var tx_data Request_Oracle_Data
-		err := json.Unmarshal([]byte(tx.Data),&tx_data)
+		err := json.Unmarshal([]byte(tx.Data), &tx_data)
 		if err != nil {
 			log.Println("Unable to parse tx data")
 			return nil
@@ -44,7 +45,7 @@ func (tx *Transaction) ParseInterface() interface{} {
 		return tx_data
 	} else if tx.Type == "3" {
 		var tx_data Request_Contract
-		err := json.Unmarshal([]byte(tx.Data),&tx_data)
+		err := json.Unmarshal([]byte(tx.Data), &tx_data)
 		if err != nil {
 			log.Println("Unable to parse tx data")
 			return nil
@@ -68,12 +69,9 @@ func CheckConsensusTx(consensus *Request_Consensus) bool {
 	// 	return false
 	// }
 
-		return false
-
+	return false
 
 }
-
-
 
 func DeserializeTransaction(data []byte) Transaction {
 	var transaction Transaction
@@ -171,7 +169,6 @@ func hashTransaction(txTime, txType, txData, txPrev string) string {
 
 	return txHash
 }
-
 
 func CreateTrustedTransaction(prev string, trusted_data Trusted_Data) Transaction {
 	var new_tx Transaction
