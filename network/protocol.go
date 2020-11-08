@@ -171,10 +171,16 @@ func (s *Server) NewConsensusTXFromCore(req transaction.Request_Consensus) {
 	}
 }
 
-func (s *Server) CreateContract(asset string, denom string) {
+//CreateContract make new contract uploaded fron config.json
+func (s *Server) CreateContract() {
 	var txPrev string
-	contract := transaction.Request_Contract{asset, denom}
-	json_contract, _ := json.Marshal(contract)
+	file, _ := ioutil.ReadFile("config.json")
+
+	data := contract.Contract{}
+
+	_ = json.Unmarshal([]byte(file), &data)
+
+	jsonContract, _ := json.Marshal(data)
 
 	db, connectErr := s.Prtl.Dat.Connect()
 	defer db.Close()
@@ -182,13 +188,13 @@ func (s *Server) CreateContract(asset string, denom string) {
 
 	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
-	tx := transaction.CreateTransaction("3", txPrev, []byte(json_contract), []string{}, []string{})
+	tx := transaction.CreateTransaction("3", txPrev, []byte(jsonContract), []string{}, []string{})
 
 	if !s.Prtl.Dat.HaveTx(tx.Hash) {
 		go s.Prtl.Dat.CommitDBTx(tx)
 		go s.BroadCastTX(tx)
 	}
-	log.Println("Created Contract " + tx.Hash[:8] + ": " + asset + "/" + denom)
+	log.Println("Created Contract " + tx.Hash[:8])
 }
 
 /*

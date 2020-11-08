@@ -75,19 +75,7 @@ func inputHandler(s *network.Server /*keyCollection *ED25519Keys*/) {
 		} else if strings.Compare("mempool", text) == 0 {
 			s.Prtl.Mempool.PrintMemPool()
 		} else if strings.HasPrefix(text, "create_contract ") {
-			strings.TrimPrefix(text, "create_contract ")
-			args := strings.Fields(text)
-			if args[1] == "XHV" || args[1] == "XEQ" || args[1] == "LOKI" || args[1] == "ETH" || args[1] == "DOGE" || args[1] == "XMR" {
-				if args[2] == "BTC" {
-					go s.CreateContract(args[1], args[2])
-				} else {
-					log.Println("Pair Not Supported! BTC")
-				}
-
-			} else {
-				log.Println("Pair Not Supported! XEQ, XHV, LOKI, ETH, DOGE")
-
-			}
+			go s.CreateContract()
 		}
 	}
 }
