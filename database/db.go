@@ -10,10 +10,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	config "github.com/harrisonhesslink/pythia/configuration"
 	"github.com/harrisonhesslink/pythia/transaction"
 	"github.com/harrisonhesslink/pythia/util"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 )
 

@@ -1,13 +1,12 @@
 package network
 
 import (
-	// "encoding/hex"
 	"log"
-	//"github.com/harrisonhesslink/pythia/database"
-	"github.com/harrisonhesslink/karai/database"
+
 	api "github.com/harrisonhesslink/pythia/api"
 	config "github.com/harrisonhesslink/pythia/configuration"
 	contract "github.com/harrisonhesslink/pythia/contract"
+	"github.com/harrisonhesslink/pythia/database"
 
 	"encoding/json"
 	"io/ioutil"
@@ -16,14 +15,20 @@ import (
 
 	externalip "github.com/glendc/go-external-ip"
 	"github.com/harrisonhesslink/flatend"
-	db "github.com/harrisonhesslink/pythia/database"
 	"github.com/harrisonhesslink/pythia/transaction"
 	"github.com/harrisonhesslink/pythia/util"
 	"github.com/lithdew/kademlia"
+
+	_ "github.com/lib/pq"
 	//"github.com/gorilla/websocket"
 )
 
-func Protocol_Init(c *config.Config, s *Server) {
+/*
+
+ProtocolInit = init all of the protocol
+
+*/
+func ProtocolInit(c *config.Config, s *Server) {
 
 	test_contract := contract.Contract{}
 	test_contract.APIURLS = make(map[string]string)
@@ -95,6 +100,11 @@ func Protocol_Init(c *config.Config, s *Server) {
 	select {}
 }
 
+/*
+
+HandleCall = Handle a call from p2p
+
+*/
 func (s *Server) HandleCall(stream *flatend.Stream) {
 	req, err := ioutil.ReadAll(stream.Reader)
 	if err != nil {
@@ -103,6 +113,11 @@ func (s *Server) HandleCall(stream *flatend.Stream) {
 	go s.HandleConnection(req, nil)
 }
 
+/*
+
+GetProviderFromID = Get provider from id
+
+*/
 func (s *Server) GetProviderFromID(id *kademlia.ID) *flatend.Provider {
 	providers := s.node.ProvidersFor("karai-xeq")
 	if providers != nil && len(providers) > 0 {
@@ -115,6 +130,11 @@ func (s *Server) GetProviderFromID(id *kademlia.ID) *flatend.Provider {
 	return nil
 }
 
+/*
+
+LookForNodes = Look for peers not known
+
+*/
 func (s *Server) LookForNodes() {
 	for {
 		if s.pl.Count < 9 {
@@ -137,12 +157,16 @@ func (s *Server) LookForNodes() {
 	}
 }
 
-//Go through all contracts and send data out
+//NewDataTxFromCore = Go through all contracts and send data out
 func (s *Server) NewDataTxFromCore(req transaction.NewBlock) {
 
 	if s.Prtl.MyNodeKey == "" {
 		s.Prtl.MyNodeKey = req.Pubkey
 	}
+
+	db, connectErr := s.Prtl.Dat.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
 
 	rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='3' ORDER BY tx_time DESC")
 	if err != nil {
@@ -164,6 +188,11 @@ func (s *Server) NewDataTxFromCore(req transaction.NewBlock) {
 		}
 
 		data, r := api.MakeRequest(contract)
+		if r {
+			for k, v := range data {
+				log.Println(k + ": " + v)
+			}
+		}
 
 	}
 	err = rows.Err()
@@ -177,7 +206,7 @@ func (s *Server) NewDataTxFromCore(req transaction.NewBlock) {
 	// }
 }
 
-//Create consensus tx v1
+//NewConsensusTXFromCore = create v1 tx
 func (s *Server) NewConsensusTXFromCore(req transaction.NewBlock) {
 	req_string, _ := json.Marshal(req)
 
@@ -292,6 +321,10 @@ func (s *Server) CheckNode(tx transaction.Transaction) bool {
 	return checks_out
 }
 
+/*
+
+GetContractMap creates contract map and their last known tx
+*/
 func (s *Server) GetContractMap() map[string]string {
 
 	db, connectErr := s.Prtl.Dat.Connect()
@@ -325,6 +358,11 @@ func (s *Server) GetContractMap() map[string]string {
 
 	return Contracts
 }
+
+/*
+
+CreateTrustedData creates trusted data source from all known tx
+*/
 func (s *Server) CreateTrustedData(block_height string) {
 
 	db, connectErr := s.Prtl.Dat.Connect()

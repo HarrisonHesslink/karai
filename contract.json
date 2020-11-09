@@ -1,0 +1,20 @@
+{
+    "variables": {
+        "bittrex": [
+            "lastTradeRate"
+        ],
+        "tradeogre": [
+            "price",
+            "volume"
+        ]
+    },
+    "request_time": 0,
+    "ContractRef": "",
+    "Threshold": "",
+    "Type": "",
+    "OutputVar": "",
+    "api_url": {
+        "bittrex": "https://api.bittrex.com/v3/markets/XHV-BTC/ticker",
+        "tradeogre": "https://tradeogre.com/api/v1/ticker/BTC-XHV"
+    }
+}
