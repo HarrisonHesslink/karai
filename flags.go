@@ -1,7 +1,7 @@
 package main
 import (
 	"flag"
-	config "github.com/karai/go-karai/configuration"
+	config "github.com/harrisonhesslink/pythia/configuration"
 )
 
 //parseFlags This evaluates the flags used when the program was run

@@ -1,8 +1,8 @@
 package main
 
 import (
-	config "github.com/karai/go-karai/configuration"
-	"github.com/karai/go-karai/network"
+	config "github.com/harrisonhesslink/pythia/configuration"
+	"github.com/harrisonhesslink/pythia/network"
 )
 
 // Hello Karai

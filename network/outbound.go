@@ -4,8 +4,8 @@ import (
 	"bytes"
 
 	"github.com/harrisonhesslink/flatend"
-	"github.com/karai/go-karai/transaction"
-	"github.com/karai/go-karai/util"
+	"github.com/harrisonhesslink/pythia/transaction"
+	"github.com/harrisonhesslink/pythia/util"
 
 	//"math/rand"
 	//"time"

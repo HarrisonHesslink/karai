@@ -3,9 +3,9 @@ package network
 import (
 	"github.com/gorilla/websocket"
 	"github.com/harrisonhesslink/flatend"
-	config "github.com/karai/go-karai/configuration"
-	"github.com/karai/go-karai/database"
-	"github.com/karai/go-karai/transaction"
+	config "github.com/harrisonhesslink/pythia/configuration"
+	"github.com/harrisonhesslink/pythia/database"
+	"github.com/harrisonhesslink/pythia/transaction"
 	"github.com/lithdew/kademlia"
 )
 

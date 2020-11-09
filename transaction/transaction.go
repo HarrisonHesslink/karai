@@ -7,7 +7,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/karai/go-karai/util"
+	"github.com/harrisonhesslink/pythia/util"
 	"golang.org/x/crypto/sha3"
 )
 

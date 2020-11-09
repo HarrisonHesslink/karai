@@ -11,7 +11,7 @@ RUN         apk add git              && \
 FROM        alpine
 
 COPY        --from=builder              \
-            /home/karai/go-karai go-karai
+            /home/harrisonhesslink/pythia go-karai
 
 EXPOSE      4200
 

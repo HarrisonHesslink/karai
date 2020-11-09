@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/karai/go-karai/network"
+	"github.com/harrisonhesslink/pythia/network"
 )
 
 // inputHandler This is a basic input loop that listens for

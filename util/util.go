@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	config "github.com/karai/go-karai/configuration"
+	config "github.com/harrisonhesslink/pythia/configuration"
 )
 
 // ascii Splash logo. We used to have a package for this

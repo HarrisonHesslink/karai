@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	config "github.com/karai/go-karai/configuration"
-	"github.com/karai/go-karai/transaction"
-	"github.com/karai/go-karai/util"
+	config "github.com/harrisonhesslink/pythia/configuration"
+	"github.com/harrisonhesslink/pythia/transaction"
+	"github.com/harrisonhesslink/pythia/util"
 	_ "github.com/lib/pq"
 )
 

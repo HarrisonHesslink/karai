@@ -9,7 +9,7 @@ import (
 
 	"github.com/Jeffail/gabs"
 
-	contract "github.com/karai/go-karai/contract"
+	"github.com/harrisonhesslink/pythia/contract"
 )
 
 //Make a Request to contract api url and return data in string with bool if returned correctly
@@ -38,7 +38,7 @@ func MakeRequest(c contract.Contract) (map[string]string, bool) {
 		// Search JSON
 		for _, v := range c.Data[k] {
 			fmt.Println("Get value of "+v+" from "+k+" :\t", jsonParsed.Path(v).Data())
-			//data[v] = strconv.Itoa(jsonParsed.Path(v).Data())
+			data[v] = jsonParsed.Path(v).Data().(string)
 		}
 	}
 

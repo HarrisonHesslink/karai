@@ -3,8 +3,8 @@ package network
 import (
 	"strconv"
 
-	"github.com/karai/go-karai/transaction"
-	"github.com/karai/go-karai/util"
+	"github.com/harrisonhesslink/pythia/transaction"
+	"github.com/harrisonhesslink/pythia/util"
 )
 
 func NewMemPool() *MemPool {

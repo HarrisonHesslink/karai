@@ -3,10 +3,11 @@ package network
 import (
 	// "encoding/hex"
 	"log"
-	//"github.com/karai/go-karai/database"
-	api "github.com/karai/go-karai/api"
-	config "github.com/karai/go-karai/configuration"
-	contract "github.com/karai/go-karai/contract"
+	//"github.com/harrisonhesslink/pythia/database"
+	"github.com/harrisonhesslink/karai/database"
+	api "github.com/harrisonhesslink/pythia/api"
+	config "github.com/harrisonhesslink/pythia/configuration"
+	contract "github.com/harrisonhesslink/pythia/contract"
 
 	"encoding/json"
 	"io/ioutil"
@@ -15,9 +16,9 @@ import (
 
 	externalip "github.com/glendc/go-external-ip"
 	"github.com/harrisonhesslink/flatend"
-	"github.com/karai/go-karai/database"
-	"github.com/karai/go-karai/transaction"
-	"github.com/karai/go-karai/util"
+	db "github.com/harrisonhesslink/pythia/database"
+	"github.com/harrisonhesslink/pythia/transaction"
+	"github.com/harrisonhesslink/pythia/util"
 	"github.com/lithdew/kademlia"
 	//"github.com/gorilla/websocket"
 )
@@ -136,17 +137,47 @@ func (s *Server) LookForNodes() {
 	}
 }
 
+//Go through all contracts and send data out
 func (s *Server) NewDataTxFromCore(req transaction.NewBlock) {
 
 	if s.Prtl.MyNodeKey == "" {
 		s.Prtl.MyNodeKey = req.Pubkey
 	}
 
+	rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='3' ORDER BY tx_time DESC")
+	if err != nil {
+		panic(err)
+	}
+
+	for rows.Next() {
+		var this_tx transaction.Transaction
+		err = rows.StructScan(&this_tx)
+		if err != nil {
+			// handle this error
+			log.Panic(err)
+		}
+
+		var contract contract.Contract
+		err := json.Unmarshal([]byte(this_tx.Data), &contract)
+		if err != nil {
+			log.Panic(err)
+		}
+
+		data, r := api.MakeRequest(contract)
+
+	}
+	err = rows.Err()
+	if err != nil {
+		log.Panic(err)
+	}
+	rows.Close()
+
 	// if s.Prtl.Mempool.addOracleData() {
 	// 	go s.BroadCastOracleData(req)
 	// }
 }
 
+//Create consensus tx v1
 func (s *Server) NewConsensusTXFromCore(req transaction.NewBlock) {
 	req_string, _ := json.Marshal(req)
 
