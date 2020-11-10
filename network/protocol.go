@@ -84,6 +84,8 @@ func ProtocolInit(c *config.Config, s *Server) {
 		log.Println("Unable to connect")
 	}
 
+	go s.LookForNodes()
+
 	select {}
 }
 
