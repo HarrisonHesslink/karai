@@ -77,14 +77,17 @@ func ProtocolInit(c *config.Config, s *Server) {
 	err = s.node.Start(s.ExternalIP)
 	s.node.Probe("167.172.156.118:4201")
 	s.node.Probe("157.230.91.2:4201")
-	s.node.Probe(":4201")
 	s.Prtl.Sync.Connected = true
 
 	if err != nil {
 		log.Println("Unable to connect")
 	}
 
-	go s.LookForNodes()
+	providers := s.node.ProvidersFor("karai-xeq")
+	log.Println("providers:" + strconv.Itoa(len(providers)))
+	for _, provider := range providers {
+		go s.SendVersion(provider)
+	}
 
 	select {}
 }
@@ -133,12 +136,6 @@ func (s *Server) LookForNodes() {
 			log.Println(len(new_ids))
 			for _, peer := range new_ids {
 				s.node.Probe(peer.Host.String() + ":" + strconv.Itoa(int(peer.Port)))
-			}
-
-			providers := s.node.ProvidersFor("karai-xeq")
-			//log.Println(strconv.Itoa(len(providers)))
-			for _, provider := range providers {
-				go s.SendVersion(provider)
 			}
 		}
 
