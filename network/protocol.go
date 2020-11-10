@@ -379,16 +379,15 @@ func (s *Server) CreateTrustedData(block_height string) {
 		log.Println("Size of contract_array: " + strconv.Itoa(len(contract_array)))
 
 		var lastTrustedTx transaction.Transaction
-		_ = db.QueryRow("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Contract).Scan(&lastTrustedTx)
+		_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Contract).StructScan(&lastTrustedTx)
 		prev := lastTrustedTx.Hash
+		log.Println(prev)
 		if prev == "" {
 			return
 		}
 
-		ltd := transaction.Trusted_Data{}
-		json.Unmarshal([]byte(lastTrustedTx.Data), &ltd)
-
-		log.Println(ltd.TrustedData)
+		// ltd := transaction.Trusted_Data{}
+		// json.Unmarshal([]byte(lastTrustedTx.Data), &ltd)
 
 		var multi float64
 
@@ -424,7 +423,7 @@ func (s *Server) CreateTrustedData(block_height string) {
 
 		new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
 
-		go s.Prtl.Dat.CommitDBTx(new_tx)
+		s.Prtl.Dat.CommitDBTx(new_tx)
 		go s.BroadCastTX(new_tx)
 	}
 }
