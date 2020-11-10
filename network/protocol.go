@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"log"
 
 	api "github.com/harrisonhesslink/pythia/api"
@@ -371,20 +372,50 @@ func (s *Server) CreateTrustedData(block_height string) {
 
 	filtered_data_map, trusted_data_map := FilterOracleDataMap(contract_data_map)
 
-	log.Println("Creating Trust Data TX")
+	log.Println("Creating Trust Data TX for block: " + block_height)
 
 	for _, contract_array := range filtered_data_map {
 
 		log.Println("Size of contract_array: " + strconv.Itoa(len(contract_array)))
 
-		var prev string
-		_ = db.QueryRow("SELECT tx_hash FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Contract).Scan(&prev)
-
+		var lastTrustedTx transaction.Transaction
+		_ = db.QueryRow("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Contract).Scan(&lastTrustedTx)
+		prefv := lastTrustedTx.Hash
 		if prev == "" {
 			return
 		}
 
-		trusted_data := transaction.Trusted_Data{contract_array, trusted_data_map[contract_array[0].Contract]}
+		var multi float64
+
+		var contractTx transaction.Transaction
+		_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_hash=$1 ORDER BY tx_time DESC", contract_array[0].Contract).StructScan(&contractTx)
+
+		contract := contract.Contract{}
+		json.Unmarshal([]byte(contractTx.Data), &contract)
+
+		if contract.ContractRef != "" {
+			log.Println(contract.ContractRef)
+			var lastContractRef transaction.Transaction
+			_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract.ContractRef).StructScan(&lastContractRef)
+
+			if lastContractRef.Hash == "" {
+				log.Println("Unable to query last contract ref!")
+			}
+
+			td := transaction.Trusted_Data{}
+			json.Unmarshal([]byte(lastContractRef.Data), &td)
+			if td.TrustedAnswer > 0 {
+				multi = td.TrustedAnswer
+
+			} else {
+				multi = 1.0
+			}
+
+		} else {
+			multi = 1.0
+		}
+		fmt.Println(multi)
+		trusted_data := transaction.Trusted_Data{contract_array, trusted_data_map[contract_array[0].Contract] * multi}
 
 		new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
 

@@ -30,6 +30,11 @@ import (
 // 	s.SendData(address, request)
 // }
 
+/*
+
+SendTx : Send singular tx
+
+*/
 func (s *Server) SendTx(p *flatend.Provider, tx transaction.Transaction) {
 	data := GOB_TX{tx.Serialize()}
 	payload := GobEncode(data)
@@ -41,6 +46,11 @@ func (s *Server) SendTx(p *flatend.Provider, tx transaction.Transaction) {
 	}
 }
 
+/*
+
+BroadCastTX : broadcast tx
+
+*/
 func (s *Server) BroadCastTX(tx transaction.Transaction) {
 	data := GOB_TX{tx.Serialize()}
 	payload := GobEncode(data)
@@ -53,12 +63,17 @@ func (s *Server) BroadCastTX(tx transaction.Transaction) {
 		stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 		if err == nil {
 			go s.HandleCall(stream)
-			util.Success_log(util.Send + " [VERSION] Call")
+			util.Success_log(util.Send + " [TX] Broadcast TX Hash: " + tx.Hash)
 		}
 
 	}
 }
 
+/*
+
+BroadCastOracleData : broadcast oracle data
+
+*/
 func (s *Server) BroadCastOracleData(oracle_data transaction.OracleData) {
 	data := GOB_ORACLE_DATA{oracle_data}
 	payload := GobEncode(data)
@@ -77,6 +92,11 @@ func (s *Server) BroadCastOracleData(oracle_data transaction.OracleData) {
 
 }
 
+/*
+
+SendData : sendBytes
+
+*/
 func (s *Server) SendData(ctx *flatend.Context, data []byte) {
 
 	p := s.GetProviderFromID(&ctx.ID)
@@ -88,6 +108,11 @@ func (s *Server) SendData(ctx *flatend.Context, data []byte) {
 	}
 }
 
+/*
+
+BroadCastData : Broadcast data
+
+*/
 func (s *Server) BroadCastData(data []byte) {
 	providers := s.node.ProvidersFor("karai-xeq")
 	for _, provider := range providers {
@@ -98,56 +123,11 @@ func (s *Server) BroadCastData(data []byte) {
 	}
 }
 
-// func (s Server) SendBroadcastTX(tx transaction.Transaction) {
-// 	data := GOB_TX{tx.Serialize()}
-// 	payload := GobEncode(data)
-// 	request := append(CmdToBytes("broadtx"), payload...)
+/*
 
-// 	rand.Seed(time.Now().UnixNano())
-// 	// providers := s.node.ProvidersFor("karai-xeq")
-// 	// for _, provider := range providers {
-// 	// 	s.SendData(*provider, request)
-// 	// 	// if err != nil {
-// 	// 	// 	fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
-// 	// 	// }
-// 	// 	log.Println("[SEND] [BRD] Broadcasting Transaction: " + tx.Hash)
-// 	// }
-// }
+SendGetTxes : Get tansactions not known
 
-// func (s Server) SendBroadcastNewPeer(provider flatend.Provider) {
-// 	data := NewPeer{nodeAddress, addr}
-// 	payload := GobEncode(data)
-// 	request := append(CmdToBytes("newpeer"), payload...)
-
-// 	rand.Seed(time.Now().UnixNano())
-
-// 	ok := false
-// 	//loop to make sure it broadcasts not self
-// 	for ok == false {
-// 		index := rand.Intn(len(KnownNodes))
-// 		if KnownNodes[index] != nodeAddress {
-// 			//s.SendData(KnownNodes[index], request)
-// 			log.Println("[SEND] [BRD] Broadcasting Connected Peer: " + addr)
-// 			ok = true
-// 		}
-// 	}
-// }
-
-func (s *Server) SendInv(kind string, items [][]byte) {
-	inventory := Inv{nodeAddress, kind, items}
-	payload := GobEncode(inventory)
-	request := append(CmdToBytes("inv"), payload...)
-
-	for _, p := range s.pl.Peers {
-		stream, err := p.Provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
-		if err != nil {
-			//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
-		}
-		util.Success_log(util.Send + " [INV] Sending INV: " + strconv.Itoa(len(items)))
-		s.HandleCall(stream)
-	}
-}
-
+*/
 func (s *Server) SendGetTxes(ctx *flatend.Context, fill bool, contracts map[string]string) {
 
 	var txPrev string
@@ -169,14 +149,11 @@ func (s *Server) SendGetTxes(ctx *flatend.Context, fill bool, contracts map[stri
 	}
 }
 
-// func (s Server) SendGetData(provider flatend.Provider, kind string, id []byte) {
-// 	payload := GobEncode(GetData{nodeAddress, kind, id})
-// 	request := append(CmdToBytes("getdata"), payload...)
+/*
 
-// 	//s.SendData(address, request)
-// 	//log.Println("[SEND] [GDTA][" + kind + "] Sending Data to: " + address)
-// }
+SendVersion : Send Sync Call
 
+*/
 func (s *Server) SendVersion(p *flatend.Provider) {
 
 	db, connectErr := s.Prtl.Dat.Connect()

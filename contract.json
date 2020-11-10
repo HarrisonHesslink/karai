@@ -1,24 +1,19 @@
 {
     "variables": {
-        "gemini": [
-            "close"
+        "bittrex": [
+            "lastTradeRate"
         ],
-        "binance": [
-            "lastPrice"
-        ],
-        "ftx": [
-            "result.last"
+        "tradeogre": [
+            "price"
         ]
     },
     "request_time": 0,
-    "ContractRef": "",
-    "Threshold": ".01",
+    "ContractRef": "868b2dcf05936db9485b1a08d5674f638c73d7b5c7e4a1c27b137fb909e453281e188020a6114391cf2dbd156449a305b7c40f3ed26bc1bcee9e4e3b39a16f00",
+    "Threshold": "",
     "Type": "",
     "OutputVar": "",
     "api_url": {
-        "gemini": "https://api.gemini.com/v2/ticker/btcusd",
-        "binance": "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
-        "ftx": "https://ftx.com/api/markets/BTC/USD"
-
+        "bittrex": "https://api.bittrex.com/v3/markets/XHV-BTC/ticker",
+        "tradeogre": "https://tradeogre.com/api/v1/ticker/BTC-XHV"
     }
 }
