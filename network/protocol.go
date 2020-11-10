@@ -83,12 +83,6 @@ func ProtocolInit(c *config.Config, s *Server) {
 		log.Println("Unable to connect")
 	}
 
-	providers := s.node.ProvidersFor("karai-xeq")
-	log.Println("providers:" + strconv.Itoa(len(providers)))
-	for _, provider := range providers {
-		go s.SendVersion(provider)
-	}
-
 	go s.LookForNodes()
 
 	select {}
@@ -134,7 +128,6 @@ func (s *Server) LookForNodes() {
 		if s.pl.Count < 9 {
 
 			providers := s.node.ProvidersFor("karai-xeq")
-			log.Println("providers:" + strconv.Itoa(len(providers)))
 			for _, provider := range providers {
 				go s.SendVersion(provider)
 			}
