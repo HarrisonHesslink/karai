@@ -89,6 +89,8 @@ func ProtocolInit(c *config.Config, s *Server) {
 		go s.SendVersion(provider)
 	}
 
+	go s.LookForNodes()
+
 	select {}
 }
 
@@ -130,12 +132,11 @@ LookForNodes = Look for peers not known
 func (s *Server) LookForNodes() {
 	for {
 		if s.pl.Count < 9 {
-			new_ids := s.node.Bootstrap()
 
-			//probe new nodes
-			log.Println(len(new_ids))
-			for _, peer := range new_ids {
-				s.node.Probe(peer.Host.String() + ":" + strconv.Itoa(int(peer.Port)))
+			providers := s.node.ProvidersFor("karai-xeq")
+			log.Println("providers:" + strconv.Itoa(len(providers)))
+			for _, provider := range providers {
+				go s.SendVersion(provider)
 			}
 		}
 
