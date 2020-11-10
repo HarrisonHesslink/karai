@@ -181,7 +181,7 @@ func CreateTrustedTransaction(prev string, trusted_data Trusted_Data) Transactio
 	new_tx.Type = "2"
 	new_tx.Time = util.UnixTimeStampNano()
 	new_tx.Prev = prev
-	new_tx.Epoc = trusted_data.TrustedData[0].Epoc
+	new_tx.Epoc = trusted_data.TrustedData[0].Contract
 	new_tx.Subg = new_tx.Epoc
 	new_tx.Prnt = ""
 	new_tx.Lead = false

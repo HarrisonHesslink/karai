@@ -52,7 +52,7 @@ func (s *Server) BroadCastTX(tx transaction.Transaction) {
 
 }
 
-func (s *Server) BroadCastOracleData(oracle_data transaction.Request_Oracle_Data) {
+func (s *Server) BroadCastOracleData(oracle_data transaction.OracleData) {
 	data := GOB_ORACLE_DATA{oracle_data}
 	payload := GobEncode(data)
 	request := append(CmdToBytes("data"), payload...)

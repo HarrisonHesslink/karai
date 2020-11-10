@@ -14,28 +14,22 @@ func NewMemPool() *MemPool {
 }
 
 //sorts oracle map
-func (m *MemPool) SortOracleDataMap(block_height string) map[string][]transaction.Request_Oracle_Data {
-	contract_data_map := make(map[string][]transaction.Request_Oracle_Data)
+func (m *MemPool) SortOracleDataMap(block_height string) map[string][]transaction.OracleData {
+	contract_data_map := make(map[string][]transaction.OracleData)
 
 	for _, oracle_data := range m.transactions {
 		if oracle_data.Height == block_height {
-			contract_data_map[oracle_data.Epoc] = append(contract_data_map[oracle_data.Epoc], oracle_data)
+			contract_data_map[oracle_data.Contract] = append(contract_data_map[oracle_data.Contract], oracle_data)
 		}
 	}
 	return contract_data_map
 }
 
-func (m *MemPool) addOracleData(tx transaction.Request_Oracle_Data) bool {
+func (m *MemPool) addOracleData(tx transaction.OracleData) bool {
 
 	if m.InMempool(tx.Hash) {
 		return false
 	}
-
-	// this_height, err := strconv.Atoi(tx.Height)
-
-	// if err != nil {
-	// 	return false
-	// }
 
 	m.transactions = append(m.transactions, tx)
 	m.transactions_map[tx.Hash] = (len(m.transactions) - 1)
@@ -62,20 +56,20 @@ func (m *MemPool) Count() int {
 	return len(m.transactions)
 }
 
-func FilterOracleDataMap(contract_map map[string][]transaction.Request_Oracle_Data) (map[string][]transaction.Request_Oracle_Data, map[string]float32) {
-	contract_data_map := make(map[string][]transaction.Request_Oracle_Data)
-	trusted_answer_data_map := make(map[string]float32)
+func FilterOracleDataMap(contract_map map[string][]transaction.OracleData) (map[string][]transaction.OracleData, map[string]float64) {
+	contract_data_map := make(map[string][]transaction.OracleData)
+	trusted_answer_data_map := make(map[string]float64)
 	for _, oracle_array := range contract_map {
-		floats := stringsToFloats(oracle_array)
+		floats := toFloatArray(oracle_array)
 
 		stdev, mean := stdevData(floats)
 
 		for i, contract_data := range oracle_array {
 			if !isOneDev(floats[i], stdev, mean) {
-				contract_data_map[contract_data.Epoc] = append(contract_data_map[contract_data.Epoc], contract_data)
+				contract_data_map[contract_data.Contract] = append(contract_data_map[contract_data.Contract], contract_data)
 			}
 		}
-		trusted_answer_data_map[oracle_array[0].Epoc] = calcMedian(floats)
+		trusted_answer_data_map[oracle_array[0].Contract] = calcMedian(floats)
 	}
 	return contract_data_map, trusted_answer_data_map
 }

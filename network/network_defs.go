@@ -28,7 +28,7 @@ type Addr struct {
 }
 
 type GOB_ORACLE_DATA struct {
-	Oracle_Data transaction.Request_Oracle_Data
+	Oracle_Data transaction.OracleData
 }
 
 type GOB_TX struct {
@@ -91,7 +91,7 @@ type Protocol struct {
 }
 
 type MemPool struct {
-	transactions []transaction.Request_Oracle_Data
+	transactions []transaction.OracleData
 	// tx_hash -> block height
 	transactions_map map[string]int
 }

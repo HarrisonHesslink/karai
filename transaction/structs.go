@@ -18,6 +18,15 @@ type NewBlock struct {
 	Leader bool     `json:"leader"`
 }
 
+type OracleData struct {
+	Hash      string  `json:"hash"`
+	Price     float64 `json:"price"`
+	Height    string  `json:"height"`
+	Contract  string  `json:"contract"`
+	Pubkey    string  `json:"pubkey"`
+	Signature string  `json:"signature"`
+}
+
 type Request_Consensus struct {
 	Hash      string   `json:"hash"`
 	PubKey    string   `json:"pubkey"`
@@ -47,6 +56,6 @@ type Request_Contract struct {
 }
 
 type Trusted_Data struct {
-	TrustedData   []Request_Oracle_Data `json:"trusted_data"`
-	TrustedAnswer float32               `json:trusted_answer`
+	TrustedData   []OracleData `json:"trusted_data"`
+	TrustedAnswer float64      `json:trusted_answer`
 }

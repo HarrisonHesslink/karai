@@ -30,17 +30,6 @@ ProtocolInit = init all of the protocol
 */
 func ProtocolInit(c *config.Config, s *Server) {
 
-	test_contract := contract.Contract{}
-	test_contract.APIURLS = make(map[string]string)
-	test_contract.APIURLS["bittrex"] = "https://api.bittrex.com/v3/markets/XHV-BTC/ticker"
-	test_contract.APIURLS["tradeogre"] = "https://tradeogre.com/api/v1/ticker/BTC-XHV"
-
-	test_contract.Data = make(map[string][]string)
-	test_contract.Data["bittrex"] = append(test_contract.Data["bittrex"], "lastTradeRate")
-	test_contract.Data["tradeogre"] = append(test_contract.Data["tradeogre"], "price", "volume")
-
-	_, _ = api.MakeRequest(test_contract)
-
 	var p Protocol
 	var peer_list PeerList
 	var sync Syncer
@@ -164,6 +153,8 @@ func (s *Server) NewDataTxFromCore(req transaction.NewBlock) {
 		s.Prtl.MyNodeKey = req.Pubkey
 	}
 
+	var agg float64
+
 	db, connectErr := s.Prtl.Dat.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
@@ -189,9 +180,25 @@ func (s *Server) NewDataTxFromCore(req transaction.NewBlock) {
 
 		data, r := api.MakeRequest(contract)
 		if r {
-			for k, v := range data {
-				log.Println(k + ": " + v)
+			for _, v := range data {
+				f, _ := strconv.ParseFloat(v, 64)
+				agg += f
 			}
+			agg = agg / float64(len(data))
+
+			var oracledata transaction.OracleData
+			oracledata.Height = req.Height
+			oracledata.Pubkey = req.Pubkey
+			oracledata.Price = agg
+			oracledata.Contract = this_tx.Hash
+			oracledata.Hash = ""
+			oracledata.Signature = ""
+			sig, hash := api.CoreSign(oracledata)
+
+			oracledata.Hash = hash
+			oracledata.Signature = sig
+
+			go s.BroadCastOracleData(oracledata)
 		}
 
 	}
@@ -380,13 +387,13 @@ func (s *Server) CreateTrustedData(block_height string) {
 		log.Println("Size of contract_array: " + strconv.Itoa(len(contract_array)))
 
 		var prev string
-		_ = db.QueryRow("SELECT tx_hash FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Epoc).Scan(&prev)
+		_ = db.QueryRow("SELECT tx_hash FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Contract).Scan(&prev)
 
 		if prev == "" {
 			return
 		}
 
-		trusted_data := transaction.Trusted_Data{contract_array, trusted_data_map[contract_array[0].Epoc]}
+		trusted_data := transaction.Trusted_Data{contract_array, trusted_data_map[contract_array[0].Contract]}
 
 		new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
 

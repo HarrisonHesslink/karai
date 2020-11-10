@@ -7,7 +7,6 @@ import (
 	"log"
 	"math"
 	"sort"
-	"strconv"
 
 	"github.com/harrisonhesslink/pythia/transaction"
 )
@@ -79,36 +78,34 @@ func containsValue(m map[string]string, v string) bool {
 }
 
 //gets mean, standard deviation on a array of floats
-func stdevData(oracle_array []float32) (float32, float32) {
-	var stdev, mean, sum float32
+func stdevData(oracle_array []float64) (float64, float64) {
+	var stdev, mean, sum float64
 	for _, price := range oracle_array {
 		sum += price
 	}
 
-	mean = sum / float32(len(oracle_array))
+	mean = sum / float64(len(oracle_array))
 
 	for _, val := range oracle_array {
-		stdev += float32(math.Pow(float64(val-mean), 2))
+		stdev += math.Pow(float64(val-mean), 2)
 	}
 
-	stdev = float32(math.Sqrt(float64(stdev / float32(len(oracle_array)))))
+	stdev = math.Sqrt(float64(stdev / float64(len(oracle_array))))
 
 	return stdev, mean
 }
 
 //takes prices and makes them into float32
-func stringsToFloats(oracle_array []transaction.Request_Oracle_Data) []float32 {
-	var floats []float32
+func toFloatArray(oracle_array []transaction.OracleData) []float64 {
+	var floats []float64
 	for _, s := range oracle_array {
-		if float, err := strconv.ParseFloat(s.Data, 32); err == nil {
-			floats = append(floats, float32(float))
-		}
+		floats = append(floats, s.Price)
 	}
 	return floats
 }
 
 //Checks if price is one deviation away
-func isOneDev(price, stdev, mean float32) bool {
+func isOneDev(price, stdev, mean float64) bool {
 
 	if price >= (stdev-mean) && price <= (stdev+mean) {
 		return true
@@ -118,33 +115,22 @@ func isOneDev(price, stdev, mean float32) bool {
 }
 
 //removes
-func remove(slice []transaction.Request_Oracle_Data, index int) []transaction.Request_Oracle_Data {
+func remove(slice []transaction.OracleData, index int) []transaction.OracleData {
 	return append(slice[:index], slice[index+1:]...)
 }
 
-func calcMedian(floats []float32) float32 {
-	log.Println(strconv.Itoa(len(floats)))
-	float32Values := floats
-	if len(float32Values) > 1 {
-		float32AsFloat64Values := make([]float64, len(floats))
+func calcMedian(floats []float64) float64 {
+	if len(floats) > 1 {
 
-		for i, val := range float32Values {
-			float32AsFloat64Values[i] = float64(val)
+		sort.Float64s(floats)
+
+		mnum := len(floats) / 2
+
+		if len(floats)%2 == 0 {
+			return floats[mnum]
 		}
 
-		sort.Float64s(float32AsFloat64Values)
-
-		for i, val := range float32AsFloat64Values {
-			float32Values[i] = float32(val)
-		}
-
-		mnum := len(float32Values) / 2
-
-		if len(float32Values)%2 == 0 {
-			return float32Values[mnum]
-		}
-
-		return (float32Values[mnum-1] + float32Values[mnum]) / 2
+		return (floats[mnum-1] + floats[mnum]) / 2
 	}
 	return 0
 }
