@@ -84,7 +84,7 @@ func ProtocolInit(c *config.Config, s *Server) {
 		log.Println("Unable to connect")
 	}
 
-	go s.LookForNodes()
+	//go s.LookForNodes()
 
 	select {}
 }
@@ -130,7 +130,7 @@ func (s *Server) LookForNodes() {
 			new_ids := s.node.Bootstrap()
 
 			//probe new nodes
-
+			log.Println(len(new_ids))
 			for _, peer := range new_ids {
 				s.node.Probe(peer.Host.String() + ":" + strconv.Itoa(int(peer.Port)))
 			}
