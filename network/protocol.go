@@ -380,10 +380,15 @@ func (s *Server) CreateTrustedData(block_height string) {
 
 		var lastTrustedTx transaction.Transaction
 		_ = db.QueryRow("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Contract).Scan(&lastTrustedTx)
-		prefv := lastTrustedTx.Hash
+		prev := lastTrustedTx.Hash
 		if prev == "" {
 			return
 		}
+
+		ltd := transaction.Trusted_Data{}
+		json.Unmarshal([]byte(lastTrustedTx.Data), &ltd)
+
+		log.Println(ltd.TrustedData)
 
 		var multi float64
 
