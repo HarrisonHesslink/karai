@@ -159,7 +159,7 @@ func (s *Server) LookForNodes() {
 
 //NewDataTxFromCore = Go through all contracts and send data out
 func (s *Server) NewDataTxFromCore(req transaction.NewBlock) {
-
+	log.Println(req.Pubkey)
 	if s.Prtl.MyNodeKey == "" {
 		s.Prtl.MyNodeKey = req.Pubkey
 	}

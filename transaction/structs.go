@@ -12,11 +12,10 @@ type Request_Oracle_Data struct {
 }
 
 type NewBlock struct {
-	Hash   string `json:"hash"`
-	Pubkey string `json:"pubkey"`
-	Height string `json:"height"`
-	Nodes  string `json:"nodes"`
-	Leader bool   `json:"leader"`
+	Height string   `json:"height"`
+	Pubkey string   `json:"pubkey"`
+	Nodes  []string `json:"nodes"`
+	Leader bool     `json:"leader"`
 }
 
 type Request_Consensus struct {

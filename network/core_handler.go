@@ -164,6 +164,7 @@ func (s *Server) RestAPI() {
 	}).Methods("GET")
 
 	api.HandleFunc("/new_block", func(w http.ResponseWriter, r *http.Request) {
+
 		if s.Prtl.Sync.Connected {
 			var req transaction.NewBlock
 			// Try to decode the request body into the struct. If there is an error,
@@ -175,7 +176,6 @@ func (s *Server) RestAPI() {
 			}
 
 			if req.Pubkey != "" && len(req.Nodes) > 0 && req.Height != "" {
-
 				if req.Leader {
 					go s.NewConsensusTXFromCore(req)
 				} else {
