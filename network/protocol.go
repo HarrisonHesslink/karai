@@ -420,17 +420,17 @@ func (s *Server) CreateTrustedData(block_height string) {
 			fmt.Println(price)
 			send := false
 			if contract.Threshold != "" {
-				if s, err := strconv.ParseFloat(contract.Threshold, 64); err != nil {
-					log.Println(s)
-					if s >= 0.0 {
-						ltd := transaction.Trusted_Data{}
-						json.Unmarshal([]byte(lastTrustedTx.Data), &ltd)
+				log.Println(contract.Threshold)
+				s, _ := strconv.ParseFloat(contract.Threshold, 64)
+				log.Println(s)
+				if s > 0.0 {
+					ltd := transaction.Trusted_Data{}
+					json.Unmarshal([]byte(lastTrustedTx.Data), &ltd)
 
-						change := PercentageChange(ltd.TrustedAnswer, price)
+					change := PercentageChange(ltd.TrustedAnswer, price)
 
-						if change >= s {
-							send = true
-						}
+					if change >= s {
+						send = true
 					}
 				}
 			} else {
