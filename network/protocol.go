@@ -376,55 +376,57 @@ func (s *Server) CreateTrustedData(block_height string) {
 
 	for _, contract_array := range filtered_data_map {
 
-		log.Println("Size of contract_array: " + strconv.Itoa(len(contract_array)))
+		if len(contract_array) > 1 {
+			log.Println("Size of contract_array: " + strconv.Itoa(len(contract_array)))
 
-		var lastTrustedTx transaction.Transaction
-		_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Contract).StructScan(&lastTrustedTx)
-		prev := lastTrustedTx.Hash
-		if prev == "" {
-			return
-		}
-
-		// ltd := transaction.Trusted_Data{}
-		// json.Unmarshal([]byte(lastTrustedTx.Data), &ltd)
-
-		multi := 1.0
-
-		var contractTx transaction.Transaction
-		_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_hash=$1 ORDER BY tx_time DESC", contract_array[0].Contract).StructScan(&contractTx)
-
-		contract := contract.Contract{}
-		json.Unmarshal([]byte(contractTx.Data), &contract)
-
-		if contract.ContractRef != "" {
-			var lastContractRef transaction.Transaction
-			_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract.ContractRef).StructScan(&lastContractRef)
-
-			if lastContractRef.Hash == "" {
-				log.Println("Unable to query last contract ref!")
+			var lastTrustedTx transaction.Transaction
+			_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Contract).StructScan(&lastTrustedTx)
+			prev := lastTrustedTx.Hash
+			if prev == "" {
+				return
 			}
 
-			td := transaction.Trusted_Data{}
-			json.Unmarshal([]byte(lastContractRef.Data), &td)
-			if td.TrustedAnswer > 0 {
-				multi = td.TrustedAnswer
+			// ltd := transaction.Trusted_Data{}
+			// json.Unmarshal([]byte(lastTrustedTx.Data), &ltd)
+
+			multi := 1.0
+
+			var contractTx transaction.Transaction
+			_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_hash=$1 ORDER BY tx_time DESC", contract_array[0].Contract).StructScan(&contractTx)
+
+			contract := contract.Contract{}
+			json.Unmarshal([]byte(contractTx.Data), &contract)
+
+			if contract.ContractRef != "" {
+				var lastContractRef transaction.Transaction
+				_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract.ContractRef).StructScan(&lastContractRef)
+
+				if lastContractRef.Hash == "" {
+					log.Println("Unable to query last contract ref!")
+				}
+
+				td := transaction.Trusted_Data{}
+				json.Unmarshal([]byte(lastContractRef.Data), &td)
+				if td.TrustedAnswer > 0 {
+					multi = td.TrustedAnswer
+
+				} else {
+					multi = 1.0
+				}
 
 			} else {
 				multi = 1.0
 			}
+			height, _ := strconv.Atoi(block_height)
 
-		} else {
-			multi = 1.0
+			go s.Prtl.Mempool.PruneHeight(strconv.Itoa(height - 5))
+			fmt.Println(multi)
+			trusted_data := transaction.Trusted_Data{contract_array, trusted_data_map[contract_array[0].Contract] * multi}
+
+			new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
+
+			s.Prtl.Dat.CommitDBTx(new_tx)
+			go s.BroadCastTX(new_tx)
 		}
-		height, _ := strconv.Atoi(block_height)
-
-		go s.Prtl.Mempool.PruneHeight(strconv.Itoa(height - 5))
-		fmt.Println(multi)
-		trusted_data := transaction.Trusted_Data{contract_array, trusted_data_map[contract_array[0].Contract] * multi}
-
-		new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
-
-		s.Prtl.Dat.CommitDBTx(new_tx)
-		go s.BroadCastTX(new_tx)
 	}
 }
