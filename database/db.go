@@ -165,17 +165,15 @@ func (d *Database) ReturnTopHash() (string, int) {
 }
 
 func (d *Database) HaveTx(hash string) bool {
-	exists := true
-	var tx_hash string
 	db, connectErr := d.Connect()
 	util.Handle("Error creating a DB connection: ", connectErr)
 	defer db.Close()
-	row := db.QueryRow("SELECT tx_hash FROM "+d.Cf.GetTableName()+" WHERE tx_hash=$1", hash)
-	_ = row.Scan(&tx_hash)
-	if tx_hash != hash {
-		exists = false
-	}
 
+	var exists bool
+	err := db.QueryRow("SELECT exists(select 1 from transactions where tx_hash=$1)", hash).Scan(&exists)
+	if err != nil {
+		return true
+	}
 	return exists
 }
 
