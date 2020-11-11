@@ -211,7 +211,7 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 
 		if s.Prtl.ConsensusNode == s.Prtl.MyNodeKey {
 			height, _ := strconv.Atoi(consensus_data.Height)
-			go s.CreateTrustedData(strconv.Itoa(height - 1))
+			s.CreateTrustedData(strconv.Itoa(height - 1))
 		}
 
 		s.Prtl.ConsensusNode = consensus_data.PubKey
@@ -227,6 +227,15 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 		if s.Prtl.Dat.HaveTx(tx.Prev) {
 			if !s.Prtl.Dat.HaveTx(tx.Hash) {
 				s.Prtl.Dat.CommitDBTx(tx)
+
+				oracleData := transaction.OracleData{}
+
+				json.Unmarshal([]byte(tx.Data), &oracleData)
+
+				height, _ := strconv.Atoi(oracleData.Height)
+
+				s.Prtl.Mempool.PruneHeight(strconv.Itoa(height - 1))
+
 				go s.BroadCastTX(tx)
 			}
 		}

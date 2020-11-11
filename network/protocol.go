@@ -388,7 +388,7 @@ func (s *Server) CreateTrustedData(block_height string) {
 		// ltd := transaction.Trusted_Data{}
 		// json.Unmarshal([]byte(lastTrustedTx.Data), &ltd)
 
-		var multi float64
+		multi := 1.0
 
 		var contractTx transaction.Transaction
 		_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_hash=$1 ORDER BY tx_time DESC", contract_array[0].Contract).StructScan(&contractTx)
@@ -416,6 +416,8 @@ func (s *Server) CreateTrustedData(block_height string) {
 		} else {
 			multi = 1.0
 		}
+
+		s.Prtl.Mempool.PruneHeight(block_height)
 		fmt.Println(multi)
 		trusted_data := transaction.Trusted_Data{contract_array, trusted_data_map[contract_array[0].Contract] * multi}
 

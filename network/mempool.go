@@ -85,3 +85,14 @@ func (m *MemPool) InMempool(tx_hash string) bool {
 	}
 	return false
 }
+
+func (m *MemPool) PruneHeight(block_height string) {
+	for i, data := range m.transactions {
+
+		if data.Height == block_height {
+			remove(m.transactions, i)
+			util.Success_log_array("Deleting Hash: " + data.Hash[:8] + " For Height: " + data.Height)
+		}
+
+	}
+}
