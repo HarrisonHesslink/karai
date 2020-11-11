@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"log"
 
 	api "github.com/harrisonhesslink/pythia/api"
@@ -372,11 +373,11 @@ func (s *Server) CreateTrustedData(block_height string) {
 	filtered_data_map, trusted_data_map := FilterOracleDataMap(contract_data_map)
 
 	log.Println("Creating Trust Data TX for block: " + block_height)
+	log.Println("Size of filtered_data_map: " + strconv.Itoa(len(filtered_data_map)))
 
 	for _, contract_array := range filtered_data_map {
-
+		log.Println("Size of contract_array: " + strconv.Itoa(len(contract_array)))
 		if len(contract_array) > 1 {
-			log.Println("Size of contract_array: " + strconv.Itoa(len(contract_array)))
 
 			var lastTrustedTx transaction.Transaction
 			_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Contract).StructScan(&lastTrustedTx)
@@ -415,9 +416,12 @@ func (s *Server) CreateTrustedData(block_height string) {
 			}
 
 			price := trusted_data_map[contract_array[0].Contract] * multi
+			fmt.Print("Trusted Answer: ")
+			fmt.Println(price)
 			send := false
 			if contract.Threshold != "" {
 				if s, err := strconv.ParseFloat(contract.Threshold, 64); err != nil {
+					log.Println(s)
 					if s >= 0.0 {
 						ltd := transaction.Trusted_Data{}
 						json.Unmarshal([]byte(lastTrustedTx.Data), &ltd)

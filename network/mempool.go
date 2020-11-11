@@ -1,6 +1,7 @@
 package network
 
 import (
+	"fmt"
 	"strconv"
 
 	"log"
@@ -47,8 +48,8 @@ func (m *MemPool) removeOracleData(tx_hash string) bool {
 
 func (m *MemPool) PrintMemPool() {
 	for _, data := range m.transactions {
-
-		util.Success_log_array("Hash: " + data.Hash[:8] + " For Height: " + data.Height)
+		s := fmt.Sprintf("%f", data.Price)
+		util.Success_log_array("Hash: " + data.Hash[:8] + " For Height: " + data.Height + " Price: " + s)
 	}
 	util.Success_log("Printed: " + strconv.Itoa(len(m.transactions)) + " in oracle data mempool")
 }
