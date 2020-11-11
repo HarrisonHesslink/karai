@@ -416,8 +416,9 @@ func (s *Server) CreateTrustedData(block_height string) {
 		} else {
 			multi = 1.0
 		}
+		height, _ := strconv.Atoi(block_height)
 
-		go s.Prtl.Mempool.PruneHeight(block_height)
+		go s.Prtl.Mempool.PruneHeight(strconv.Itoa(height - 5))
 		fmt.Println(multi)
 		trusted_data := transaction.Trusted_Data{contract_array, trusted_data_map[contract_array[0].Contract] * multi}
 

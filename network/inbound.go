@@ -228,7 +228,7 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 
 				height, _ := strconv.Atoi(oracleData.Height)
 
-				go s.Prtl.Mempool.PruneHeight(strconv.Itoa(height - 1))
+				go s.Prtl.Mempool.PruneHeight(strconv.Itoa(height - 5))
 
 				go s.BroadCastTX(tx)
 			}
