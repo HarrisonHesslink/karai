@@ -35,7 +35,6 @@ func (m *MemPool) addOracleData(tx transaction.OracleData) bool {
 
 	m.transactions = append(m.transactions, tx)
 	m.transactions_map[tx.Hash] = (len(m.transactions) - 1)
-
 	return true
 }
 
