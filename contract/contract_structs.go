@@ -2,6 +2,9 @@ package contract
 
 //Contract Struct
 type Contract struct {
+	Asset string
+
+	Denom string
 	// Return variables for data
 	// exchange:[]variables
 	Data map[string][]string `json:"variables"`

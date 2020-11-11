@@ -190,7 +190,7 @@ func (s *Server) NewDataTxFromCore(req transaction.NewBlock) {
 			oracledata.Hash = hash
 			oracledata.Signature = sig
 
-			go s.BroadCastOracleData(oracledata)
+			s.BroadCastOracleData(oracledata)
 		}
 
 	}
@@ -225,7 +225,7 @@ func (s *Server) NewConsensusTXFromCore(req transaction.NewBlock) {
 
 	new_tx := transaction.CreateTransaction("1", txPrev, req_string, []string{}, []string{})
 	if !s.Prtl.Dat.HaveTx(new_tx.Hash) {
-		go s.Prtl.Dat.CommitDBTx(new_tx)
+		s.Prtl.Dat.CommitDBTx(new_tx)
 		go s.BroadCastTX(new_tx)
 	}
 }
@@ -250,7 +250,7 @@ func (s *Server) CreateContract() {
 	tx := transaction.CreateTransaction("3", txPrev, []byte(jsonContract), []string{}, []string{})
 
 	if !s.Prtl.Dat.HaveTx(tx.Hash) {
-		go s.Prtl.Dat.CommitDBTx(tx)
+		s.Prtl.Dat.CommitDBTx(tx)
 		go s.BroadCastTX(tx)
 	}
 	log.Println("Created Contract " + tx.Hash[:8])
@@ -381,7 +381,6 @@ func (s *Server) CreateTrustedData(block_height string) {
 		var lastTrustedTx transaction.Transaction
 		_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Contract).StructScan(&lastTrustedTx)
 		prev := lastTrustedTx.Hash
-		log.Println(prev)
 		if prev == "" {
 			return
 		}
@@ -398,7 +397,6 @@ func (s *Server) CreateTrustedData(block_height string) {
 		json.Unmarshal([]byte(contractTx.Data), &contract)
 
 		if contract.ContractRef != "" {
-			log.Println(contract.ContractRef)
 			var lastContractRef transaction.Transaction
 			_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract.ContractRef).StructScan(&lastContractRef)
 

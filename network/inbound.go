@@ -218,7 +218,7 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 
 		if s.Prtl.Dat.HaveTx(tx.Prev) {
 			if !s.Prtl.Dat.HaveTx(tx.Hash) {
-				go s.Prtl.Dat.CommitDBTx(tx)
+				s.Prtl.Dat.CommitDBTx(tx)
 				go s.BroadCastTX(tx)
 			}
 		}
@@ -226,7 +226,7 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 	} else {
 		if s.Prtl.Dat.HaveTx(tx.Prev) {
 			if !s.Prtl.Dat.HaveTx(tx.Hash) {
-				go s.Prtl.Dat.CommitDBTx(tx)
+				s.Prtl.Dat.CommitDBTx(tx)
 				go s.BroadCastTX(tx)
 			}
 		}
