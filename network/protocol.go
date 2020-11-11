@@ -1,7 +1,6 @@
 package network
 
 import (
-	"fmt"
 	"log"
 
 	api "github.com/harrisonhesslink/pythia/api"
@@ -386,9 +385,6 @@ func (s *Server) CreateTrustedData(block_height string) {
 				return
 			}
 
-			// ltd := transaction.Trusted_Data{}
-			// json.Unmarshal([]byte(lastTrustedTx.Data), &ltd)
-
 			multi := 1.0
 
 			var contractTx transaction.Transaction
@@ -417,16 +413,38 @@ func (s *Server) CreateTrustedData(block_height string) {
 			} else {
 				multi = 1.0
 			}
+
+			price := trusted_data_map[contract_array[0].Contract] * multi
+			send := false
+			if contract.Threshold != "" {
+				if s, err := strconv.ParseFloat(contract.Threshold, 64); err != nil {
+					if s >= 0.0 {
+						ltd := transaction.Trusted_Data{}
+						json.Unmarshal([]byte(lastTrustedTx.Data), &ltd)
+
+						change := PercentageChange(ltd.TrustedAnswer, price)
+
+						if change >= s {
+							send = true
+						}
+					}
+				}
+			} else {
+				send = true
+			}
+
 			height, _ := strconv.Atoi(block_height)
 
 			go s.Prtl.Mempool.PruneHeight(strconv.Itoa(height - 5))
-			fmt.Println(multi)
-			trusted_data := transaction.Trusted_Data{contract_array, trusted_data_map[contract_array[0].Contract] * multi}
 
-			new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
+			if send {
+				trusted_data := transaction.Trusted_Data{contract_array, price}
 
-			s.Prtl.Dat.CommitDBTx(new_tx)
-			go s.BroadCastTX(new_tx)
+				new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
+
+				s.Prtl.Dat.CommitDBTx(new_tx)
+				go s.BroadCastTX(new_tx)
+			}
 		}
 	}
 }
