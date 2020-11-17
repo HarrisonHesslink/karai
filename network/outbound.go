@@ -54,7 +54,7 @@ func (s *Server) BroadCastTX(tx transaction.Transaction) {
 	payload := GobEncode(data)
 	request := append(CmdToBytes("tx"), payload...)
 
-	_, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	_, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	if err == nil {
 		util.Success_log(util.Send + " [TX] Broadcast TX Hash: " + tx.Hash)
 	}
@@ -70,7 +70,7 @@ func (s *Server) BroadCastOracleData(oracle_data transaction.OracleData) {
 	payload := GobEncode(data)
 	request := append(CmdToBytes("data"), payload...)
 
-	_, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	_, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
 	if err == nil {
 		util.Success_log(util.Send + " [DATA] Broadcasting Oracle Data Out Hash: " + oracle_data.Hash)
 	}
@@ -85,7 +85,7 @@ func (s *Server) SendData(ctx *flatend.Context, data []byte) {
 
 	p := s.GetProviderFromID(&ctx.ID)
 	if p != nil {
-		stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
+		stream, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
 		if err == nil {
 			go s.HandleCall(stream)
 		}
