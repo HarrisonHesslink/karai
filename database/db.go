@@ -103,7 +103,6 @@ func (d Database) CreateRoot() error {
 }
 
 func (d *Database) CommitDBTx(tx transaction.Transaction) {
-	d.Mutex.Lock()
 
 	if !d.HaveTx(tx.Hash) {
 		db, connectErr := d.Connect()
@@ -114,7 +113,6 @@ func (d *Database) CommitDBTx(tx transaction.Transaction) {
 		txn.MustExec("INSERT INTO "+d.Cf.GetTableName()+" (tx_time, tx_type, tx_hash, tx_data, tx_prev, tx_epoc, tx_subg, tx_prnt, tx_mile, tx_lead ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", tx.Time, tx.Type, tx.Hash, tx.Data, tx.Prev, tx.Epoc, tx.Subg, tx.Prnt, tx.Mile, tx.Lead)
 		txn.Commit()
 	}
-	d.Mutex.Unlock()
 }
 
 func (d Database) GetPrevHash() transaction.Transaction {

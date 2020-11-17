@@ -116,7 +116,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 			payload := GobEncode(data)
 			request := append(CmdToBytes("batchtx"), payload...)
 
-			go s.SendData(ctx, request)
+			s.SendData(ctx, request)
 			txes = [][]byte{}
 		}
 	}
@@ -163,14 +163,21 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
-	for _, tx_ := range payload.Batch {
+	count := 0
 
-		tx := transaction.DeserializeTransaction(tx_)
-		if s.Prtl.Dat.HaveTx(tx.Prev) {
-			if !s.Prtl.Dat.HaveTx(tx.Hash) {
-				s.Prtl.Dat.CommitDBTx(tx)
+	if !s.isSyncing {
+		s.isSyncing = true
+		for _, tx_ := range payload.Batch {
+
+			tx := transaction.DeserializeTransaction(tx_)
+			if s.Prtl.Dat.HaveTx(tx.Prev) {
+				if !s.Prtl.Dat.HaveTx(tx.Hash) {
+					s.Prtl.Dat.CommitDBTx(tx)
+					count++
+				}
 			}
 		}
+		s.isSyncing = false
 	}
 
 	// if need_fill {
@@ -179,7 +186,7 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 
 	// percentage_float := float64(payload.TotalSent) / float64(s.tx_need) * 100
 	// percentage_string := fmt.Sprintf("%.2f", percentage_float)
-	util.Success_log(util.Rcv + " [" + command + "] Received Transactions: " + strconv.Itoa(len(payload.Batch))) //. Sync %:" + percentage_string + "[" + strconv.Itoa(payload.TotalSent) + "/" + strconv.Itoa(s.tx_need) + "]")
+	util.Success_log(util.Rcv + " [" + command + "] Received Transactions: " + strconv.Itoa(count)) //. Sync %:" + percentage_string + "[" + strconv.Itoa(payload.TotalSent) + "/" + strconv.Itoa(s.tx_need) + "]")
 	// if payload.TotalSent == s.tx_need {
 	// 	s.tx_need = 0
 	// 	s.sync = false

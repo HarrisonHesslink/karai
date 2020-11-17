@@ -78,6 +78,8 @@ type Server struct {
 	ExternalIP   string
 	ExternalPort int
 	Sockets      []*websocket.Conn
+
+	isSyncing bool
 }
 
 type Protocol struct {
