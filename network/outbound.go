@@ -2,7 +2,6 @@ package network
 
 import (
 	"bytes"
-	"log"
 
 	"github.com/harrisonhesslink/flatend"
 	"github.com/harrisonhesslink/pythia/transaction"
@@ -11,7 +10,6 @@ import (
 	//"math/rand"
 	//"time"
 	"io/ioutil"
-	"strconv"
 	//"github.com/lithdew/kademlia"
 )
 
@@ -56,16 +54,9 @@ func (s *Server) BroadCastTX(tx transaction.Transaction) {
 	payload := GobEncode(data)
 	request := append(CmdToBytes("tx"), payload...)
 
-	providers := s.node.ProvidersFor("karai-xeq")
-	log.Println("providers:" + strconv.Itoa(len(providers)))
-	for _, p := range providers {
-
-		stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
-		if err == nil {
-			go s.HandleCall(stream)
-			util.Success_log(util.Send + " [TX] Broadcast TX Hash: " + tx.Hash)
-		}
-
+	_, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	if err == nil {
+		util.Success_log(util.Send + " [TX] Broadcast TX Hash: " + tx.Hash)
 	}
 }
 
@@ -79,17 +70,10 @@ func (s *Server) BroadCastOracleData(oracle_data transaction.OracleData) {
 	payload := GobEncode(data)
 	request := append(CmdToBytes("data"), payload...)
 
-	providers := s.node.ProvidersFor("karai-xeq")
-	log.Println("providers:" + strconv.Itoa(len(providers)))
-	for _, p := range providers {
-
-		stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
-		if err == nil {
-			go s.HandleCall(stream)
-			util.Success_log(util.Send + " [DATA] Broadcasting Oracle Data Out Hash: " + oracle_data.Hash)
-		}
+	_, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	if err == nil {
+		util.Success_log(util.Send + " [DATA] Broadcasting Oracle Data Out Hash: " + oracle_data.Hash)
 	}
-
 }
 
 /*
