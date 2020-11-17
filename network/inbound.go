@@ -172,8 +172,8 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 			tx := transaction.DeserializeTransaction(tx_)
 			if s.Prtl.Dat.HaveTx(tx.Prev) {
 				if !s.Prtl.Dat.HaveTx(tx.Hash) {
-					s.Prtl.Dat.CommitDBTx(tx)
 					count++
+					s.Prtl.Dat.CommitDBTx(tx)
 				}
 			}
 		}
@@ -335,7 +335,7 @@ func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {
 	case "data":
 		go s.HandleData(ctx, req)
 	case "batchtx":
-		go s.HandleBatchTx(ctx, req)
+		s.HandleBatchTx(ctx, req)
 	case "version":
 		go s.HandleSyncCall(ctx, req)
 	}
