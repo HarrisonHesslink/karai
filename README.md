@@ -1,8 +1,3 @@
-![karaicoordinator](https://user-images.githubusercontent.com/34389545/95401277-6f655b80-08d2-11eb-896c-5c3614ff20d7.png)
-
-[![Discord](https://img.shields.io/discord/388915017187328002?label=Join%20Discord)](http://chat.turtlecoin.lol) [![GitHub issues](https://img.shields.io/github/issues/harrisonhesslink/pythia?label=Issues)](https://github.com/harrisonhesslink/pythia/issues) ![GitHub stars](https://img.shields.io/github/stars/harrisonhesslink/pythia?label=Github%20Stars) ![Build](https://github.com/harrisonhesslink/pythia/workflows/Build/badge.svg) ![GitHub](https://img.shields.io/github/license/harrisonhesslink/pythia) ![GitHub issues by-label](https://img.shields.io/github/issues/harrisonhesslink/pythia/Todo) [![Go Report Card](https://goreportcard.com/badge/github.com/harrisonhesslink/pythia)](https://goreportcard.com/report/github.com/harrisonhesslink/pythia)
-
-**Website:** [📝 karai.io](https://karai.io) **Browse:** [💻 Karai Pointer Explorer](https://karai.io/explore/) **Read:** [🔗 Official Karai Blog](https://karai.io/dev/)
 
 ## Usage
 
@@ -75,7 +70,7 @@ Karai supports Linux on AMD64 architecture, but may compile in other settings. D
 
 **Optional:** Compile with all errors displayed, then run binary. Avoids "too many errors" from hiding error info.
 
-`go build -gcflags="-e" && ./go-karai`
+`go build -gcflags="-e" && ./pythia`
 
 ## Contributing
 
