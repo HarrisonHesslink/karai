@@ -375,6 +375,8 @@ func (s *Server) CreateTrustedData(block_height string) {
 	log.Println("Creating Trust Data TX for block: " + block_height)
 	log.Println("Size of filtered_data_map: " + strconv.Itoa(len(filtered_data_map)))
 
+	height := 0
+
 	for _, contract_array := range filtered_data_map {
 		log.Println("Size of contract_array: " + strconv.Itoa(len(contract_array)))
 		if len(contract_array) > 1 {
@@ -437,9 +439,7 @@ func (s *Server) CreateTrustedData(block_height string) {
 				send = true
 			}
 
-			height, _ := strconv.Atoi(block_height)
-
-			go s.Prtl.Mempool.PruneHeight(strconv.Itoa(height - 5))
+			height, _ = strconv.Atoi(block_height)
 
 			if send {
 				trusted_data := transaction.Trusted_Data{contract_array, price}
@@ -451,4 +451,5 @@ func (s *Server) CreateTrustedData(block_height string) {
 			}
 		}
 	}
+	go s.Prtl.Mempool.PruneHeight(strconv.Itoa(height - 5))
 }
