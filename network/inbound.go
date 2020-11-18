@@ -258,7 +258,7 @@ func (s *Server) HandleData(ctx *flatend.Context, request []byte) {
 	}
 
 	if s.Prtl.Mempool.addOracleData(payload.Oracle_Data) {
-		go s.BroadCastOracleData(payload.Oracle_Data)
+		s.BroadCastOracleData(payload.Oracle_Data)
 		util.Success_log(util.Rcv + " [" + command + "] Oracle Data: " + payload.Oracle_Data.Hash)
 	}
 }
