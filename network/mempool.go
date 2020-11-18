@@ -87,11 +87,11 @@ func (m *MemPool) InMempool(tx_hash string) bool {
 }
 
 func (m *MemPool) PruneHeight(block_height int) {
-	for i, data := range m.transactions {
+	for _, data := range m.transactions {
 		height, _ := strconv.Atoi(data.Height)
 
 		if height <= block_height {
-			remove(m.transactions, i)
+			m.removeOracleData(data.Hash)
 			util.Success_log_array("Deleting Hash: " + data.Hash[:8] + " For Height: " + data.Height)
 		}
 
