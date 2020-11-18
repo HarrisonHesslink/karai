@@ -235,10 +235,6 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 
 				json.Unmarshal([]byte(tx.Data), &oracleData)
 
-				height, _ := strconv.Atoi(oracleData.Height)
-
-				go s.Prtl.Mempool.PruneHeight(strconv.Itoa(height - 5))
-
 				go s.BroadCastTX(tx)
 			}
 		}

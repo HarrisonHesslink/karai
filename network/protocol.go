@@ -1,7 +1,6 @@
 package network
 
 import (
-	"fmt"
 	"log"
 
 	api "github.com/harrisonhesslink/pythia/api"
@@ -145,6 +144,10 @@ func (s *Server) NewDataTxFromCore(req transaction.NewBlock) {
 		s.Prtl.MyNodeKey = req.Pubkey
 	}
 
+	height, _ := strconv.Atoi(req.Height)
+
+	go s.Prtl.Mempool.PruneHeight(height - 5)
+
 	var agg float64
 
 	db, connectErr := s.Prtl.Dat.Connect()
@@ -212,8 +215,11 @@ func (s *Server) NewConsensusTXFromCore(req transaction.NewBlock) {
 	if s.Prtl.MyNodeKey == "" {
 		s.Prtl.MyNodeKey = req.Pubkey
 	}
-	log.Println(req.Pubkey)
 	s.Prtl.ConsensusNode = req.Pubkey
+
+	height, _ := strconv.Atoi(req.Height)
+
+	go s.Prtl.Mempool.PruneHeight(height - 5)
 
 	var txPrev string
 
@@ -372,13 +378,7 @@ func (s *Server) CreateTrustedData(block_height string) {
 
 	filtered_data_map, trusted_data_map := FilterOracleDataMap(contract_data_map)
 
-	log.Println("Creating Trust Data TX for block: " + block_height)
-	log.Println("Size of filtered_data_map: " + strconv.Itoa(len(filtered_data_map)))
-
-	height := 0
-
 	for _, contract_array := range filtered_data_map {
-		log.Println("Size of contract_array: " + strconv.Itoa(len(contract_array)))
 		if len(contract_array) > 1 {
 
 			var lastTrustedTx transaction.Transaction
@@ -418,13 +418,10 @@ func (s *Server) CreateTrustedData(block_height string) {
 			}
 
 			price := trusted_data_map[contract_array[0].Contract] * multi
-			fmt.Print("Trusted Answer: ")
-			fmt.Println(price)
 			send := false
 			if contract.Threshold != "" {
 				log.Println(contract.Threshold)
 				s, _ := strconv.ParseFloat(contract.Threshold, 64)
-				log.Println(s)
 				if s > 0.0 {
 					ltd := transaction.Trusted_Data{}
 					json.Unmarshal([]byte(lastTrustedTx.Data), &ltd)
@@ -439,8 +436,6 @@ func (s *Server) CreateTrustedData(block_height string) {
 				send = true
 			}
 
-			height, _ = strconv.Atoi(block_height)
-
 			if send {
 				trusted_data := transaction.Trusted_Data{contract_array, price}
 
@@ -451,5 +446,4 @@ func (s *Server) CreateTrustedData(block_height string) {
 			}
 		}
 	}
-	go s.Prtl.Mempool.PruneHeight(strconv.Itoa(height - 5))
 }
