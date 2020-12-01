@@ -6,7 +6,7 @@
 
 > Note: Pythia aims to always compile and run on **Linux** targetting the **AMD64** CPU architecture. Other operating systems and architectures may compile and run this software but should do so expecting some inconsistencies.
 
-**Launch Karai Coordinator**
+**Launch Pythia**
 
 ```
 go build -gcflags="-e" && ./pythia
@@ -22,7 +22,7 @@ Pythia supports Linux on AMD64 architecture, but may compile in other settings. 
 
 **Optional:** Compile with all errors displayed, then run binary. Avoids "too many errors" from hiding error info.
 
-`go build -gcflags="-e" && ./go-karai`
+`go build -gcflags="-e" && ./pythia`
 
 ## Contributing
 
