@@ -176,11 +176,10 @@ func (s *Server) RestAPI() {
 			}
 
 			if req.Pubkey == req.Nodes[len(req.Nodes)-1] {
-				height, _ := strconv.Atoi(req.Height)
-				s.CreateTrustedData(strconv.Itoa(height - 1))
+				s.CreateTrustedData(req.Height - 1)
 			}
 
-			if req.Pubkey != "" && len(req.Nodes) > 0 && req.Height != "" {
+			if req.Pubkey != "" && len(req.Nodes) > 0 && req.Height != 0 {
 				if req.Leader {
 					go s.NewConsensusTXFromCore(req)
 				} else {

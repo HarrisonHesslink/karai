@@ -12,7 +12,7 @@ type Request_Oracle_Data struct {
 }
 
 type NewBlock struct {
-	Height string   `json:"height"`
+	Height int64    `json:"height"`
 	Pubkey string   `json:"pubkey"`
 	Nodes  []string `json:"nodes"`
 	Leader bool     `json:"leader"`
@@ -21,7 +21,7 @@ type NewBlock struct {
 type OracleData struct {
 	Hash      string  `json:"hash"`
 	Price     float64 `json:"price"`
-	Height    string  `json:"height"`
+	Height    int64   `json:"height"`
 	Contract  string  `json:"contract"`
 	Pubkey    string  `json:"pubkey"`
 	Signature string  `json:"signature"`
@@ -33,21 +33,22 @@ type Request_Consensus struct {
 	Signature string   `json:"signature"`
 	Data      []string `json:"data"`
 	Task      string   `json:"task"`
-	Height    string   `json:"height"`
+	Height    int64    `json:"height"`
 }
 
 // Transaction This is the structure of the transaction
 type Transaction struct {
-	Time string `json:"time" db:"tx_time"`
-	Type string `json:"type" db:"tx_type"`
-	Hash string `json:"hash" db:"tx_hash"`
-	Data string `json:"data" db:"tx_data"`
-	Prev string `json:"prev" db:"tx_prev"`
-	Epoc string `json:"epoc" db:"tx_epoc"`
-	Subg string `json:"subg" db:"tx_subg"`
-	Prnt string `json:"prnt" db:"tx_prnt"`
-	Mile bool   `json:"mile" db:"tx_mile"`
-	Lead bool   `json:"lead" db:"tx_lead"`
+	Time   string `json:"time" db:"tx_time"`
+	Type   string `json:"type" db:"tx_type"`
+	Hash   string `json:"hash" db:"tx_hash"`
+	Data   string `json:"data" db:"tx_data"`
+	Prev   string `json:"prev" db:"tx_prev"`
+	Epoc   string `json:"epoc" db:"tx_epoc"`
+	Subg   string `json:"subg" db:"tx_subg"`
+	Prnt   string `json:"prnt" db:"tx_prnt"`
+	Mile   bool   `json:"mile" db:"tx_mile"`
+	Lead   bool   `json:"lead" db:"tx_lead"`
+	Height int64  `json:"height" db:"tx_height"`
 }
 
 type Request_Contract struct {

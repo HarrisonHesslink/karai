@@ -212,12 +212,11 @@ func (s *Server) NewDataTxFromCore(req transaction.NewBlock) {
 func (s *Server) NewConsensusTXFromCore(req transaction.NewBlock) {
 	req_string, _ := json.Marshal(req)
 
-	if s.Prtl.MyNodeKey == "" {
-		s.Prtl.MyNodeKey = req.Pubkey
-	}
-	s.Prtl.ConsensusNode = req.Pubkey
+	height := req.Height
 
-	height, _ := strconv.Atoi(req.Height)
+	if height%10 != 0 {
+		return
+	}
 
 	go s.Prtl.Mempool.PruneHeight(height - 5)
 
@@ -229,7 +228,7 @@ func (s *Server) NewConsensusTXFromCore(req transaction.NewBlock) {
 
 	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
-	new_tx := transaction.CreateTransaction("1", txPrev, req_string, []string{}, []string{})
+	new_tx := transaction.CreateTransaction("1", txPrev, req_string, []string{}, []string{}, height)
 	if !s.Prtl.Dat.HaveTx(new_tx.Hash) {
 		s.Prtl.Dat.CommitDBTx(new_tx)
 		go s.BroadCastTX(new_tx)
@@ -253,77 +252,13 @@ func (s *Server) CreateContract() {
 
 	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
-	tx := transaction.CreateTransaction("3", txPrev, []byte(jsonContract), []string{}, []string{})
+	tx := transaction.CreateTransaction("3", txPrev, []byte(jsonContract), []string{}, []string{}, 0)
 
 	if !s.Prtl.Dat.HaveTx(tx.Hash) {
 		s.Prtl.Dat.CommitDBTx(tx)
 		go s.BroadCastTX(tx)
 	}
 	log.Println("Created Contract " + tx.Hash[:8])
-}
-
-/*
-
-CheckNode checks if a node should be able to put data on the contract takes a Transaction
-
-*/
-func (s *Server) CheckNode(tx transaction.Transaction) bool {
-
-	checks_out := false
-	var hash string
-	var tx_data string
-
-	db, connectErr := s.Prtl.Dat.Connect()
-	defer db.Close()
-	util.Handle("Error creating a DB connection: ", connectErr)
-
-	_ = db.QueryRow("SELECT tx_hash, tx_data FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_type='1' && tx_epoc=$1 ORDER BY tx_time DESC", tx.Epoc).Scan(&hash, &tx_data)
-
-	if hash != "" {
-		checks_out = true
-	}
-
-	var last_consensus transaction.Request_Consensus
-	err := json.Unmarshal([]byte(tx_data), &last_consensus)
-	if err != nil {
-		//unable to parse last consensus ? this should never happen
-		log.Println("Failed to Parse Last Consensus TX on Cehck")
-		return false
-	}
-
-	//get interface for checks [Request_Consensus, Request_Oracle_Data, Request_Contract]
-
-	result := tx.ParseInterface()
-	if result == nil {
-		return false
-	}
-
-	switch v := result.(type) {
-	case transaction.Request_Consensus:
-		isFound := false
-		for _, key := range last_consensus.Data {
-			if key == v.PubKey {
-				isFound = true
-				break
-			}
-		}
-
-		if !isFound {
-			return false
-		}
-
-		// here v has type T
-		break
-	case transaction.Request_Oracle_Data:
-		// here v has type S
-		break
-	case transaction.Request_Contract:
-		break
-	default:
-		return false
-	}
-
-	return checks_out
 }
 
 /*
@@ -368,7 +303,7 @@ func (s *Server) GetContractMap() map[string]string {
 
 CreateTrustedData creates trusted data source from all known tx
 */
-func (s *Server) CreateTrustedData(block_height string) {
+func (s *Server) CreateTrustedData(block_height int64) {
 
 	db, connectErr := s.Prtl.Dat.Connect()
 	defer db.Close()

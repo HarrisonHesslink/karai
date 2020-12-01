@@ -84,7 +84,7 @@ func DeserializeTransaction(data []byte) Transaction {
 	return transaction
 }
 
-func CreateTransaction(txType, last_epoc_tx string, data []byte, txhash_on_epoc []string, txdata_on_epoc []string) Transaction {
+func CreateTransaction(txType, last_epoc_tx string, data []byte, txhash_on_epoc []string, txdata_on_epoc []string, height int64) Transaction {
 	var newTx Transaction
 
 	newTx.Type = txType
@@ -109,7 +109,7 @@ func CreateTransaction(txType, last_epoc_tx string, data []byte, txhash_on_epoc 
 		newTx.Time = util.UnixTimeStampNano()
 		newTx.Epoc = rct.Epoc
 		newTx.Mile = false
-
+		newTx.Height = height
 		newTx.Prnt = newTx.Epoc
 
 		newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, newTx.Prev)
@@ -126,6 +126,7 @@ func CreateTransaction(txType, last_epoc_tx string, data []byte, txhash_on_epoc 
 		}
 
 		newTx.Prev = last_epoc_tx
+		newTx.Height = height
 
 		newTx.Time = util.UnixTimeStampNano()
 		newTx.Hash = hashTransaction(newTx.Time, newTx.Type, newTx.Data, last_epoc_tx)
@@ -150,6 +151,7 @@ func CreateTransaction(txType, last_epoc_tx string, data []byte, txhash_on_epoc 
 		newTx.Epoc = newTx.Hash
 		newTx.Mile = true
 		newTx.Lead = false
+		newTx.Height = height
 		newTx.Prnt = last_epoc_tx
 		return newTx
 	}

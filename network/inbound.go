@@ -103,7 +103,6 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 				transactions = append(transactions, this_tx)
 			}
 		}
-
 	}
 
 	var txes [][]byte
