@@ -144,7 +144,7 @@ func (s *Server) NewDataTxFromCore(req transaction.NewBlock) {
 		s.Prtl.MyNodeKey = req.Pubkey
 	}
 
-	height, _ := strconv.Atoi(req.Height)
+	height := req.Height
 
 	go s.Prtl.Mempool.PruneHeight(height - 5)
 

@@ -9,6 +9,10 @@ import (
 	"github.com/lithdew/kademlia"
 )
 
+const (
+	commandLength = 12
+)
+
 type Addr struct {
 	AddrList []string
 }
@@ -72,7 +76,6 @@ type Server struct {
 	Nodes []string
 
 	isSyncing bool
-	senate    *senate.Senate
 }
 
 type Protocol struct {

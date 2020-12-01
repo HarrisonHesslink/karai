@@ -49,16 +49,6 @@ func GobEncode(data interface{}) []byte {
 	return buff.Bytes()
 }
 
-func NodeIsKnown(addr string) bool {
-	for _, node := range KnownNodes {
-		if node == addr {
-			return true
-		}
-	}
-
-	return false
-}
-
 func stringInSlice(a string, list []string) bool {
 	for _, b := range list {
 		if b == a {

@@ -17,7 +17,7 @@ func NewMemPool() *MemPool {
 }
 
 //sorts oracle map
-func (m *MemPool) SortOracleDataMap(block_height string) map[string][]transaction.OracleData {
+func (m *MemPool) SortOracleDataMap(block_height int64) map[string][]transaction.OracleData {
 	contract_data_map := make(map[string][]transaction.OracleData)
 
 	for _, oracle_data := range m.transactions {
@@ -49,7 +49,7 @@ func (m *MemPool) removeOracleData(tx_hash string) bool {
 func (m *MemPool) PrintMemPool() {
 	for _, data := range m.transactions {
 		s := fmt.Sprintf("%f", data.Price)
-		util.Success_log_array("Hash: " + data.Hash[:8] + " For Height: " + data.Height + " Price: " + s)
+		util.Success_log_array("Hash: " + data.Hash[:8] + " For Height: " + strconv.FormatInt(data.Height, 10) + " Price: " + s)
 	}
 	util.Success_log("Printed: " + strconv.Itoa(len(m.transactions)) + " in oracle data mempool")
 }
@@ -86,13 +86,12 @@ func (m *MemPool) InMempool(tx_hash string) bool {
 	return false
 }
 
-func (m *MemPool) PruneHeight(block_height int) {
+func (m *MemPool) PruneHeight(block_height int64) {
 	for _, data := range m.transactions {
-		height, _ := strconv.Atoi(data.Height)
 
-		if height <= block_height {
+		if data.Height <= block_height {
 			m.removeOracleData(data.Hash)
-			util.Success_log_array("Deleting Hash: " + data.Hash[:8] + " For Height: " + data.Height)
+			util.Success_log_array("Deleting Hash: " + data.Hash[:8] + " For Height: " + strconv.FormatInt(data.Height, 10))
 		}
 
 	}
