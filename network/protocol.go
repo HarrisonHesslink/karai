@@ -213,10 +213,10 @@ func (s *Server) NewConsensusTXFromCore(req transaction.NewBlock) {
 	req_string, _ := json.Marshal(req)
 
 	height := req.Height
-
-	if height%10 != 0 {
-		return
-	}
+	log.Println(height)
+	// if height%10 != 0 {
+	// 	return
+	// }
 
 	go s.Prtl.Mempool.PruneHeight(height - 5)
 

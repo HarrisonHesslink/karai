@@ -91,6 +91,7 @@ func (s *Server) HandleGetTxes(ctx *flatend.Context, request []byte) {
 				var this_tx transaction.Transaction
 				err = rows.StructScan(&this_tx)
 				if err != nil {
+					log.Println(err)
 					log.Println("Error query")
 					break
 				}

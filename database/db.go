@@ -60,7 +60,7 @@ func (d *Database) CreateTables() {
 
 	tx := db.MustBegin()
 
-	q := "CREATE TABLE IF NOT EXISTS " + d.Cf.GetTableName() + "(tx_time CHAR(19) NOT NULL, tx_type CHAR(1) NOT NULL, tx_hash CHAR(128) NOT NULL, tx_data TEXT NOT NULL, tx_prev CHAR(128) NOT NULL, tx_epoc TEXT NOT NULL, tx_subg CHAR(128) NOT NULL, tx_prnt CHAR(128), tx_mile BOOLEAN NOT NULL,tx_lead BOOLEAN NOT NULL, tx_height BIGINT);"
+	q := "CREATE TABLE IF NOT EXISTS " + d.Cf.GetTableName() + "(tx_time CHAR(19) NOT NULL, tx_type CHAR(1) NOT NULL, tx_hash CHAR(128) NOT NULL, tx_data TEXT NOT NULL, tx_prev CHAR(128) NOT NULL, tx_epoc TEXT NOT NULL, tx_subg CHAR(128) NOT NULL, tx_prnt CHAR(128), tx_mile BOOLEAN NOT NULL,tx_lead BOOLEAN NOT NULL, tx_height INTEGER NOT NULL);"
 	tx.MustExec(q)
 	tx.Commit()
 }
@@ -109,7 +109,7 @@ func (d *Database) CommitDBTx(tx transaction.Transaction) {
 		util.Handle("Error creating a DB connection: ", connectErr)
 		txn := db.MustBegin()
 
-		txn.MustExec("INSERT INTO "+d.Cf.GetTableName()+" (tx_time, tx_type, tx_hash, tx_data, tx_prev, tx_epoc, tx_subg, tx_prnt, tx_mile, tx_lead ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)", tx.Time, tx.Type, tx.Hash, tx.Data, tx.Prev, tx.Epoc, tx.Subg, tx.Prnt, tx.Mile, tx.Lead)
+		txn.MustExec("INSERT INTO "+d.Cf.GetTableName()+" (tx_time, tx_type, tx_hash, tx_data, tx_prev, tx_epoc, tx_subg, tx_prnt, tx_mile, tx_lead, tx_height ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)", tx.Time, tx.Type, tx.Hash, tx.Data, tx.Prev, tx.Epoc, tx.Subg, tx.Prnt, tx.Mile, tx.Lead, tx.Height)
 		txn.Commit()
 	}
 }
