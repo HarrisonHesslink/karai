@@ -12,10 +12,12 @@ type Request_Oracle_Data struct {
 }
 
 type NewBlock struct {
-	Height int64    `json:"height"`
-	Pubkey string   `json:"pubkey"`
-	Nodes  []string `json:"nodes"`
-	Leader bool     `json:"leader"`
+	Height   int64      `json:"height"`
+	Pubkey   string     `json:"pubkey"`
+	Nodes    []string   `json:"nodes"`
+	Leader   bool       `json:"leader"`
+	Swaps    [][]string `json:"swaps"`
+	Requests [][]string `json:"requests"`
 }
 
 type OracleData struct {

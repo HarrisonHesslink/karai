@@ -138,74 +138,45 @@ func (s *Server) LookForNodes() {
 }
 
 //NewDataTxFromCore = Go through all contracts and send data out
-func (s *Server) NewDataTxFromCore(req transaction.NewBlock) {
-	log.Println(req.Pubkey)
-	if s.Prtl.MyNodeKey == "" {
-		s.Prtl.MyNodeKey = req.Pubkey
-	}
-
-	height := req.Height
-
-	go s.Prtl.Mempool.PruneHeight(height - 5)
+func (s *Server) NewDataTxFromCore(request []string, height int64, pubkey string) {
 
 	var agg float64
+	var tx transaction.Transaction
+	var contract contract.Contract
 
 	db, connectErr := s.Prtl.Dat.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
-	rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='3' ORDER BY tx_time DESC")
-	if err != nil {
-		panic(err)
-	}
+	_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_hash=$1 ORDER BY tx_time DESC", request[1]).StructScan(&tx)
 
-	for rows.Next() {
-		var this_tx transaction.Transaction
-		err = rows.StructScan(&this_tx)
-		if err != nil {
-			// handle this error
-			log.Panic(err)
-		}
-
-		var contract contract.Contract
-		err := json.Unmarshal([]byte(this_tx.Data), &contract)
-		if err != nil {
-			log.Panic(err)
-		}
-
-		data, r := api.MakeRequest(contract)
-		if r {
-			for _, v := range data {
-				f, _ := strconv.ParseFloat(v, 64)
-				agg += f
-			}
-			agg = agg / float64(len(data))
-
-			var oracledata transaction.OracleData
-			oracledata.Height = req.Height
-			oracledata.Pubkey = req.Pubkey
-			oracledata.Price = agg
-			oracledata.Contract = this_tx.Hash
-			oracledata.Hash = ""
-			oracledata.Signature = ""
-			sig, hash := api.CoreSign(oracledata)
-
-			oracledata.Hash = hash
-			oracledata.Signature = sig
-
-			s.BroadCastOracleData(oracledata)
-		}
-
-	}
-	err = rows.Err()
+	err := json.Unmarshal([]byte(tx.Data), &contract)
 	if err != nil {
 		log.Panic(err)
 	}
-	rows.Close()
 
-	// if s.Prtl.Mempool.addOracleData() {
-	// 	go s.BroadCastOracleData(req)
-	// }
+	data, r := api.MakeRequest(contract)
+	if r {
+		for _, v := range data {
+			f, _ := strconv.ParseFloat(v, 64)
+			agg += f
+		}
+		agg = agg / float64(len(data))
+
+		var oracledata transaction.OracleData
+		oracledata.Height = height
+		oracledata.Pubkey = pubkey
+		oracledata.Price = agg
+		oracledata.Contract = tx.Hash
+		oracledata.Hash = ""
+		oracledata.Signature = ""
+		sig, hash := api.CoreSign(oracledata)
+
+		oracledata.Hash = hash
+		oracledata.Signature = sig
+
+		s.BroadCastOracleData(oracledata)
+	}
 }
 
 //NewConsensusTXFromCore = create v1 tx
