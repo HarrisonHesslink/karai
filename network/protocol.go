@@ -346,7 +346,6 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		// Miner:            miner,
 	}
 	callback(network)
-	err = RequestBlocks(network)
 
 	//go HandleEvents(network)
 	// if miner {
@@ -364,7 +363,10 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 
 func (net *Network) hearbeat() {
 	for {
-		go RequestBlocks(net)
+		peers := net.GeneralChannel.ListPeers()
+		for _, p := range peers {
+			net.SendVersion()
+		}
 		time.Sleep(10 * time.Second)
 	}
 }
