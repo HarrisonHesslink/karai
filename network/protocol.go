@@ -357,15 +357,15 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 	if err != nil {
 		panic(err)
 	}
-	go network.handleEvents()
-	go network.hearbeat()
+	network.handleEvents()
+	network.hearbeat()
 }
 
 func (net *Network) hearbeat() {
 	for {
 		peers := net.GeneralChannel.ListPeers()
-		for _, _ = range peers {
-			net.SendVersion()
+		for range peers {
+			go net.SendVersion()
 		}
 		time.Sleep(10 * time.Second)
 	}
@@ -384,7 +384,7 @@ func RequestBlocks(net *Network) error {
 	peers := net.GeneralChannel.ListPeers()
 	for _, p := range peers {
 		log.Info(p.Pretty())
-		net.SendVersion()
+		go net.SendVersion()
 	}
 	return nil
 }
@@ -515,7 +515,6 @@ func (net *Network) HandleStream(content *ChannelContent) {
 	// ui.displayContent(content)
 	if content.Payload != nil {
 		command := BytesToCmd(content.Payload[:commandLength])
-		// fmt.Fprintf(ui.hostWindow, "Received  %s command \n", command)
 
 		switch command {
 		case "gettxes":
@@ -528,8 +527,8 @@ func (net *Network) HandleStream(content *ChannelContent) {
 			net.HandleData(content)
 		case "batchtx":
 			net.HandleBatchTx(content)
-			// case "version":
-			// 	net.HandleSyncCall(ctx, req)
+		case "version":
+			net.HandleSyncCall(content)
 		}
 	}
 }

@@ -247,59 +247,59 @@ func (net *Network) HandleData(content *ChannelContent) {
 	}
 }
 
-// func (net *Network) HandleSyncCall(content *ChannelContent) {
-// 	command := BytesToCmd(content.Payload[:commandLength])
-// 	var buff bytes.Buffer
-// 	var payload SyncCall
+func (net *Network) HandleSyncCall(content *ChannelContent) {
+	command := BytesToCmd(content.Payload[:commandLength])
+	var buff bytes.Buffer
+	var payload SyncCall
 
-// 	buff.Write(request[commandLength:])
-// 	dec := gob.NewDecoder(&buff)
-// 	err := dec.Decode(&payload)
-// 	if err != nil {
-// 		log.Info("Unable to decode")
-// 		return
-// 	}
+	buff.Write(content.Payload[commandLength:])
+	dec := gob.NewDecoder(&buff)
+	err := dec.Decode(&payload)
+	if err != nil {
+		log.Info("Unable to decode")
+		return
+	}
 
-// 	db, connectErr := net.Database.Connect()
-// 	defer db.Close()
-// 	util.Handle("Error creating a DB connection: ", connectErr)
+	db, connectErr := net.Database.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
 
-// 	var txPrev string
-// 	_ = db.QueryRow("SELECT tx_hash FROM " + net.Database.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+	var txPrev string
+	_ = db.QueryRow("SELECT tx_hash FROM " + net.Database.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
-// 	if txPrev == "" {
-// 		return
-// 	}
+	if txPrev == "" {
+		return
+	}
 
-// 	var request_contracts map[string]string
-// 	if net.Database.HaveTx(payload.TopHash) {
-// 		//okay, our v1 txes are all synced, lets check v2/v3
-// 		our_contracts := s.GetContractMap()
+	var request_contracts map[string]string
+	if net.Database.HaveTx(payload.TopHash) {
+		//okay, our v1 txes are all synced, lets check v2/v3
+		our_contracts := net.GetContractMap()
 
-// 		request_contracts = make(map[string]string)
+		request_contracts = make(map[string]string)
 
-// 		for contract_hash, top_hash := range payload.Contracts {
-// 			if _, ok := our_contracts[contract_hash]; !ok {
-// 				//does not have v3 tx so add it to request payload
-// 				request_contracts[contract_hash] = "need"
-// 				continue
-// 			}
+		for contract_hash, top_hash := range payload.Contracts {
+			if _, ok := our_contracts[contract_hash]; !ok {
+				//does not have v3 tx so add it to request payload
+				request_contracts[contract_hash] = "need"
+				continue
+			}
 
-// 			if !containsValue(our_contracts, top_hash) {
-// 				if !net.Database.HaveTx(top_hash) {
-// 					//we shouldn't have this tx
-// 					request_contracts[contract_hash] = our_contracts[contract_hash]
-// 					continue
-// 				}
-// 			}
+			if !containsValue(our_contracts, top_hash) {
+				if !net.Database.HaveTx(top_hash) {
+					//we shouldn't have this tx
+					request_contracts[contract_hash] = our_contracts[contract_hash]
+					continue
+				}
+			}
 
-// 		}
+		}
 
-// 		go s.SendGetTxes(ctx, true, request_contracts)
-// 	} else {
-// 		//get v1
-// 		go s.SendGetTxes(ctx, false, request_contracts)
-// 	}
+		go net.SendGetTxes(true, request_contracts)
+	} else {
+		//get v1
+		go net.SendGetTxes(false, request_contracts)
+	}
 
-// 	util.Success_log(util.Rcv + " [" + command + "]")
-// }
+	util.Success_log(util.Rcv + " [" + command + "]")
+}
