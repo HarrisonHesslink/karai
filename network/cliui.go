@@ -172,24 +172,20 @@ func (ui *CLIUI) HandleStream(net *Network, content *ChannelContent) {
 		command := BytesToCmd(content.Payload[:commandLength])
 		fmt.Fprintf(ui.hostWindow, "Received  %s command \n", command)
 
-		// switch command {
-		// case "block":
-		// 	net.HandleBlocks(content)
-		// case "inv":
-		// 	net.HandleInv(content)
-		// case "getblocks":
-		// 	net.HandleGetBlocks(content)
+		switch command {
+		// case "gettxes":
+		// 	net.HandleGetTxes(content)
 		// case "getdata":
 		// 	net.HandleGetData(content)
-		// case "tx":
-		// 	net.HandleTx(content)
-		// case "gettxfrompool":
-		// 	net.HandleGetTxFromPool(content)
-		// case "version":
-		// 	net.HandleVersion(content)
-		// default:
-		// 	log.Warn("Unknown Command")
-		// }
+		case "tx":
+			net.HandleTx(content)
+		// case "data":
+		// 	net.HandleData(content)
+		// case "batchtx":
+		// 	net.HandleBatchTx(content)
+		case "version":
+			//net.HandleSyncCall(ctx, req)
+		}
 	}
 }
 

@@ -127,4 +127,6 @@ type Network struct {
 	MiningChannel    *Channel
 	FullNodesChannel *Channel
 	Transactions     chan *transaction.Transaction
+	Database         *database.Database
+	Ui               *CLIUI
 }

@@ -49,12 +49,12 @@ func (s *Server) SendTx(p *flatend.Provider, tx transaction.Transaction) {
 BroadCastTX : broadcast tx
 
 */
-func (s *Server) BroadCastTX(tx transaction.Transaction) {
+func (net *Network) BroadCastTX(tx transaction.Transaction) {
 	data := GOB_TX{tx.Serialize()}
 	payload := GobEncode(data)
 	request := append(CmdToBytes("tx"), payload...)
 
-	s.P2p.GeneralChannel.Publish("Recieved NEW TX: ", request, "")
+	net.GeneralChannel.Publish("Recieved NEW TX: ", request, "")
 }
 
 /*

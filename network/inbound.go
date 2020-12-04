@@ -195,13 +195,13 @@ func (s *Server) HandleBatchTx(ctx *flatend.Context, request []byte) {
 	// }
 }
 
-func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
-	command := BytesToCmd(request[:commandLength])
+func (net *Network) HandleTx(content *ChannelContent) {
+	command := BytesToCmd(content.Payload[:commandLength])
 
 	var buff bytes.Buffer
 	var payload GOB_TX
 
-	buff.Write(request[commandLength:])
+	buff.Write(content.Payload[commandLength:])
 	dec := gob.NewDecoder(&buff)
 	err := dec.Decode(&payload)
 	if err != nil {
@@ -217,30 +217,28 @@ func (s *Server) HandleTx(ctx *flatend.Context, request []byte) {
 		if err != nil {
 			return
 		}
-		s.Prtl.ConsensusNode = consensus_data.PubKey
 
-		if s.Prtl.Dat.HaveTx(tx.Prev) {
-			if !s.Prtl.Dat.HaveTx(tx.Hash) {
-				s.Prtl.Dat.CommitDBTx(tx)
-				go s.BroadCastTX(tx)
+		if net.Database.HaveTx(tx.Prev) {
+			if !net.Database.HaveTx(tx.Hash) {
+				net.Database.CommitDBTx(tx)
+				net.BroadCastTX(tx)
 			}
 		}
 
 	} else {
-		if s.Prtl.Dat.HaveTx(tx.Prev) {
-			if !s.Prtl.Dat.HaveTx(tx.Hash) {
-				s.Prtl.Dat.CommitDBTx(tx)
+		if net.Database.HaveTx(tx.Prev) {
+			if !net.Database.HaveTx(tx.Hash) {
+				net.Database.CommitDBTx(tx)
 
 				oracleData := transaction.OracleData{}
 
 				json.Unmarshal([]byte(tx.Data), &oracleData)
 
-				go s.BroadCastTX(tx)
+				net.BroadCastTX(tx)
 			}
 		}
 	}
-
-	util.Success_log(util.Rcv + " [" + command + "] Transaction: " + tx.Hash)
+	net.Ui.displaySelfMessage(" [" + command + "] Transaction: " + tx.Hash)
 }
 
 func (s *Server) HandleData(ctx *flatend.Context, request []byte) {
@@ -263,79 +261,59 @@ func (s *Server) HandleData(ctx *flatend.Context, request []byte) {
 	}
 }
 
-func (s *Server) HandleSyncCall(ctx *flatend.Context, request []byte) {
-	command := BytesToCmd(request[:commandLength])
-	var buff bytes.Buffer
-	var payload SyncCall
+// func (net *Network) HandleSyncCall(content *ChannelContent) {
+// 	command := BytesToCmd(content.Payload[:commandLength])
+// 	var buff bytes.Buffer
+// 	var payload SyncCall
 
-	buff.Write(request[commandLength:])
-	dec := gob.NewDecoder(&buff)
-	err := dec.Decode(&payload)
-	if err != nil {
-		log.Println("Unable to decode")
-		return
-	}
+// 	buff.Write(request[commandLength:])
+// 	dec := gob.NewDecoder(&buff)
+// 	err := dec.Decode(&payload)
+// 	if err != nil {
+// 		log.Println("Unable to decode")
+// 		return
+// 	}
 
-	db, connectErr := s.Prtl.Dat.Connect()
-	defer db.Close()
-	util.Handle("Error creating a DB connection: ", connectErr)
+// 	db, connectErr := s.Prtl.Dat.Connect()
+// 	defer db.Close()
+// 	util.Handle("Error creating a DB connection: ", connectErr)
 
-	var txPrev string
-	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+// 	var txPrev string
+// 	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
-	if txPrev == "" {
-		return
-	}
+// 	if txPrev == "" {
+// 		return
+// 	}
 
-	var request_contracts map[string]string
-	if s.Prtl.Dat.HaveTx(payload.TopHash) {
-		//okay, our v1 txes are all synced, lets check v2/v3
-		our_contracts := s.GetContractMap()
+// 	var request_contracts map[string]string
+// 	if s.Prtl.Dat.HaveTx(payload.TopHash) {
+// 		//okay, our v1 txes are all synced, lets check v2/v3
+// 		our_contracts := s.GetContractMap()
 
-		request_contracts = make(map[string]string)
+// 		request_contracts = make(map[string]string)
 
-		for contract_hash, top_hash := range payload.Contracts {
-			if _, ok := our_contracts[contract_hash]; !ok {
-				//does not have v3 tx so add it to request payload
-				request_contracts[contract_hash] = "need"
-				continue
-			}
+// 		for contract_hash, top_hash := range payload.Contracts {
+// 			if _, ok := our_contracts[contract_hash]; !ok {
+// 				//does not have v3 tx so add it to request payload
+// 				request_contracts[contract_hash] = "need"
+// 				continue
+// 			}
 
-			if !containsValue(our_contracts, top_hash) {
-				if !s.Prtl.Dat.HaveTx(top_hash) {
-					//we shouldn't have this tx
-					request_contracts[contract_hash] = our_contracts[contract_hash]
-					continue
-				}
-			}
+// 			if !containsValue(our_contracts, top_hash) {
+// 				if !s.Prtl.Dat.HaveTx(top_hash) {
+// 					//we shouldn't have this tx
+// 					request_contracts[contract_hash] = our_contracts[contract_hash]
+// 					continue
+// 				}
+// 			}
 
-		}
+// 		}
 
-		go s.SendGetTxes(ctx, true, request_contracts)
-	} else {
-		//get v1
-		go s.SendGetTxes(ctx, false, request_contracts)
-	}
+// 		go s.SendGetTxes(ctx, true, request_contracts)
+// 	} else {
+// 		//get v1
+// 		go s.SendGetTxes(ctx, false, request_contracts)
+// 	}
 
-	util.Success_log(util.Rcv + " [" + command + "]")
-}
-
-func (s *Server) HandleConnection(req []byte, ctx *flatend.Context) {
-
-	command := BytesToCmd(req[:commandLength])
-	switch command {
-	case "gettxes":
-		go s.HandleGetTxes(ctx, req)
-	case "getdata":
-		go s.HandleGetData(ctx, req)
-	case "tx":
-		go s.HandleTx(ctx, req)
-	case "data":
-		go s.HandleData(ctx, req)
-	case "batchtx":
-		s.HandleBatchTx(ctx, req)
-	case "version":
-		go s.HandleSyncCall(ctx, req)
-	}
-
-}
+// 	util.Success_log(util.Rcv + " [" + command + "]")
+// }

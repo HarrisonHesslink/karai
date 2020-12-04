@@ -46,25 +46,11 @@ ProtocolInit = init all of the protocol
 
 */
 func ProtocolInit(c *config.Config, s *Server) {
-
-	var p Protocol
-	var peer_list PeerList
-	var sync Syncer
-	sync.Connected = false
-	sync.Synced = false
-
-	p.Sync = &sync
-	s.pl = &peer_list
-	s.cf = c
-
-	p.Dat = database.NewDataBase(c)
-	p.Mempool = NewMemPool()
-
-	s.Prtl = &p
 	s.RestAPI()
 
 	StartNode("4201", true, func(net *Network) {
 		s.P2p = net
+		s.P2p.Database = database.NewDataBase(c)
 		//go jsonrpc.StartServer(cli, rpc, rpcPort, rpcAddr)
 	})
 }
@@ -74,13 +60,13 @@ func ProtocolInit(c *config.Config, s *Server) {
 HandleCall = Handle a call from p2p
 
 */
-func (s *Server) HandleCall(stream *flatend.Stream) {
-	req, err := ioutil.ReadAll(stream.Reader)
-	if err != nil {
-		log.Panic(err)
-	}
-	go s.HandleConnection(req, nil)
-}
+// func (s *Server) HandleCall(stream *flatend.Stream) {
+// 	req, err := ioutil.ReadAll(stream.Reader)
+// 	if err != nil {
+// 		log.Panic(err)
+// 	}
+// 	go s.HandleConnection(req, nil)
+// }
 
 /*
 
@@ -180,9 +166,9 @@ func (s *Server) NewConsensusTXFromCore(req transaction.NewBlock) {
 	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
 	new_tx := transaction.CreateTransaction("1", txPrev, req_string, []string{}, []string{}, height)
-	if !s.Prtl.Dat.HaveTx(new_tx.Hash) {
-		s.Prtl.Dat.CommitDBTx(new_tx)
-		s.BroadCastTX(new_tx)
+	if !s.P2p.Database.HaveTx(new_tx.Hash) {
+		s.P2p.Database.CommitDBTx(new_tx)
+		s.P2p.BroadCastTX(new_tx)
 	}
 }
 
@@ -197,17 +183,17 @@ func (s *Server) CreateContract() {
 
 	jsonContract, _ := json.Marshal(data)
 
-	db, connectErr := s.Prtl.Dat.Connect()
+	db, connectErr := s.P2p.Database.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
-	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+	_ = db.QueryRow("SELECT tx_hash FROM " + s.P2p.Database.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
 	tx := transaction.CreateTransaction("3", txPrev, []byte(jsonContract), []string{}, []string{}, 0)
 
-	if !s.Prtl.Dat.HaveTx(tx.Hash) {
-		s.Prtl.Dat.CommitDBTx(tx)
-		go s.BroadCastTX(tx)
+	if !s.P2p.Database.HaveTx(tx.Hash) {
+		s.P2p.Database.CommitDBTx(tx)
+		go s.P2p.BroadCastTX(tx)
 	}
 	log.Info("Created Contract " + tx.Hash[:8])
 }
@@ -256,7 +242,7 @@ CreateTrustedData creates trusted data source from all known tx
 */
 func (s *Server) CreateTrustedData(block_height int64) {
 
-	db, connectErr := s.Prtl.Dat.Connect()
+	db, connectErr := s.P2p.Database.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
@@ -327,8 +313,8 @@ func (s *Server) CreateTrustedData(block_height int64) {
 
 				new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
 
-				s.Prtl.Dat.CommitDBTx(new_tx)
-				s.BroadCastTX(new_tx)
+				s.P2p.Database.CommitDBTx(new_tx)
+				s.P2p.BroadCastTX(new_tx)
 			}
 		}
 	}
@@ -398,17 +384,21 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 	fullNodesChannel, _ := JoinChannel(ctx, pub, host.ID(), FullNodesChannel, subscribe)
 
 	ui := NewCLIUI(generalChannel, miningChannel, fullNodesChannel)
+
 	// setup peer discovery
 	err = SetupDiscovery(ctx, host)
+
 	if err != nil {
 		panic(err)
 	}
+
 	network := &Network{
 		Host:             host,
 		GeneralChannel:   generalChannel,
 		MiningChannel:    miningChannel,
 		FullNodesChannel: fullNodesChannel,
 		Transactions:     make(chan *transaction.Transaction, 200),
+		Ui:               ui,
 		// Miner:            miner,
 	}
 	callback(network)
@@ -442,8 +432,6 @@ func RequestBlocks(net *Network) error {
 	peers := net.GeneralChannel.ListPeers()
 	for _, p := range peers {
 		log.Info(p.Pretty())
-	}
-	if len(peers) > 0 {
 		net.SendVersion()
 	}
 	return nil
@@ -479,7 +467,7 @@ func SetupDiscovery(ctx context.Context, host host.Host) error {
 			if err := host.Connect(ctx, *peerinfo); err != nil {
 				log.Error(err)
 			} else {
-				log.Info("Connection established with bootstrap node:", *peerinfo)
+				log.Debug("Connection established with bootstrap node:", *peerinfo)
 			}
 		}()
 	}
@@ -487,14 +475,14 @@ func SetupDiscovery(ctx context.Context, host host.Host) error {
 
 	// We use a rendezvous point "meet me here" to announce our location.
 	// This is like telling your friends to meet you at the Eiffel Tower.
-	log.Info("Announcing ourselves...")
+	log.Debug("Announcing ourselves...")
 	routingDiscovery := discovery.NewRoutingDiscovery(kademliaDHT)
 	discovery.Advertise(ctx, routingDiscovery, "xeq-equilibria")
-	log.Info("Successfully announced!")
+	log.Info("P2P Network Initialized...")
 
 	// Now, look for others who have announced
 	// This is like your friend telling you the location to meet you.
-	log.Info("Searching for other peers...")
+	log.Debug("Searching for other peers...")
 	peerChan, err := routingDiscovery.FindPeers(ctx, "xeq-equilibria")
 	if err != nil {
 		panic(err)
