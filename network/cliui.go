@@ -1,310 +1,325 @@
 package network
 
-import (
-	"bufio"
-	"encoding/json"
-	"fmt"
-	"io"
-	"io/ioutil"
-	"os"
-	"path"
-	"path/filepath"
-	"runtime"
-	"strings"
-	"time"
+// import (
+// 	"bufio"
+// 	"encoding/json"
+// 	"fmt"
+// 	"io"
+// 	"io/ioutil"
+// 	"os"
+// 	"path"
+// 	"path/filepath"
+// 	"runtime"
+// 	"strings"
+// 	"time"
 
-	log "github.com/sirupsen/logrus"
+// 	log "github.com/sirupsen/logrus"
 
-	"github.com/gdamore/tcell/v2"
+// 	"github.com/gdamore/tcell/v2"
 
-	"github.com/rivo/tview"
-)
+// 	"github.com/rivo/tview"
+// )
 
-// CLIUI is a Text User Interface (TUI) for Peers
-type CLIUI struct {
-	GeneralChannel   *Channel
-	MiningChannel    *Channel
-	FullNodesChannel *Channel
-	app              *tview.Application
-	peersList        *tview.TextView
+// // CLIUI is a Text User Interface (TUI) for Peers
+// type CLIUI struct {
+// 	GeneralChannel   *Channel
+// 	MiningChannel    *Channel
+// 	FullNodesChannel *Channel
+// 	app              *tview.Application
+// 	peersList        *tview.TextView
 
-	hostWindow *tview.TextView
-	inputCh    chan string
-	doneCh     chan struct{}
-}
+// 	hostWindow *tview.TextView
+// 	inputCh    chan string
+// 	doneCh     chan struct{}
+// }
 
-type Log struct {
-	Level string `json:"level"`
-	Msg   string `json:"msg"`
-	Time  string `json:"time"`
-}
+// type Log struct {
+// 	Level string `json:"level"`
+// 	Msg   string `json:"msg"`
+// 	Time  string `json:"time"`
+// }
 
-var (
-	_, b, _, _ = runtime.Caller(0)
+// var (
+// 	_, b, _, _ = runtime.Caller(0)
 
-	// Root folder of this project
-	Root = filepath.Join(filepath.Dir(b), "../")
-)
+// 	// Root folder of this project
+// 	Root = filepath.Join(filepath.Dir(b), "../")
+// )
 
-func NewCLIUI(generalChannel *Channel, miningChannel *Channel, fullNodesChannel *Channel) *CLIUI {
-	app := tview.NewApplication()
+// func NewCLIUI(generalChannel *Channel, miningChannel *Channel, fullNodesChannel *Channel) *CLIUI {
+// 	app := tview.NewApplication()
 
-	msgBox := tview.NewTextView()
-	msgBox.SetDynamicColors(true)
-	msgBox.SetBorder(true)
-	msgBox.SetTitle(fmt.Sprintf("HOST (%s)", strings.ToUpper(ShortID(generalChannel.self))))
+// 	msgBox := tview.NewTextView()
+// 	msgBox.SetDynamicColors(true)
+// 	msgBox.SetBorder(true)
+// 	msgBox.SetTitle(fmt.Sprintf("HOST (%s)", strings.ToUpper(ShortID(generalChannel.self))))
 
-	msgBox.SetChangedFunc(func() {
-		app.Draw()
-	})
+// 	msgBox.SetChangedFunc(func() {
+// 		app.Draw()
+// 	})
 
-	inputCh := make(chan string, 32)
-	input := tview.NewInputField().
-		SetLabel(strings.ToUpper(ShortID(generalChannel.self)) + " > ").
-		SetFieldWidth(2).
-		SetFieldBackgroundColor(tcell.ColorRed)
+// 	inputCh := make(chan string, 32)
+// 	input := tview.NewInputField().
+// 		SetLabel(strings.ToUpper(ShortID(generalChannel.self)) + " > ").
+// 		SetFieldWidth(2).
+// 		SetFieldBackgroundColor(tcell.ColorRed)
 
-	input.SetBorder(true)
+// 	input.SetBorder(true)
 
-	input.SetDoneFunc(func(key tcell.Key) {
-		if key != tcell.KeyEnter {
-			// we don't want to do anything if they just tabbed away
-			return
-		}
-		line := input.GetText()
-		if len(line) == 0 {
-			// ignore blank lines
-			return
-		}
+// 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+// 		// Anything handled here will be executed on the main thread
+// 		switch event.Key() {
+// 		case tcell.KeyEnter:
+// 			submittedName = !submittedName
 
-		// bail if requested
-		if line == "/quit" {
-			app.Stop()
-			return
-		}
+// 			if submittedName {
+// 				name := input.GetText()
+// 				if strings.TrimSpace(name) == "" {
+// 					name = "Anonymous"
+// 				}
 
-		inputCh <- line
-		input.SetText("placehold")
-	})
+// 				// Create a modal dialog
+// 				m := tview.NewModal().
+// 					SetText(fmt.Sprintf("Greetings, %s!", name)).
+// 					AddButtons([]string{"Hello"})
 
-	peersList := tview.NewTextView()
-	peersList.SetBorder(true)
-	peersList.SetTitle("Peers")
+// 				// Display and focus the dialog
+// 				app.SetRoot(m, true).SetFocus(m)
+// 			} else {
+// 				// Clear the input field
+// 				input.SetText("")
 
-	chatPanel := tview.NewFlex().
-		AddItem(msgBox, 0, 1, false).
-		AddItem(peersList, 20, 1, false).
-		AddItem(input, 20, 1, false)
+// 				// Display appGrid and focus the input field
+// 				app.SetRoot(appGrid, true).SetFocus(input)
+// 			}
+// 			return nil
+// 		case tcell.KeyEsc:
+// 			// Exit the application
+// 			app.Stop()
+// 			return nil
+// 		}
 
-	flex := tview.NewFlex().
-		SetDirection(tview.FlexRow).
-		AddItem(chatPanel, 0, 1, false)
+// 		return event
+// 	})
 
-	app.SetRoot(flex, true)
+// 	peersList := tview.NewTextView()
+// 	peersList.SetBorder(true)
+// 	peersList.SetTitle("Peers")
 
-	return &CLIUI{
-		GeneralChannel:   generalChannel,
-		MiningChannel:    miningChannel,
-		FullNodesChannel: fullNodesChannel,
-		app:              app,
-		peersList:        peersList,
-		hostWindow:       msgBox,
-		inputCh:          inputCh,
-		doneCh:           make(chan struct{}, 1),
-	}
-}
+// 	chatPanel := tview.NewFlex().
+// 		AddItem(msgBox, 0, 1, false).
+// 		AddItem(peersList, 20, 1, false).
+// 		AddItem(input, 10, 1, true)
 
-// Run starts the logs event loop in the background, then starts
-// the event loop for the text UI.
-func (ui *CLIUI) Run(net *Network) error {
-	go ui.handleEvents(net)
-	defer ui.end()
+// 	flex := tview.NewFlex().
+// 		SetDirection(tview.FlexRow).
+// 		AddItem(chatPanel, 0, 1, false)
 
-	return ui.app.Run()
-}
+// 	app.SetRoot(flex, true)
 
-// end signals the event loop to exit gracefully
-func (ui *CLIUI) end() {
-	ui.doneCh <- struct{}{}
-}
+// 	return &CLIUI{
+// 		GeneralChannel:   generalChannel,
+// 		MiningChannel:    miningChannel,
+// 		FullNodesChannel: fullNodesChannel,
+// 		app:              app,
+// 		peersList:        peersList,
+// 		hostWindow:       msgBox,
+// 		inputCh:          inputCh,
+// 		doneCh:           make(chan struct{}, 1),
+// 	}
+// }
 
-// refreshPeers pulls the list of peers currently in the channel and
-// displays the last 8 chars of their peer id in the Peers panel in the ui.
-func (ui *CLIUI) refreshPeers() {
-	peers := ui.GeneralChannel.ListPeers()
-	minerPeers := ui.MiningChannel.ListPeers()
-	idStrs := make([]string, len(peers))
+// // Run starts the logs event loop in the background, then starts
+// // the event loop for the text UI.
+// func (ui *CLIUI) Run(net *Network) error {
+// 	go ui.handleEvents(net)
+// 	defer ui.end()
 
-	for i, p := range peers {
-		peerId := strings.ToUpper(ShortID(p))
-		if len(minerPeers) != 0 {
-			isMiner := false
-			for _, minerPeer := range minerPeers {
-				if minerPeer == p {
-					isMiner = true
-					break
-				}
-			}
-			if isMiner {
-				idStrs[i] = "MINER: " + peerId
-			} else {
-				idStrs[i] = peerId
-			}
-		} else {
-			idStrs[i] = peerId
-		}
-	}
+// 	return ui.app.Run()
+// }
 
-	ui.peersList.SetText(strings.Join(idStrs, "\n"))
-	ui.app.Draw()
-}
+// // end signals the event loop to exit gracefully
+// func (ui *CLIUI) end() {
+// 	ui.doneCh <- struct{}{}
+// }
 
-func (ui *CLIUI) displaySelfMessage(msg string) {
-	prompt := withColor("yellow", fmt.Sprintf("<%s>:", strings.ToUpper(ShortID(ui.GeneralChannel.self))))
-	fmt.Fprintf(ui.hostWindow, "%s %s\n", prompt, msg)
-}
+// // refreshPeers pulls the list of peers currently in the channel and
+// // displays the last 8 chars of their peer id in the Peers panel in the ui.
+// func (ui *CLIUI) refreshPeers() {
+// 	peers := ui.GeneralChannel.ListPeers()
+// 	minerPeers := ui.MiningChannel.ListPeers()
+// 	idStrs := make([]string, len(peers))
 
-func (ui *CLIUI) displayContent(content *ChannelContent) {
-	prompt := withColor("green", fmt.Sprintf("<%s>:", strings.ToUpper(content.SendFrom)))
-	fmt.Fprintf(ui.hostWindow, "%s %s\n", prompt, content.Message)
-}
+// 	for i, p := range peers {
+// 		peerId := strings.ToUpper(ShortID(p))
+// 		if len(minerPeers) != 0 {
+// 			isMiner := false
+// 			for _, minerPeer := range minerPeers {
+// 				if minerPeer == p {
+// 					isMiner = true
+// 					break
+// 				}
+// 			}
+// 			if isMiner {
+// 				idStrs[i] = "MINER: " + peerId
+// 			} else {
+// 				idStrs[i] = peerId
+// 			}
+// 		} else {
+// 			idStrs[i] = peerId
+// 		}
+// 	}
 
-func (ui *CLIUI) HandleStream(net *Network, content *ChannelContent) {
-	// ui.displayContent(content)
-	if content.Payload != nil {
-		command := BytesToCmd(content.Payload[:commandLength])
-		fmt.Fprintf(ui.hostWindow, "Received  %s command \n", command)
+// 	ui.peersList.SetText(strings.Join(idStrs, "\n"))
+// 	ui.app.Draw()
+// }
 
-		switch command {
-		// case "gettxes":
-		// 	net.HandleGetTxes(content)
-		// case "getdata":
-		// 	net.HandleGetData(content)
-		case "tx":
-			net.HandleTx(content)
-		// case "data":
-		// 	net.HandleData(content)
-		// case "batchtx":
-		// 	net.HandleBatchTx(content)
-		case "version":
-			//net.HandleSyncCall(ctx, req)
-		}
-	}
-}
+// func (ui *CLIUI) displaySelfMessage(msg string) {
+// 	prompt := withColor("yellow", fmt.Sprintf("<%s>:", strings.ToUpper(ShortID(ui.GeneralChannel.self))))
+// 	fmt.Fprintf(ui.hostWindow, "%s %s\n", prompt, msg)
+// }
 
-func (ui *CLIUI) readFromLogs(instanceId string) {
-	filename := "/logs/console.log"
-	if instanceId != "" {
-		filename = fmt.Sprintf("/logs/console_%s.log", instanceId)
-	}
+// func (ui *CLIUI) displayContent(content *ChannelContent) {
+// 	prompt := withColor("green", fmt.Sprintf("<%s>:", strings.ToUpper(content.SendFrom)))
+// 	fmt.Fprintf(ui.hostWindow, "%s %s\n", prompt, content.Message)
+// }
 
-	logFile := path.Join(Root, filename)
-	e := ioutil.WriteFile(logFile, []byte(""), 0644)
-	if e != nil {
-		panic(e)
-	}
-	log.SetOutput(ioutil.Discard)
+// func (ui *CLIUI) HandleStream(net *Network, content *ChannelContent) {
+// 	// ui.displayContent(content)
+// 	if content.Payload != nil {
+// 		command := BytesToCmd(content.Payload[:commandLength])
+// 		fmt.Fprintf(ui.hostWindow, "Received  %s command \n", command)
 
-	f, err := os.Open(logFile)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
+// 		switch command {
+// 		// case "gettxes":
+// 		// 	net.HandleGetTxes(content)
+// 		// case "getdata":
+// 		// 	net.HandleGetData(content)
+// 		case "tx":
+// 			net.HandleTx(content)
+// 		// case "data":
+// 		// 	net.HandleData(content)
+// 		// case "batchtx":
+// 		// 	net.HandleBatchTx(content)
+// 		case "version":
+// 			//net.HandleSyncCall(ctx, req)
+// 		}
+// 	}
+// }
 
-	r := bufio.NewReader(f)
-	info, err := f.Stat()
-	if err != nil {
-		panic(err)
-	}
-	logLevels := map[string]string{
-		"info":    "green",
-		"warning": "brown",
-		"error":   "red",
-		"fatal":   "red",
-	}
-	oldSize := info.Size()
-	for {
-		for line, prefix, err := r.ReadLine(); err != io.EOF; line, prefix, err = r.ReadLine() {
-			var data Log
-			if err := json.Unmarshal(line, &data); err != nil {
-				panic(err)
-			}
-			prompt := fmt.Sprintf("[%s]:", withColor(logLevels[data.Level], strings.ToUpper(data.Level)))
-			if prefix {
-				fmt.Fprintf(ui.hostWindow, "%s %s\n", prompt, data.Msg)
-			} else {
-				fmt.Fprintf(ui.hostWindow, "%s %s\n", prompt, data.Msg)
-			}
-			ui.hostWindow.ScrollToEnd()
-		}
-		pos, err := f.Seek(0, io.SeekCurrent)
-		if err != nil {
-			panic(err)
-		}
-		for {
-			time.Sleep(time.Second)
-			newinfo, err := f.Stat()
-			if err != nil {
-				panic(err)
-			}
-			newSize := newinfo.Size()
-			if newSize != oldSize {
-				if newSize < oldSize {
-					f.Seek(0, 0)
-				} else {
-					f.Seek(pos, io.SeekStart)
-				}
-				r = bufio.NewReader(f)
-				oldSize = newSize
-				break
-			}
-		}
-	}
-}
+// func (ui *CLIUI) readFromLogs(instanceId string) {
+// 	filename := "/logs/console.log"
+// 	if instanceId != "" {
+// 		filename = fmt.Sprintf("/logs/console_%s.log", instanceId)
+// 	}
 
-// handleEvents runs an event loop that sends user input to the channel
-// and displays messages received from the channel. It also periodically
-// refreshes the list of peers in the UI.
-func (ui *CLIUI) handleEvents(net *Network) {
-	peerRefreshTicker := time.NewTicker(time.Second)
-	defer peerRefreshTicker.Stop()
+// 	logFile := path.Join(Root, filename)
+// 	e := ioutil.WriteFile(logFile, []byte(""), 0644)
+// 	if e != nil {
+// 		panic(e)
+// 	}
+// 	log.SetOutput(ioutil.Discard)
 
-	//go ui.readFromLogs(net.Blockchain.InstanceId)
-	log.Info("HOST ADDR: ", net.Host.Addrs())
+// 	f, err := os.Open(logFile)
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	defer f.Close()
 
-	for {
-		select {
-		case input := <-ui.inputCh:
+// 	r := bufio.NewReader(f)
+// 	info, err := f.Stat()
+// 	if err != nil {
+// 		panic(err)
+// 	}
+// 	logLevels := map[string]string{
+// 		"info":    "green",
+// 		"warning": "brown",
+// 		"error":   "red",
+// 		"fatal":   "red",
+// 	}
+// 	oldSize := info.Size()
+// 	for {
+// 		for line, prefix, err := r.ReadLine(); err != io.EOF; line, prefix, err = r.ReadLine() {
+// 			var data Log
+// 			if err := json.Unmarshal(line, &data); err != nil {
+// 				panic(err)
+// 			}
+// 			prompt := fmt.Sprintf("[%s]:", withColor(logLevels[data.Level], strings.ToUpper(data.Level)))
+// 			if prefix {
+// 				fmt.Fprintf(ui.hostWindow, "%s %s\n", prompt, data.Msg)
+// 			} else {
+// 				fmt.Fprintf(ui.hostWindow, "%s %s\n", prompt, data.Msg)
+// 			}
+// 			ui.hostWindow.ScrollToEnd()
+// 		}
+// 		pos, err := f.Seek(0, io.SeekCurrent)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		for {
+// 			time.Sleep(time.Second)
+// 			newinfo, err := f.Stat()
+// 			if err != nil {
+// 				panic(err)
+// 			}
+// 			newSize := newinfo.Size()
+// 			if newSize != oldSize {
+// 				if newSize < oldSize {
+// 					f.Seek(0, 0)
+// 				} else {
+// 					f.Seek(pos, io.SeekStart)
+// 				}
+// 				r = bufio.NewReader(f)
+// 				oldSize = newSize
+// 				break
+// 			}
+// 		}
+// 	}
+// }
 
-			err := ui.GeneralChannel.Publish(input, nil, "")
-			if err != nil {
-				log.Errorf("Publish error: %s", err)
-			}
-			ui.displaySelfMessage(input)
+// // handleEvents runs an event loop that sends user input to the channel
+// // and displays messages received from the channel. It also periodically
+// // refreshes the list of peers in the UI.
+// func (ui *CLIUI) handleEvents(net *Network) {
+// 	peerRefreshTicker := time.NewTicker(time.Second)
+// 	defer peerRefreshTicker.Stop()
 
-		case <-peerRefreshTicker.C:
-			// refresh the list of peers in the chat room periodically
-			ui.refreshPeers()
+// 	//go ui.readFromLogs(net.Blockchain.InstanceId)
+// 	log.Info("HOST ADDR: ", net.Host.Addrs())
 
-		case m := <-ui.GeneralChannel.Content:
-			ui.HandleStream(net, m)
+// 	for {
+// 		select {
+// 		case input := <-ui.inputCh:
 
-		case m := <-ui.MiningChannel.Content:
-			ui.HandleStream(net, m)
+// 			err := ui.GeneralChannel.Publish(input, nil, "")
+// 			if err != nil {
+// 				log.Errorf("Publish error: %s", err)
+// 			}
+// 			ui.displaySelfMessage(input)
 
-		case m := <-ui.FullNodesChannel.Content:
-			ui.HandleStream(net, m)
+// 		case <-peerRefreshTicker.C:
+// 			// refresh the list of peers in the chat room periodically
+// 			ui.refreshPeers()
 
-		case <-ui.GeneralChannel.ctx.Done():
-			return
+// 		case m := <-ui.GeneralChannel.Content:
+// 			ui.HandleStream(net, m)
 
-		case <-ui.doneCh:
-			return
-		}
-	}
-}
+// 		case m := <-ui.MiningChannel.Content:
+// 			ui.HandleStream(net, m)
 
-// withColor wraps a string with color tags for display in the messages text box.
-func withColor(color, msg string) string {
-	return fmt.Sprintf("[%s]%s[-]", color, msg)
-}
+// 		case m := <-ui.FullNodesChannel.Content:
+// 			ui.HandleStream(net, m)
+
+// 		case <-ui.GeneralChannel.ctx.Done():
+// 			return
+
+// 		case <-ui.doneCh:
+// 			return
+// 		}
+// 	}
+// }
+
+// // withColor wraps a string with color tags for display in the messages text box.
+// func withColor(color, msg string) string {
+// 	return fmt.Sprintf("[%s]%s[-]", color, msg)
+// }

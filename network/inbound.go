@@ -5,8 +5,9 @@ import (
 	"encoding/gob"
 
 	// "fmt"
-	"log"
 	"strconv"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/harrisonhesslink/flatend"
 
@@ -238,7 +239,7 @@ func (net *Network) HandleTx(content *ChannelContent) {
 			}
 		}
 	}
-	net.Ui.displaySelfMessage(" [" + command + "] Transaction: " + tx.Hash)
+	log.Info(" [" + command + "] Transaction: " + tx.Hash)
 }
 
 // func (s *Server) HandleData(ctx *flatend.Context, request []byte) {

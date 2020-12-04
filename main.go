@@ -17,6 +17,7 @@ func main() {
 	//createRoot()
 	//ascii()
 	var s network.Server
+	go inputHandler(&s)
 	network.ProtocolInit(&c, &s)
 	//go getDataCovid19(1000)
 	//go getDataOgre(500)

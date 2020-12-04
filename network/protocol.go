@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	api "github.com/harrisonhesslink/pythia/api"
 	config "github.com/harrisonhesslink/pythia/configuration"
@@ -361,11 +362,7 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 	if err != nil {
 		panic(err)
 	}
-	for _, addr := range host.Addrs() {
-		fmt.Println("Listening on", addr)
-	}
 	log.Info("Host created: ", host.ID())
-
 	// create a new PubSub service using the GossipSub router for general room
 	pub, err := pubsub.NewGossipSub(ctx, host)
 	if err != nil {
@@ -383,8 +380,6 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 	}
 	fullNodesChannel, _ := JoinChannel(ctx, pub, host.ID(), FullNodesChannel, subscribe)
 
-	ui := NewCLIUI(generalChannel, miningChannel, fullNodesChannel)
-
 	// setup peer discovery
 	err = SetupDiscovery(ctx, host)
 
@@ -398,7 +393,6 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		MiningChannel:    miningChannel,
 		FullNodesChannel: fullNodesChannel,
 		Transactions:     make(chan *transaction.Transaction, 200),
-		Ui:               ui,
 		// Miner:            miner,
 	}
 	callback(network)
@@ -414,9 +408,7 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 	if err != nil {
 		panic(err)
 	}
-	if err = ui.Run(network); err != nil {
-		log.Error("error running text UI: %s", err)
-	}
+	network.handleEvents()
 }
 
 func HandleEvents(net *Network) {
@@ -558,3 +550,56 @@ func loadPeerKey() (crypto.PrivKey, error) {
 // 		}
 // 	}
 // }
+
+func (net *Network) HandleStream(content *ChannelContent) {
+	// ui.displayContent(content)
+	if content.Payload != nil {
+		command := BytesToCmd(content.Payload[:commandLength])
+		// fmt.Fprintf(ui.hostWindow, "Received  %s command \n", command)
+
+		switch command {
+		// case "gettxes":
+		// 	net.HandleGetTxes(content)
+		// case "getdata":
+		// 	net.HandleGetData(content)
+		case "tx":
+			net.HandleTx(content)
+		// case "data":
+		// 	net.HandleData(content)
+		// case "batchtx":
+		// 	net.HandleBatchTx(content)
+		case "version":
+			//net.HandleSyncCall(ctx, req)
+		}
+	}
+}
+
+func (net *Network) handleEvents() {
+	peerRefreshTicker := time.NewTicker(time.Second)
+	defer peerRefreshTicker.Stop()
+
+	//go ui.readFromLogs(net.Blockchain.InstanceId)
+	log.Info("HOST ADDR: ", net.Host.Addrs())
+
+	for {
+		select {
+		// case <-peerRefreshTicker.C:
+		// 	// refresh the list of peers in the chat room periodically
+		// 	ui.refreshPeers()
+
+		case m := <-net.GeneralChannel.Content:
+			net.HandleStream(m)
+		case m := <-net.MiningChannel.Content:
+			net.HandleStream(m)
+
+		case m := <-net.FullNodesChannel.Content:
+			net.HandleStream(m)
+
+		case <-net.GeneralChannel.ctx.Done():
+			return
+
+			// case <-ui.doneCh:
+			// 	return
+		}
+	}
+}
