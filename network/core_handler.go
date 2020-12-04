@@ -79,7 +79,7 @@ func (s *Server) RestAPI() {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 
-		db, err := s.Prtl.Dat.Connect()
+		db, err := s.P2p.Database.Connect()
 		if err != nil {
 			res, _ := json.Marshal(map[string]bool{"status": false})
 			w.WriteHeader(http.StatusBadRequest)
@@ -101,7 +101,7 @@ func (s *Server) RestAPI() {
 		}
 
 		var transactions []transaction.Transaction
-		rows, _ := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + queryExtension + order)
+		rows, _ := db.Queryx("SELECT * FROM " + s.P2p.Database.Cf.GetTableName() + queryExtension + order)
 		defer rows.Close()
 		x := 1
 		for rows.Next() {
@@ -123,7 +123,7 @@ func (s *Server) RestAPI() {
 	api.HandleFunc("/get_contracts", func(w http.ResponseWriter, r *http.Request) {
 		if s.Prtl.Sync.Connected {
 
-			db, connectErr := s.Prtl.Dat.Connect()
+			db, connectErr := s.P2p.Database.Connect()
 			defer db.Close()
 			util.Handle("Error creating a DB connection: ", connectErr)
 
@@ -132,7 +132,7 @@ func (s *Server) RestAPI() {
 			// reportRequest("transactions/"+hash, w, r)
 			transactions := []transaction.Transaction{}
 
-			rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='3' ORDER BY tx_time DESC")
+			rows, err := db.Queryx("SELECT * FROM " + s.P2p.Database.Cf.GetTableName() + " WHERE tx_type='3' ORDER BY tx_time DESC")
 			if err != nil {
 				panic(err)
 			}

@@ -16,7 +16,6 @@ import (
 	"io/ioutil"
 	"strconv"
 
-	"github.com/harrisonhesslink/flatend"
 	"github.com/harrisonhesslink/pythia/transaction"
 	"github.com/harrisonhesslink/pythia/util"
 	_ "github.com/lib/pq"
@@ -31,7 +30,6 @@ import (
 	yamux "github.com/libp2p/go-libp2p-yamux"
 	tcp "github.com/libp2p/go-tcp-transport"
 	ws "github.com/libp2p/go-ws-transport"
-	"github.com/lithdew/kademlia"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -54,55 +52,6 @@ func ProtocolInit(c *config.Config, s *Server) {
 		s.P2p.Database = database.NewDataBase(c)
 		//go jsonrpc.StartServer(cli, rpc, rpcPort, rpcAddr)
 	})
-}
-
-/*
-
-HandleCall = Handle a call from p2p
-
-*/
-// func (s *Server) HandleCall(stream *flatend.Stream) {
-// 	req, err := ioutil.ReadAll(stream.Reader)
-// 	if err != nil {
-// 		log.Panic(err)
-// 	}
-// 	go s.HandleConnection(req, nil)
-// }
-
-/*
-
-GetProviderFromID = Get provider from id
-
-*/
-func (s *Server) GetProviderFromID(id *kademlia.ID) *flatend.Provider {
-	// providers := s.node.ProvidersFor("karai-xeq")
-	// if providers != nil && len(providers) > 0 {
-	// 	for _, provider := range providers {
-	// 		if provider.GetID().Pub.String() == id.Pub.String() {
-	// 			return provider
-	// 		}
-	// 	}
-	// }
-	return nil
-}
-
-/*
-
-LookForNodes = Look for peers not known
-
-*/
-func (s *Server) LookForNodes() {
-	// for {
-	// 	if s.pl.Count < 9 {
-
-	// 		providers := s.node.ProvidersFor("karai-xeq")
-	// 		for _, provider := range providers {
-	// 			go s.SendVersion(provider)
-	// 		}
-	// 	}
-
-	// 	time.Sleep(10 * time.Second)
-	// }
 }
 
 //NewDataTxFromCore = Go through all contracts and send data out
@@ -174,7 +123,7 @@ func (net *Network) NewConsensusTXFromCore(req transaction.NewBlock) {
 }
 
 //CreateContract make new contract uploaded fron config.json
-func (s *Server) CreateContract() {
+func (net *Network) CreateContract() {
 	var txPrev string
 	file, _ := ioutil.ReadFile("contract.json")
 
@@ -184,17 +133,17 @@ func (s *Server) CreateContract() {
 
 	jsonContract, _ := json.Marshal(data)
 
-	db, connectErr := s.P2p.Database.Connect()
+	db, connectErr := net.Database.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
-	_ = db.QueryRow("SELECT tx_hash FROM " + s.P2p.Database.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+	_ = db.QueryRow("SELECT tx_hash FROM " + net.Database.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
 	tx := transaction.CreateTransaction("3", txPrev, []byte(jsonContract), []string{}, []string{}, 0)
 
-	if !s.P2p.Database.HaveTx(tx.Hash) {
-		s.P2p.Database.CommitDBTx(tx)
-		go s.P2p.BroadCastTX(tx)
+	if !net.Database.HaveTx(tx.Hash) {
+		net.Database.CommitDBTx(tx)
+		go net.BroadCastTX(tx)
 	}
 	log.Info("Created Contract " + tx.Hash[:8])
 }
@@ -203,9 +152,9 @@ func (s *Server) CreateContract() {
 
 GetContractMap creates contract map and their last known tx
 */
-func (s *Server) GetContractMap() map[string]string {
+func (net *Network) GetContractMap() map[string]string {
 
-	db, connectErr := s.Prtl.Dat.Connect()
+	db, connectErr := net.Database.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
@@ -213,7 +162,7 @@ func (s *Server) GetContractMap() map[string]string {
 	Contracts = make(map[string]string)
 
 	//loop through to find oracle data
-	rows, err := db.Queryx("SELECT * FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='3' ORDER BY tx_time DESC")
+	rows, err := db.Queryx("SELECT * FROM " + net.Database.Cf.GetTableName() + " WHERE tx_type='3' ORDER BY tx_time DESC")
 	if err != nil {
 		panic(err)
 	}
@@ -226,7 +175,7 @@ func (s *Server) GetContractMap() map[string]string {
 			log.Panic(err)
 		}
 		var data_prev string
-		_ = db.QueryRow("SELECT tx_hash FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", this_tx.Hash).Scan(&data_prev)
+		_ = db.QueryRow("SELECT tx_hash FROM "+net.Database.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", this_tx.Hash).Scan(&data_prev)
 		Contracts[this_tx.Hash] = data_prev
 	}
 	err = rows.Err()
@@ -241,13 +190,13 @@ func (s *Server) GetContractMap() map[string]string {
 
 CreateTrustedData creates trusted data source from all known tx
 */
-func (s *Server) CreateTrustedData(block_height int64) {
+func (net *Network) CreateTrustedData(block_height int64) {
 
-	db, connectErr := s.P2p.Database.Connect()
+	db, connectErr := net.Database.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
-	contract_data_map := s.Prtl.Mempool.SortOracleDataMap(block_height)
+	contract_data_map := net.Mempool.SortOracleDataMap(block_height)
 
 	filtered_data_map, trusted_data_map := FilterOracleDataMap(contract_data_map)
 
@@ -255,7 +204,7 @@ func (s *Server) CreateTrustedData(block_height int64) {
 		if len(contract_array) > 1 {
 
 			var lastTrustedTx transaction.Transaction
-			_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Contract).StructScan(&lastTrustedTx)
+			_ = db.QueryRowx("SELECT * FROM "+net.Database.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract_array[0].Contract).StructScan(&lastTrustedTx)
 			prev := lastTrustedTx.Hash
 			if prev == "" {
 				return
@@ -264,14 +213,14 @@ func (s *Server) CreateTrustedData(block_height int64) {
 			multi := 1.0
 
 			var contractTx transaction.Transaction
-			_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_hash=$1 ORDER BY tx_time DESC", contract_array[0].Contract).StructScan(&contractTx)
+			_ = db.QueryRowx("SELECT * FROM "+net.Database.Cf.GetTableName()+" WHERE tx_hash=$1 ORDER BY tx_time DESC", contract_array[0].Contract).StructScan(&contractTx)
 
 			contract := contract.Contract{}
 			json.Unmarshal([]byte(contractTx.Data), &contract)
 
 			if contract.ContractRef != "" {
 				var lastContractRef transaction.Transaction
-				_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract.ContractRef).StructScan(&lastContractRef)
+				_ = db.QueryRowx("SELECT * FROM "+net.Database.Cf.GetTableName()+" WHERE tx_epoc=$1 ORDER BY tx_time DESC", contract.ContractRef).StructScan(&lastContractRef)
 
 				if lastContractRef.Hash == "" {
 					log.Info("Unable to query last contract ref!")
@@ -314,8 +263,8 @@ func (s *Server) CreateTrustedData(block_height int64) {
 
 				new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
 
-				s.P2p.Database.CommitDBTx(new_tx)
-				s.P2p.BroadCastTX(new_tx)
+				net.Database.CommitDBTx(new_tx)
+				net.BroadCastTX(new_tx)
 			}
 		}
 	}
@@ -393,6 +342,7 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		MiningChannel:    miningChannel,
 		FullNodesChannel: fullNodesChannel,
 		Transactions:     make(chan *transaction.Transaction, 200),
+		Mempool:          NewMemPool(),
 		// Miner:            miner,
 	}
 	callback(network)
@@ -558,18 +508,18 @@ func (net *Network) HandleStream(content *ChannelContent) {
 		// fmt.Fprintf(ui.hostWindow, "Received  %s command \n", command)
 
 		switch command {
-		// case "gettxes":
-		// 	net.HandleGetTxes(content)
-		// case "getdata":
-		// 	net.HandleGetData(content)
+		case "gettxes":
+			net.HandleGetTxes(content)
+		case "getdata":
+			net.HandleGetData(content)
 		case "tx":
 			net.HandleTx(content)
-		// case "data":
-		// 	net.HandleData(content)
-		// case "batchtx":
-		// 	net.HandleBatchTx(content)
-		case "version":
-			//net.HandleSyncCall(ctx, req)
+		case "data":
+			net.HandleData(content)
+		case "batchtx":
+			net.HandleBatchTx(content)
+			// case "version":
+			// 	net.HandleSyncCall(ctx, req)
 		}
 	}
 }

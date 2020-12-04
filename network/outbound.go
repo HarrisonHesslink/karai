@@ -6,6 +6,7 @@ import (
 	"github.com/harrisonhesslink/flatend"
 	"github.com/harrisonhesslink/pythia/transaction"
 	"github.com/harrisonhesslink/pythia/util"
+	log "github.com/sirupsen/logrus"
 
 	//"math/rand"
 	//"time"
@@ -75,15 +76,8 @@ func (net *Network) BroadCastOracleData(oracle_data transaction.OracleData) {
 SendData : sendBytes
 
 */
-func (s *Server) SendData(ctx *flatend.Context, data []byte) {
-
-	p := s.GetProviderFromID(&ctx.ID)
-	if p != nil {
-		// stream, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
-		// if err == nil {
-		// 	go s.HandleCall(stream)
-		// }
-	}
+func (net *Network) SendData(data []byte) {
+	net.GeneralChannel.Publish("Recieved NEW ORACLE DATA", data, "")
 }
 
 /*
@@ -106,24 +100,24 @@ func (s *Server) BroadCastData(data []byte) {
 SendGetTxes : Get tansactions not known
 
 */
-func (s *Server) SendGetTxes(ctx *flatend.Context, fill bool, contracts map[string]string) {
+func (net *Network) SendGetTxes(fill bool, contracts map[string]string) {
 
 	var txPrev string
 
-	db, connectErr := s.Prtl.Dat.Connect()
+	db, connectErr := net.Database.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
-	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+	_ = db.QueryRow("SELECT tx_hash FROM " + net.Database.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 	payload := GobEncode(GetTxes{txPrev, fill, contracts})
 	request := append(CmdToBytes("gettxes"), payload...)
 
-	go s.SendData(ctx, request)
+	go net.SendData(request)
 
 	if !fill {
-		util.Success_log(util.Send + " [GTXS] Requesting Transactions starting from: " + txPrev)
+		log.Info(util.Send + " [GTXS] Requesting Transactions starting from: " + txPrev)
 	} else {
-		util.Success_log(util.Send + " [GTXS] Requesting Contracts and Data")
+		log.Info(util.Send + " [GTXS] Requesting Contracts and Data")
 	}
 }
 
@@ -134,12 +128,12 @@ SendVersion : Send Sync Call
 */
 func (n *Network) SendVersion() {
 
-	// db, connectErr := s.Prtl.Dat.Connect()
+	// db, connectErr := net.Database.Connect()
 	// defer db.Close()
 	// util.Handle("Error creating a DB connection: ", connectErr)
 
 	// var txPrev string
-	// _ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+	// _ = db.QueryRow("SELECT tx_hash FROM " + net.Database.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
 	// contracts := s.GetContractMap()
 

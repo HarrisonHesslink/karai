@@ -128,4 +128,5 @@ type Network struct {
 	FullNodesChannel *Channel
 	Transactions     chan *transaction.Transaction
 	Database         *database.Database
+	Mempool          *MemPool
 }
