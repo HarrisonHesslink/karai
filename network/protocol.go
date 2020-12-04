@@ -148,7 +148,7 @@ func (s *Server) NewDataTxFromCore(request []string, height int64, pubkey string
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
-	_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_hash=$1 ORDER BY tx_time DESC", request[1]).StructScan(&tx)
+	_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_hash=$1 ORDER BY tx_time DESC", request[0]).StructScan(&tx)
 
 	err := json.Unmarshal([]byte(tx.Data), &contract)
 	if err != nil {
