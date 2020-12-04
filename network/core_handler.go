@@ -176,15 +176,15 @@ func (s *Server) RestAPI() {
 		}
 		log.Info(req.Height)
 		if req.Pubkey == req.Nodes[len(req.Nodes)-1] {
-			s.CreateTrustedData(req.Height - 1)
+			//s.CreateTrustedData(req.Height - 1)
 		}
 
 		if req.Pubkey != "" && len(req.Nodes) > 0 && req.Height != 0 {
 			if req.Leader {
-				s.NewConsensusTXFromCore(req)
+				s.P2p.NewConsensusTXFromCore(req)
 			} else {
 				for _, tx := range req.Requests {
-					s.NewDataTxFromCore(tx, req.Height, req.Pubkey)
+					s.P2p.NewDataTxFromCore(tx, req.Height, req.Pubkey)
 				}
 			}
 		}

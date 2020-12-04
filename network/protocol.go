@@ -105,17 +105,17 @@ func (s *Server) LookForNodes() {
 }
 
 //NewDataTxFromCore = Go through all contracts and send data out
-func (s *Server) NewDataTxFromCore(request []string, height int64, pubkey string) {
+func (net *Network) NewDataTxFromCore(request []string, height int64, pubkey string) {
 
 	var agg float64
 	var tx transaction.Transaction
 	var contract contract.Contract
 
-	db, connectErr := s.Prtl.Dat.Connect()
+	db, connectErr := net.Database.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
-	_ = db.QueryRowx("SELECT * FROM "+s.Prtl.Dat.Cf.GetTableName()+" WHERE tx_hash=$1 ORDER BY tx_time DESC", request[0]).StructScan(&tx)
+	_ = db.QueryRowx("SELECT * FROM "+net.Database.Cf.GetTableName()+" WHERE tx_hash=$1 ORDER BY tx_time DESC", request[0]).StructScan(&tx)
 
 	err := json.Unmarshal([]byte(tx.Data), &contract)
 	if err != nil {
@@ -142,12 +142,12 @@ func (s *Server) NewDataTxFromCore(request []string, height int64, pubkey string
 		oracledata.Hash = hash
 		oracledata.Signature = sig
 
-		s.BroadCastOracleData(oracledata)
+		net.BroadCastOracleData(oracledata)
 	}
 }
 
 //NewConsensusTXFromCore = create v1 tx
-func (s *Server) NewConsensusTXFromCore(req transaction.NewBlock) {
+func (net *Network) NewConsensusTXFromCore(req transaction.NewBlock) {
 	req_string, _ := json.Marshal(req)
 
 	height := req.Height
@@ -155,20 +155,20 @@ func (s *Server) NewConsensusTXFromCore(req transaction.NewBlock) {
 		return
 	}
 
-	go s.Prtl.Mempool.PruneHeight(height - 5)
+	// go s.Prtl.Mempool.PruneHeight(height - 5)
 
 	var txPrev string
 
-	db, connectErr := s.Prtl.Dat.Connect()
+	db, connectErr := net.Database.Connect()
 	defer db.Close()
 	util.Handle("Error creating a DB connection: ", connectErr)
 
-	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+	_ = db.QueryRow("SELECT tx_hash FROM " + net.Database.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
 	new_tx := transaction.CreateTransaction("1", txPrev, req_string, []string{}, []string{}, height)
-	if !s.P2p.Database.HaveTx(new_tx.Hash) {
-		s.P2p.Database.CommitDBTx(new_tx)
-		s.P2p.BroadCastTX(new_tx)
+	if !net.Database.HaveTx(new_tx.Hash) {
+		net.Database.CommitDBTx(new_tx)
+		net.BroadCastTX(new_tx)
 	}
 }
 

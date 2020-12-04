@@ -62,12 +62,12 @@ func (net *Network) BroadCastTX(tx transaction.Transaction) {
 BroadCastOracleData : broadcast oracle data
 
 */
-func (s *Server) BroadCastOracleData(oracle_data transaction.OracleData) {
+func (net *Network) BroadCastOracleData(oracle_data transaction.OracleData) {
 	data := GOB_ORACLE_DATA{oracle_data}
 	payload := GobEncode(data)
 	request := append(CmdToBytes("data"), payload...)
 
-	s.P2p.GeneralChannel.Publish("Recieved NEW ORACLE DATA", request, "")
+	net.GeneralChannel.Publish("Recieved NEW ORACLE DATA", request, "")
 }
 
 /*

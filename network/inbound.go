@@ -241,25 +241,25 @@ func (net *Network) HandleTx(content *ChannelContent) {
 	net.Ui.displaySelfMessage(" [" + command + "] Transaction: " + tx.Hash)
 }
 
-func (s *Server) HandleData(ctx *flatend.Context, request []byte) {
-	command := BytesToCmd(request[:commandLength])
+// func (s *Server) HandleData(ctx *flatend.Context, request []byte) {
+// 	command := BytesToCmd(request[:commandLength])
 
-	var buff bytes.Buffer
-	var payload GOB_ORACLE_DATA
+// 	var buff bytes.Buffer
+// 	var payload GOB_ORACLE_DATA
 
-	buff.Write(request[commandLength:])
-	dec := gob.NewDecoder(&buff)
-	err := dec.Decode(&payload)
-	if err != nil {
-		log.Println("Unable to decode")
-		return
-	}
+// 	buff.Write(request[commandLength:])
+// 	dec := gob.NewDecoder(&buff)
+// 	err := dec.Decode(&payload)
+// 	if err != nil {
+// 		log.Println("Unable to decode")
+// 		return
+// 	}
 
-	if s.Prtl.Mempool.addOracleData(payload.Oracle_Data) {
-		s.BroadCastOracleData(payload.Oracle_Data)
-		util.Success_log(util.Rcv + " [" + command + "] Oracle Data: " + payload.Oracle_Data.Hash)
-	}
-}
+// 	if s.Prtl.Mempool.addOracleData(payload.Oracle_Data) {
+// 		s.BroadCastOracleData(payload.Oracle_Data)
+// 		util.Success_log(util.Rcv + " [" + command + "] Oracle Data: " + payload.Oracle_Data.Hash)
+// 	}
+// }
 
 // func (net *Network) HandleSyncCall(content *ChannelContent) {
 // 	command := BytesToCmd(content.Payload[:commandLength])
