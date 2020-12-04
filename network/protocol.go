@@ -63,7 +63,7 @@ func ProtocolInit(c *config.Config, s *Server) {
 
 	go s.RestAPI()
 
-	StartNode("4203", true, func(net *Network) {
+	StartNode("4201", true, func(net *Network) {
 		s.P2p = net
 		//go jsonrpc.StartServer(cli, rpc, rpcPort, rpcAddr)
 	})
