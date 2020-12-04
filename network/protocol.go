@@ -364,7 +364,7 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 func (net *Network) hearbeat() {
 	for {
 		peers := net.GeneralChannel.ListPeers()
-		for _, p := range peers {
+		for _, _ = range peers {
 			net.SendVersion()
 		}
 		time.Sleep(10 * time.Second)
