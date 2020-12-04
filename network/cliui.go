@@ -61,7 +61,7 @@ func NewCLIUI(generalChannel *Channel, miningChannel *Channel, fullNodesChannel 
 	inputCh := make(chan string, 32)
 	input := tview.NewInputField().
 		SetLabel(strings.ToUpper(ShortID(generalChannel.self)) + " > ").
-		SetFieldWidth(0).
+		SetFieldWidth(2).
 		SetFieldBackgroundColor(tcell.ColorBlack)
 
 	input.SetDoneFunc(func(key tcell.Key) {

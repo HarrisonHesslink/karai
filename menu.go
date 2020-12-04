@@ -42,8 +42,8 @@ func inputHandler(s *network.Server /*keyCollection *ED25519Keys*/) {
 		} else if strings.Compare("license", text) == 0 {
 			//	printLicense()
 		} else if strings.Compare("dag", text) == 0 {
-			count := s.Prtl.Dat.GetDAGSize()
-			log.Println("Txes: " + strconv.Itoa(count))
+			count := s.P2p.Database.GetDAGSize()
+			log.Println("Transactions on Network: " + strconv.Itoa(count))
 		} else if strings.Compare("a", text) == 0 {
 			// // start := time.Now()
 			// // txint := 50
@@ -73,9 +73,9 @@ func inputHandler(s *network.Server /*keyCollection *ED25519Keys*/) {
 		} else if strings.Compare("close", text) == 0 {
 			// menuExit()
 		} else if strings.Compare("mempool", text) == 0 {
-			s.Prtl.Mempool.PrintMemPool()
+			//s.Prtl.Mempool.PrintMemPool()
 		} else if strings.HasPrefix(text, "create_contract ") {
-			go s.CreateContract()
+			//go s.CreateContract()
 		}
 	}
 }
