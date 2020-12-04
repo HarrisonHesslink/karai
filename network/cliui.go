@@ -170,7 +170,7 @@ func (ui *CLIUI) HandleStream(net *Network, content *ChannelContent) {
 	// ui.displayContent(content)
 	if content.Payload != nil {
 		command := BytesToCmd(content.Payload[:commandLength])
-		log.Infof("Received  %s command \n", command)
+		fmt.Fprintf(ui.hostWindow, "Received  %s command \n", command)
 
 		// switch command {
 		// case "block":
