@@ -1,13 +1,15 @@
 {
+    "Asset": "BTC",
+    "Denom": "USD",
     "variables": {
         "gemini": [
             "close"
         ],
         "binance": [
-            "lastprice"
+            "lastPrice"
         ],
         "ftx": [
-            "last"
+            "result.last"
         ]
     },
     "request_time": 0,
@@ -19,6 +21,5 @@
         "gemini": "https://api.gemini.com/v2/ticker/btcusd",
         "binance": "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
         "ftx": "https://ftx.com/api/markets/BTC/USD"
-
     }
 }

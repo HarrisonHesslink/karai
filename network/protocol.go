@@ -201,7 +201,7 @@ func (s *Server) NewConsensusTXFromCore(req transaction.NewBlock) {
 	new_tx := transaction.CreateTransaction("1", txPrev, req_string, []string{}, []string{}, height)
 	if !s.Prtl.Dat.HaveTx(new_tx.Hash) {
 		s.Prtl.Dat.CommitDBTx(new_tx)
-		go s.BroadCastTX(new_tx)
+		s.BroadCastTX(new_tx)
 	}
 }
 
@@ -347,7 +347,7 @@ func (s *Server) CreateTrustedData(block_height int64) {
 				new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
 
 				s.Prtl.Dat.CommitDBTx(new_tx)
-				go s.BroadCastTX(new_tx)
+				s.BroadCastTX(new_tx)
 			}
 		}
 	}
