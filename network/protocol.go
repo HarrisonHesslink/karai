@@ -68,7 +68,6 @@ func ProtocolInit(c *config.Config, s *Server) {
 		s.P2p = net
 		//go jsonrpc.StartServer(cli, rpc, rpcPort, rpcAddr)
 	})
-	select {}
 }
 
 /*
