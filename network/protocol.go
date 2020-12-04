@@ -398,6 +398,7 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 	}
 	fullNodesChannel, _ := JoinChannel(ctx, pub, host.ID(), FullNodesChannel, subscribe)
 
+	ui := NewCLIUI(generalChannel, miningChannel, fullNodesChannel)
 	// setup peer discovery
 	err = SetupDiscovery(ctx, host)
 	if err != nil {
@@ -412,7 +413,7 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		// Miner:            miner,
 	}
 	callback(network)
-	//err = RequestBlocks(network)
+	err = RequestBlocks(network)
 
 	// go HandleEvents(network)
 	// if miner {
@@ -424,9 +425,9 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 	if err != nil {
 		panic(err)
 	}
-	// if err = ui.Run(network); err != nil {
-	// 	log.Error("error running text UI: %s", err)
-	// }
+	if err = ui.Run(network); err != nil {
+		log.Error("error running text UI: %s", err)
+	}
 }
 
 // func HandleEvents(net *Network) {
@@ -508,7 +509,9 @@ func SetupDiscovery(ctx context.Context, host host.Host) error {
 		if peer.ID == host.ID() {
 			continue
 		}
-		log.Info("Found peer:", peer)
+
+		host.Peerstore().ClearAddrs(peer.ID)
+		//log.Info("Found peer:", peer)
 
 		//log.Info("Connecting to:", peer)
 		err := host.Connect(context.Background(), peer)

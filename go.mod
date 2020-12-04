@@ -5,6 +5,7 @@ go 1.14
 require (
 	github.com/Jeffail/gabs v1.4.0
 	github.com/gdamore/tcell v1.4.0
+	github.com/gdamore/tcell/v2 v2.0.1-0.20201017141208-acf90d56d591
 	github.com/glendc/go-external-ip v0.0.0-20200601212049-c872357d968e
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
@@ -28,4 +29,6 @@ require (
 	github.com/rivo/tview v0.0.0-20201118063654-f007e9ad3893
 	github.com/sirupsen/logrus v1.7.0
 	golang.org/x/crypto v0.0.0-20201016220609-9e8e0b390897
+	golang.org/x/sys v0.0.0-20201202213521-69691e467435 // indirect
+	golang.org/x/text v0.3.4 // indirect
 )
