@@ -61,10 +61,10 @@ func ProtocolInit(c *config.Config, s *Server) {
 	p.Mempool = NewMemPool()
 
 	s.Prtl = &p
+	s.RestAPI()
 
 	StartNode("4201", true, func(net *Network) {
 		s.P2p = net
-		//go s.RestAPI()
 		//go jsonrpc.StartServer(cli, rpc, rpcPort, rpcAddr)
 	})
 }
@@ -368,8 +368,8 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		transports,
 		listenAddrs,
 		muxers,
-		libp2p.NATPortMap(),
 		libp2p.EnableNATService(),
+		libp2p.NATPortMap(),
 		libp2p.Identity(prvkey),
 	)
 	if err != nil {

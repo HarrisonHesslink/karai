@@ -165,28 +165,26 @@ func (s *Server) RestAPI() {
 
 	api.HandleFunc("/new_block", func(w http.ResponseWriter, r *http.Request) {
 
-		if s.Prtl.Sync.Connected {
-			var req transaction.NewBlock
+		var req transaction.NewBlock
 
-			// Try to decode the request body into the struct. If there is an error,
-			// respond to the client with the error message and a 400 status code.
-			err := json.NewDecoder(r.Body).Decode(&req)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-			log.Info(req.Height)
-			if req.Pubkey == req.Nodes[len(req.Nodes)-1] {
-				s.CreateTrustedData(req.Height - 1)
-			}
+		// Try to decode the request body into the struct. If there is an error,
+		// respond to the client with the error message and a 400 status code.
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Info(req.Height)
+		if req.Pubkey == req.Nodes[len(req.Nodes)-1] {
+			s.CreateTrustedData(req.Height - 1)
+		}
 
-			if req.Pubkey != "" && len(req.Nodes) > 0 && req.Height != 0 {
-				if req.Leader {
-					s.NewConsensusTXFromCore(req)
-				} else {
-					for _, tx := range req.Requests {
-						s.NewDataTxFromCore(tx, req.Height, req.Pubkey)
-					}
+		if req.Pubkey != "" && len(req.Nodes) > 0 && req.Height != 0 {
+			if req.Leader {
+				s.NewConsensusTXFromCore(req)
+			} else {
+				for _, tx := range req.Requests {
+					s.NewDataTxFromCore(tx, req.Height, req.Pubkey)
 				}
 			}
 		}
@@ -195,5 +193,5 @@ func (s *Server) RestAPI() {
 
 	// Serve via HTTP
 	log.Info("TX API listening on [::]:4203")
-	http.ListenAndServe(":4203", handlers.CORS(headersCORS, originsCORS, methodsCORS)(api))
+	go http.ListenAndServe(":4203", handlers.CORS(headersCORS, originsCORS, methodsCORS)(api))
 }
