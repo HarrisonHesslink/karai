@@ -26,6 +26,7 @@ import (
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	mplex "github.com/libp2p/go-libp2p-mplex"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
+	secio "github.com/libp2p/go-libp2p-secio"
 	yamux "github.com/libp2p/go-libp2p-yamux"
 	tcp "github.com/libp2p/go-tcp-transport"
 	ws "github.com/libp2p/go-ws-transport"
@@ -356,7 +357,7 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		libp2p.Muxer("/mplex/6.7.0", mplex.DefaultTransport),
 	)
 
-	// security := libp2p.Security(secio.ID, secio.New)
+	security := libp2p.Security(secio.ID, secio.New)
 	if len(listenPort) == 0 {
 		listenPort = "0"
 	}
@@ -371,6 +372,7 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		transports,
 		listenAddrs,
 		muxers,
+		security,
 		libp2p.Identity(prvKey),
 	)
 	if err != nil {
@@ -489,13 +491,13 @@ func SetupDiscovery(ctx context.Context, host host.Host) error {
 	// This is like telling your friends to meet you at the Eiffel Tower.
 	log.Info("Announcing ourselves...")
 	routingDiscovery := discovery.NewRoutingDiscovery(kademliaDHT)
-	discovery.Advertise(ctx, routingDiscovery, "rendezvous")
+	discovery.Advertise(ctx, routingDiscovery, "xeq-equilibria")
 	log.Info("Successfully announced!")
 
 	// Now, look for others who have announced
 	// This is like your friend telling you the location to meet you.
 	log.Info("Searching for other peers...")
-	peerChan, err := routingDiscovery.FindPeers(ctx, "rendezvous")
+	peerChan, err := routingDiscovery.FindPeers(ctx, "xeq-equilibria")
 	if err != nil {
 		panic(err)
 	}
