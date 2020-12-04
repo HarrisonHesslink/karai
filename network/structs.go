@@ -1,11 +1,11 @@
 package network
 
 import (
-	"github.com/gorilla/websocket"
 	"github.com/harrisonhesslink/flatend"
 	config "github.com/harrisonhesslink/pythia/configuration"
 	"github.com/harrisonhesslink/pythia/database"
 	"github.com/harrisonhesslink/pythia/transaction"
+	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/lithdew/kademlia"
 )
 
@@ -65,17 +65,14 @@ type NewPeer struct {
 }
 
 type Server struct {
-	Prtl         *Protocol
-	cf           *config.Config
-	node         *flatend.Node
-	pl           *PeerList
-	ExternalIP   string
-	ExternalPort int
-	Sockets      []*websocket.Conn
+	Prtl *Protocol
+	cf   *config.Config
+	pl   *PeerList
 
 	Nodes []string
 
 	isSyncing bool
+	P2p       *Network
 }
 
 type Protocol struct {
@@ -122,4 +119,12 @@ type ArrayTX struct {
 type ErrorJson struct {
 	Message string `json:message`
 	Error   bool   `json:is_error`
+}
+
+type Network struct {
+	Host             host.Host
+	GeneralChannel   *Channel
+	MiningChannel    *Channel
+	FullNodesChannel *Channel
+	Transactions     chan *transaction.Transaction
 }

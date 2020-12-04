@@ -9,6 +9,7 @@ import (
 	"sort"
 
 	"github.com/harrisonhesslink/pythia/transaction"
+	"github.com/libp2p/go-libp2p-core/peer"
 )
 
 func CmdToBytes(cmd string) []byte {
@@ -129,4 +130,10 @@ func PercentageChange(old, new float64) float64 {
 	diff := new - old
 	delta := (diff / old) * 100
 	return math.Abs(delta)
+}
+
+// ShortID returns the last 8 chars of a base58-encoded peer id.
+func ShortID(p peer.ID) string {
+	pretty := p.Pretty()
+	return pretty[len(pretty)-8:]
 }

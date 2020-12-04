@@ -50,14 +50,14 @@ BroadCastTX : broadcast tx
 
 */
 func (s *Server) BroadCastTX(tx transaction.Transaction) {
-	data := GOB_TX{tx.Serialize()}
-	payload := GobEncode(data)
-	request := append(CmdToBytes("tx"), payload...)
+	// data := GOB_TX{tx.Serialize()}
+	// payload := GobEncode(data)
+	// request := append(CmdToBytes("tx"), payload...)
 
-	_, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
-	if err == nil {
-		util.Success_log(util.Send + " [TX] Broadcast TX Hash: " + tx.Hash)
-	}
+	// _, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	// if err == nil {
+	// 	util.Success_log(util.Send + " [TX] Broadcast TX Hash: " + tx.Hash)
+	// }
 }
 
 /*
@@ -66,14 +66,14 @@ BroadCastOracleData : broadcast oracle data
 
 */
 func (s *Server) BroadCastOracleData(oracle_data transaction.OracleData) {
-	data := GOB_ORACLE_DATA{oracle_data}
-	payload := GobEncode(data)
-	request := append(CmdToBytes("data"), payload...)
+	// data := GOB_ORACLE_DATA{oracle_data}
+	// payload := GobEncode(data)
+	// request := append(CmdToBytes("data"), payload...)
 
-	_, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
-	if err == nil {
-		util.Success_log(util.Send + " [DATA] Broadcasting Oracle Data Out Hash: " + oracle_data.Hash)
-	}
+	// _, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
+	// if err == nil {
+	// 	util.Success_log(util.Send + " [DATA] Broadcasting Oracle Data Out Hash: " + oracle_data.Hash)
+	// }
 }
 
 /*
@@ -85,10 +85,10 @@ func (s *Server) SendData(ctx *flatend.Context, data []byte) {
 
 	p := s.GetProviderFromID(&ctx.ID)
 	if p != nil {
-		stream, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
-		if err == nil {
-			go s.HandleCall(stream)
-		}
+		// stream, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
+		// if err == nil {
+		// 	go s.HandleCall(stream)
+		// }
 	}
 }
 
@@ -98,13 +98,13 @@ BroadCastData : Broadcast data
 
 */
 func (s *Server) BroadCastData(data []byte) {
-	providers := s.node.ProvidersFor("karai-xeq")
-	for _, provider := range providers {
-		_, err := provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
-		if err != nil {
-			//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
-		}
-	}
+	// providers := s.node.ProvidersFor("karai-xeq")
+	// for _, provider := range providers {
+	// 	_, err := provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
+	// 	if err != nil {
+	// 		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
+	// 	}
+	// }
 }
 
 /*
