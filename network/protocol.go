@@ -370,6 +370,7 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		transports,
 		listenAddrs,
 		muxers,
+		libp2p.NATPortMap(),
 		libp2p.Identity(prvKey),
 	)
 	if err != nil {
@@ -439,14 +440,17 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 // 		}
 // 	}
 // }
-// func RequestBlocks(net *Network) error {
-// 	peers := net.GeneralChannel.ListPeers()
-// 	// Send version
-// 	if len(peers) > 0 {
-// 		net.SendVersion(peers[0].Pretty())
-// 	}
-// 	return nil
-// }
+func RequestBlocks(net *Network) error {
+	peers := net.GeneralChannel.ListPeers()
+	for _, p := range peers {
+		log.Info(p.Pretty())
+	}
+	// Send version
+	// if len(peers) > 0 {
+	// 	net.SendVersion(peers[0].Pretty())
+	// }
+	return nil
+}
 
 func SetupDiscovery(ctx context.Context, host host.Host) error {
 
