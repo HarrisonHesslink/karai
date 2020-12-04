@@ -62,7 +62,7 @@ func NewCLIUI(generalChannel *Channel, miningChannel *Channel, fullNodesChannel 
 	input := tview.NewInputField().
 		SetLabel(strings.ToUpper(ShortID(generalChannel.self)) + " > ").
 		SetFieldWidth(2).
-		SetFieldBackgroundColor(tcell.ColorBlack)
+		SetFieldBackgroundColor(tcell.ColorRed)
 
 	input.SetDoneFunc(func(key tcell.Key) {
 		if key != tcell.KeyEnter {
@@ -82,7 +82,7 @@ func NewCLIUI(generalChannel *Channel, miningChannel *Channel, fullNodesChannel 
 		}
 
 		inputCh <- line
-		input.SetText("")
+		input.SetText("placehold")
 	})
 
 	peersList := tview.NewTextView()
