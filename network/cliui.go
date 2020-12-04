@@ -64,6 +64,8 @@ func NewCLIUI(generalChannel *Channel, miningChannel *Channel, fullNodesChannel 
 		SetFieldWidth(2).
 		SetFieldBackgroundColor(tcell.ColorRed)
 
+	input.SetBorder(true)
+
 	input.SetDoneFunc(func(key tcell.Key) {
 		if key != tcell.KeyEnter {
 			// we don't want to do anything if they just tabbed away
@@ -91,7 +93,8 @@ func NewCLIUI(generalChannel *Channel, miningChannel *Channel, fullNodesChannel 
 
 	chatPanel := tview.NewFlex().
 		AddItem(msgBox, 0, 1, false).
-		AddItem(peersList, 20, 1, false)
+		AddItem(peersList, 20, 1, false).
+		AddItem(input, 20, 1, false)
 
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).
