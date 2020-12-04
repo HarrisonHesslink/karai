@@ -50,14 +50,11 @@ BroadCastTX : broadcast tx
 
 */
 func (s *Server) BroadCastTX(tx transaction.Transaction) {
-	// data := GOB_TX{tx.Serialize()}
-	// payload := GobEncode(data)
-	// request := append(CmdToBytes("tx"), payload...)
+	data := GOB_TX{tx.Serialize()}
+	payload := GobEncode(data)
+	request := append(CmdToBytes("tx"), payload...)
 
-	// _, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
-	// if err == nil {
-	// 	util.Success_log(util.Send + " [TX] Broadcast TX Hash: " + tx.Hash)
-	// }
+	s.P2p.GeneralChannel.Publish("Recieved NEW TX: ", request, "")
 }
 
 /*
@@ -66,14 +63,11 @@ BroadCastOracleData : broadcast oracle data
 
 */
 func (s *Server) BroadCastOracleData(oracle_data transaction.OracleData) {
-	// data := GOB_ORACLE_DATA{oracle_data}
-	// payload := GobEncode(data)
-	// request := append(CmdToBytes("data"), payload...)
+	data := GOB_ORACLE_DATA{oracle_data}
+	payload := GobEncode(data)
+	request := append(CmdToBytes("data"), payload...)
 
-	// _, err := s.node.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
-	// if err == nil {
-	// 	util.Success_log(util.Send + " [DATA] Broadcasting Oracle Data Out Hash: " + oracle_data.Hash)
-	// }
+	s.P2p.GeneralChannel.Publish("Recieved NEW ORACLE DATA", request, "")
 }
 
 /*
@@ -138,25 +132,20 @@ func (s *Server) SendGetTxes(ctx *flatend.Context, fill bool, contracts map[stri
 SendVersion : Send Sync Call
 
 */
-func (s *Server) SendVersion(p *flatend.Provider) {
+func (n *Network) SendVersion() {
 
-	db, connectErr := s.Prtl.Dat.Connect()
-	defer db.Close()
-	util.Handle("Error creating a DB connection: ", connectErr)
+	// db, connectErr := s.Prtl.Dat.Connect()
+	// defer db.Close()
+	// util.Handle("Error creating a DB connection: ", connectErr)
 
-	var txPrev string
-	_ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+	// var txPrev string
+	// _ = db.QueryRow("SELECT tx_hash FROM " + s.Prtl.Dat.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
-	contracts := s.GetContractMap()
+	// contracts := s.GetContractMap()
 
-	payload := GobEncode(SyncCall{txPrev, contracts})
+	payload := GobEncode(SyncCall{"yemen", nil})
 
 	request := append(CmdToBytes("version"), payload...)
 
-	stream, err := p.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(request)))
-	if err == nil {
-		go s.HandleCall(stream)
-		util.Success_log(util.Send + " [VERSION] Call")
-	}
-
+	n.GeneralChannel.Publish("Recieved send version", request, "")
 }

@@ -62,10 +62,9 @@ func ProtocolInit(c *config.Config, s *Server) {
 
 	s.Prtl = &p
 
-	go s.RestAPI()
-
 	StartNode("4201", true, func(net *Network) {
 		s.P2p = net
+		//go s.RestAPI()
 		//go jsonrpc.StartServer(cli, rpc, rpcPort, rpcAddr)
 	})
 }
@@ -415,7 +414,7 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 	callback(network)
 	err = RequestBlocks(network)
 
-	// go HandleEvents(network)
+	//go HandleEvents(network)
 	// if miner {
 	// 	// event loop for miners to constantly send a ping to fullnodes for new transactions
 	// 	// in order for it to be mined and added to the blockchain
@@ -430,26 +429,23 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 	}
 }
 
-// func HandleEvents(net *Network) {
-// 	for {
-// 		select {
-// 		case block := <-net.Blocks:
-// 			net.SendBlock("", block)
-// 		case tnx := <-net.Transactions:
-// 			// mine := false
-// 			net.SendTx("", tnx)
-// 		}
-// 	}
-// }
+func HandleEvents(net *Network) {
+	// for {
+	// 	select {
+	// 	case tnx := <-net.Transactions:
+	// 		// mine := false
+	// 		//net.SendTx("", tnx)
+	// 	}
+	// }
+}
 func RequestBlocks(net *Network) error {
 	peers := net.GeneralChannel.ListPeers()
 	for _, p := range peers {
 		log.Info(p.Pretty())
 	}
-	// Send version
-	// if len(peers) > 0 {
-	// 	net.SendVersion(peers[0].Pretty())
-	// }
+	if len(peers) > 0 {
+		net.SendVersion()
+	}
 	return nil
 }
 
@@ -558,3 +554,19 @@ func loadPeerKey() (crypto.PrivKey, error) {
 	}
 	return prvkey, nil
 }
+
+// func (net *Network) MinersEventLoop() {
+// 	poolCheckTicker := time.NewTicker(time.Second)
+// 	defer poolCheckTicker.Stop()
+
+// 	for {
+// 		select {
+// 		case <-poolCheckTicker.C:
+// 			tnx := TxFromPool{net.Host.ID().Pretty(), 1}
+// 			payload := GobEncode(tnx)
+// 			request := append(CmdToBytes("gettxfrompool"), payload...)
+// 			net.FullNodesChannel.Publish("Request transaction from pool", request, "")
+// 			memoryPool.Wg.Add(1)
+// 		}
+// 	}
+// }

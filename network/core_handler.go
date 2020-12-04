@@ -13,7 +13,7 @@ import (
 	"github.com/harrisonhesslink/pythia/util"
 
 	//"strconv"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 // restAPI() This is the main API that is activated when isCoord == true
@@ -53,7 +53,7 @@ func (s *Server) RestAPI() {
 		w.WriteHeader(http.StatusOK)
 		response, err := json.Marshal(map[string]bool{"status": true})
 		if err != nil {
-			log.Println(err.Error())
+			log.Info(err.Error())
 		}
 		_, _ = w.Write(response)
 	})
@@ -175,6 +175,7 @@ func (s *Server) RestAPI() {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
+			log.Info(req.Height)
 			if req.Pubkey == req.Nodes[len(req.Nodes)-1] {
 				s.CreateTrustedData(req.Height - 1)
 			}
@@ -193,6 +194,6 @@ func (s *Server) RestAPI() {
 	}).Methods("POST")
 
 	// Serve via HTTP
-	log.Println("TX API listening on [::]:4203")
+	log.Info("TX API listening on [::]:4203")
 	http.ListenAndServe(":4203", handlers.CORS(headersCORS, originsCORS, methodsCORS)(api))
 }
