@@ -68,6 +68,7 @@ func ProtocolInit(c *config.Config, s *Server) {
 		s.P2p = net
 		//go jsonrpc.StartServer(cli, rpc, rpcPort, rpcAddr)
 	})
+	select {}
 }
 
 /*
@@ -370,6 +371,7 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		listenAddrs,
 		muxers,
 		libp2p.NATPortMap(),
+		libp2p.EnableNATService(),
 		libp2p.Identity(prvkey),
 	)
 	if err != nil {
@@ -507,12 +509,12 @@ func SetupDiscovery(ctx context.Context, host host.Host) error {
 		if peer.ID == host.ID() {
 			continue
 		}
-		log.Debug("Found peer:", peer)
+		log.Info("Found peer:", peer)
 
-		log.Debug("Connecting to:", peer)
+		//log.Info("Connecting to:", peer)
 		err := host.Connect(context.Background(), peer)
 		if err != nil {
-			log.Warningf("Error connecting to peer %s: %s\n", peer.ID.Pretty(), err)
+			//log.Warningf("Error connecting to peer %s: %s\n", peer.ID.Pretty(), err)
 			continue
 		}
 		log.Info("Connected to:", peer)
