@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 
 	api "github.com/harrisonhesslink/pythia/api"
@@ -340,12 +341,10 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// Creates a new RSA key pair for this host.
-	prvKey, _, err := crypto.GenerateKeyPair(
-		crypto.Ed25519, // Select your key type. Ed25519 are nice short
-		-1,             // Select key length when possible (i.e. RSA).
-	)
-
+	prvkey, err := loadPeerKey()
+	if err != nil {
+		log.Error(err)
+	}
 	transports := libp2p.ChainOptions(
 		libp2p.Transport(tcp.NewTCPTransport),
 		libp2p.Transport(ws.New),
@@ -371,7 +370,7 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		listenAddrs,
 		muxers,
 		libp2p.NATPortMap(),
-		libp2p.Identity(prvKey),
+		libp2p.Identity(prvkey),
 	)
 	if err != nil {
 		panic(err)
@@ -520,4 +519,38 @@ func SetupDiscovery(ctx context.Context, host host.Host) error {
 	}
 
 	return nil
+}
+
+func loadPeerKey() (crypto.PrivKey, error) {
+	var prvkey crypto.PrivKey
+
+	if _, err := os.Stat("peerkey"); err == nil {
+		dat, _ := ioutil.ReadFile("peerkey")
+		prvkey, err = crypto.UnmarshalEd25519PrivateKey(dat)
+	} else if os.IsNotExist(err) {
+
+		key, _, err := crypto.GenerateKeyPair(
+			crypto.Ed25519,
+			-1,
+		)
+		f, err := os.Create("peerkey")
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+		key_bytes, _ := key.Raw()
+		l, err := f.Write(key_bytes)
+		if err != nil {
+			fmt.Println(err)
+			f.Close()
+			return nil, err
+		}
+		fmt.Println(l, "bytes written successfully")
+		err = f.Close()
+		if err != nil {
+			fmt.Println(err)
+			return nil, err
+		}
+	}
+	return prvkey, nil
 }

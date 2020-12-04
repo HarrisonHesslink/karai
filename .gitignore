@@ -38,3 +38,4 @@ builds/
 *.iml
 *.xml
 config.json
+peerkey
