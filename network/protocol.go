@@ -358,7 +358,15 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 	if err != nil {
 		panic(err)
 	}
-	network.handleEvents()
+	go network.handleEvents()
+	go network.hearbeat()
+}
+
+func (net *Network) hearbeat() {
+	for {
+		go RequestBlocks(net)
+		time.Sleep(10 * time.Second)
+	}
 }
 
 func HandleEvents(net *Network) {

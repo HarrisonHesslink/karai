@@ -126,20 +126,20 @@ func (net *Network) SendGetTxes(fill bool, contracts map[string]string) {
 SendVersion : Send Sync Call
 
 */
-func (n *Network) SendVersion() {
+func (net *Network) SendVersion() {
 
-	// db, connectErr := net.Database.Connect()
-	// defer db.Close()
-	// util.Handle("Error creating a DB connection: ", connectErr)
+	db, connectErr := net.Database.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
 
-	// var txPrev string
-	// _ = db.QueryRow("SELECT tx_hash FROM " + net.Database.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
+	var txPrev string
+	_ = db.QueryRow("SELECT tx_hash FROM " + net.Database.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
 
-	// contracts := s.GetContractMap()
+	contracts := net.GetContractMap()
 
-	payload := GobEncode(SyncCall{"yemen", nil})
+	payload := GobEncode(SyncCall{txPrev, contracts})
 
 	request := append(CmdToBytes("version"), payload...)
 
-	n.GeneralChannel.Publish("Recieved send version", request, "")
+	net.GeneralChannel.Publish("Recieved send version", request, "")
 }
