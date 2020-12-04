@@ -358,14 +358,14 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		panic(err)
 	}
 	network.handleEvents()
-	network.hearbeat()
+	go network.hearbeat()
 }
 
 func (net *Network) hearbeat() {
 	for {
 		peers := net.GeneralChannel.ListPeers()
 		for range peers {
-			go net.SendVersion()
+			net.SendVersion()
 		}
 		time.Sleep(10 * time.Second)
 	}
@@ -384,7 +384,7 @@ func RequestBlocks(net *Network) error {
 	peers := net.GeneralChannel.ListPeers()
 	for _, p := range peers {
 		log.Info(p.Pretty())
-		go net.SendVersion()
+		net.SendVersion()
 	}
 	return nil
 }
