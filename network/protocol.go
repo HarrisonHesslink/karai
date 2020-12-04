@@ -26,7 +26,7 @@ import (
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	mplex "github.com/libp2p/go-libp2p-mplex"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
-	secio "github.com/libp2p/go-libp2p-secio"
+	libp2ptls "github.com/libp2p/go-libp2p-tls"
 	yamux "github.com/libp2p/go-libp2p-yamux"
 	tcp "github.com/libp2p/go-tcp-transport"
 	ws "github.com/libp2p/go-ws-transport"
@@ -357,7 +357,8 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		libp2p.Muxer("/mplex/6.7.0", mplex.DefaultTransport),
 	)
 
-	security := libp2p.Security(secio.ID, secio.New)
+	security := libp2p.Security(libp2ptls.ID, libp2ptls.New)
+
 	if len(listenPort) == 0 {
 		listenPort = "0"
 	}
