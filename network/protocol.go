@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	api "github.com/harrisonhesslink/pythia/api"
@@ -346,7 +348,7 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		// Miner:            miner,
 	}
 	callback(network)
-
+	go network.hearbeat()
 	//go HandleEvents(network)
 	// if miner {
 	// 	// event loop for miners to constantly send a ping to fullnodes for new transactions
@@ -358,13 +360,13 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 		panic(err)
 	}
 	network.handleEvents()
-	go network.hearbeat()
 }
 
 func (net *Network) hearbeat() {
 	for {
 		peers := net.GeneralChannel.ListPeers()
-		for range peers {
+		for _, p := range peers {
+			log.Info(p.Pretty())
 			net.SendVersion()
 		}
 		time.Sleep(10 * time.Second)
@@ -534,18 +536,14 @@ func (net *Network) HandleStream(content *ChannelContent) {
 }
 
 func (net *Network) handleEvents() {
-	peerRefreshTicker := time.NewTicker(time.Second)
-	defer peerRefreshTicker.Stop()
+	var stopChan = make(chan os.Signal, 2)
+	signal.Notify(stopChan, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
 
 	//go ui.readFromLogs(net.Blockchain.InstanceId)
 	log.Info("HOST ADDR: ", net.Host.Addrs())
 
 	for {
 		select {
-		// case <-peerRefreshTicker.C:
-		// 	// refresh the list of peers in the chat room periodically
-		// 	ui.refreshPeers()
-
 		case m := <-net.GeneralChannel.Content:
 			net.HandleStream(m)
 		case m := <-net.MiningChannel.Content:
@@ -553,12 +551,10 @@ func (net *Network) handleEvents() {
 
 		case m := <-net.FullNodesChannel.Content:
 			net.HandleStream(m)
-
 		case <-net.GeneralChannel.ctx.Done():
 			return
-
-			// case <-ui.doneCh:
-			// 	return
+		case <-stopChan:
+			return
 		}
 	}
 }

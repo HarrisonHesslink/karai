@@ -134,7 +134,7 @@ func (net *Network) SendVersion() {
 
 	var txPrev string
 	_ = db.QueryRow("SELECT tx_hash FROM " + net.Database.Cf.GetTableName() + " WHERE tx_type='1' ORDER BY tx_time DESC").Scan(&txPrev)
-
+	log.Info(txPrev)
 	contracts := net.GetContractMap()
 
 	payload := GobEncode(SyncCall{txPrev, contracts})
