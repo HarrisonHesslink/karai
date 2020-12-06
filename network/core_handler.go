@@ -175,7 +175,7 @@ func (s *Server) RestAPI() {
 			return
 		}
 		if req.Pubkey == req.Nodes[len(req.Nodes)-1] {
-			//s.CreateTrustedData(req.Height - 1)
+			s.CreateTrustedData(req.Height - 1)
 		}
 
 		if req.Pubkey != "" && len(req.Nodes) > 0 && req.Height != 0 {
