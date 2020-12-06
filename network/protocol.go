@@ -245,7 +245,6 @@ func (net *Network) CreateTrustedData(block_height int64) {
 			price := trusted_data_map[contract_array[0].Contract] * multi
 			send := false
 			if contract.Threshold != "" {
-				log.Info(contract.Threshold)
 				s, _ := strconv.ParseFloat(contract.Threshold, 64)
 				if s > 0.0 {
 					ltd := transaction.Trusted_Data{}
@@ -372,7 +371,6 @@ func (net *Network) hearbeat() {
 	for {
 		peers := net.GeneralChannel.ListPeers()
 		for _, p := range peers {
-			log.Info(p.Pretty())
 			net.SendVersion()
 		}
 		time.Sleep(10 * time.Second)
@@ -391,7 +389,6 @@ func HandleEvents(net *Network) {
 func RequestBlocks(net *Network) error {
 	peers := net.GeneralChannel.ListPeers()
 	for _, p := range peers {
-		log.Info(p.Pretty())
 		net.SendVersion()
 	}
 	return nil

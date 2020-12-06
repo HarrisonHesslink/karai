@@ -141,7 +141,7 @@ func (net *Network) HandleGetData(content *ChannelContent) {
 
 		//s.SendTx(s.GetProviderFromID(&ctx.ID), tx)
 	}
-	log.Info(util.Rcv + " [" + command + "] Data Request from:")
+	log.Debug(util.Rcv + " [" + command + "] Data Request from:")
 }
 
 func (net *Network) HandleBatchTx(content *ChannelContent) {

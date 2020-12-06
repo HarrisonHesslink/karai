@@ -174,7 +174,6 @@ func (s *Server) RestAPI() {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		log.Info(req.Height)
 		if req.Pubkey == req.Nodes[len(req.Nodes)-1] {
 			//s.CreateTrustedData(req.Height - 1)
 		}
