@@ -1,5 +1,7 @@
 [![Discord](https://img.shields.io/discord/388915017187328002?label=Join%20Discord)](https://discord.gg/pDyfUTs) [![GitHub issues](https://img.shields.io/github/issues/equilibria/pythia?label=Issues)](https://github.com/equilibria/pythia/issues) ![GitHub stars](https://img.shields.io/github/stars/equilibria/pythia?label=Github%20Stars) ![Build](https://github.com/equilibria/pythia/workflows/Build/badge.svg) ![GitHub](https://img.shields.io/github/license/karai/go-karai) ![GitHub issues by-label](https://img.shields.io/github/issues/karai/go-karai/Todo) [![Go Report Card](https://goreportcard.com/badge/github.com/karai/go-karai)](https://goreportcard.com/report/github.com/karai/go-karai)
 
+# PYTHIA IS IN DEVELOPMENT. NOT PRODUCTION READY. REFACTOR COMING ON V0.2.0.
+
 **Website:** [Equilibria.network](https://equilibria.network) | **Explorer:** [Pythia Explorer](https://pythia.explorer.network)
 
 ## Usage
