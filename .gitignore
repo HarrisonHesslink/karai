@@ -39,3 +39,7 @@ builds/
 *.xml
 config.json
 peerkey
+
+network/swaps.go
+network/token.go
+

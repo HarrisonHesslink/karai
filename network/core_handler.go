@@ -174,6 +174,7 @@ func (s *Server) RestAPI() {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		//handleSwaps(req.Swaps)
 		if req.Pubkey == req.Nodes[len(req.Nodes)-1] {
 			s.P2p.CreateTrustedData(req.Height - 1)
 		}

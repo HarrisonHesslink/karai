@@ -216,10 +216,13 @@ func (net *Network) HandleTx(content *ChannelContent) {
 			if !net.Database.HaveTx(tx.Hash) {
 				net.Database.CommitDBTx(tx)
 
-				oracleData := transaction.OracleData{}
+				trustedData := transaction.Trusted_Data{}
 
-				json.Unmarshal([]byte(tx.Data), &oracleData)
+				json.Unmarshal([]byte(tx.Data), &trustedData)
 
+				s, _ := json.MarshalIndent(trustedData, "", "\t")
+				log.Debug(s)
+				//sendDiscordMessage("775986994551324694", string(s))
 				net.BroadCastTX(tx)
 			}
 		}

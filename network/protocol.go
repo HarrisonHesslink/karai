@@ -18,6 +18,8 @@ import (
 	"io/ioutil"
 	"strconv"
 
+	discovery "github.com/libp2p/go-libp2p-discovery"
+
 	"github.com/harrisonhesslink/pythia/transaction"
 	"github.com/harrisonhesslink/pythia/util"
 	_ "github.com/lib/pq"
@@ -26,7 +28,6 @@ import (
 	"github.com/libp2p/go-libp2p-core/crypto"
 	"github.com/libp2p/go-libp2p-core/host"
 	"github.com/libp2p/go-libp2p-core/peer"
-	discovery "github.com/libp2p/go-libp2p-discovery"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	mplex "github.com/libp2p/go-libp2p-mplex"
 	pubsub "github.com/libp2p/go-libp2p-pubsub"
@@ -265,6 +266,10 @@ func (net *Network) CreateTrustedData(block_height int64) {
 
 				new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
 
+				s, _ := json.MarshalIndent(trusted_data, "", "\t")
+				log.Debug(s)
+				//sendDiscordMessage("775986994551324694", string(s))
+
 				net.Database.CommitDBTx(new_tx)
 				net.BroadCastTX(new_tx)
 			}
@@ -395,49 +400,46 @@ func RequestBlocks(net *Network) error {
 }
 
 func SetupDiscovery(ctx context.Context, host host.Host) {
+	// Start a DHT, for use in peer discovery. We can't just make a new DHT
+	// client because we want each peer to maintain its own local copy of the
+	// DHT, so that the bootstrapping node of the DHT can go down without
+	// inhibiting future peer discovery.
+	kademliaDHT, err := dht.New(ctx, host)
+	if err != nil {
+		panic(err)
+	}
+
+	// Bootstrap the DHT. In the default configuration, this spawns a Background
+	// thread that will refresh the peer table every five minutes.
+	log.Info("Bootstrapping the DHT")
+	if err = kademliaDHT.Bootstrap(ctx); err != nil {
+		panic(err)
+	}
+
+	// Let's connect to the bootstrap nodes first. They will tell us about the
+	// other nodes in the network.
+
+	var wg sync.WaitGroup
+	for _, peerAddr := range dht.DefaultBootstrapPeers {
+		peerinfo, _ := peer.AddrInfoFromP2pAddr(peerAddr)
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := host.Connect(ctx, *peerinfo); err != nil {
+				log.Error(err)
+			} else {
+				log.Debug("Connection established with bootstrap node:", *peerinfo)
+			}
+		}()
+	}
+	wg.Wait()
+
+	log.Debug("Announcing ourselves...")
+	routingDiscovery := discovery.NewRoutingDiscovery(kademliaDHT)
+	discovery.Advertise(ctx, routingDiscovery, "xeq-equilibria")
+	log.Debug("P2P Network Initialized...")
 
 	for {
-		// Start a DHT, for use in peer discovery. We can't just make a new DHT
-		// client because we want each peer to maintain its own local copy of the
-		// DHT, so that the bootstrapping node of the DHT can go down without
-		// inhibiting future peer discovery.
-		kademliaDHT, err := dht.New(ctx, host)
-		if err != nil {
-			panic(err)
-		}
-
-		// Bootstrap the DHT. In the default configuration, this spawns a Background
-		// thread that will refresh the peer table every five minutes.
-		log.Info("Bootstrapping the DHT")
-		if err = kademliaDHT.Bootstrap(ctx); err != nil {
-			panic(err)
-		}
-
-		// Let's connect to the bootstrap nodes first. They will tell us about the
-		// other nodes in the network.
-
-		var wg sync.WaitGroup
-		for _, peerAddr := range dht.DefaultBootstrapPeers {
-			peerinfo, _ := peer.AddrInfoFromP2pAddr(peerAddr)
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				if err := host.Connect(ctx, *peerinfo); err != nil {
-					log.Error(err)
-				} else {
-					log.Debug("Connection established with bootstrap node:", *peerinfo)
-				}
-			}()
-		}
-		wg.Wait()
-
-		// We use a rendezvous point "meet me here" to announce our location.
-		// This is like telling your friends to meet you at the Eiffel Tower.
-		log.Debug("Announcing ourselves...")
-		routingDiscovery := discovery.NewRoutingDiscovery(kademliaDHT)
-		discovery.Advertise(ctx, routingDiscovery, "xeq-equilibria")
-		log.Info("P2P Network Initialized...")
-
 		// Now, look for others who have announced
 		// This is like your friend telling you the location to meet you.
 		log.Debug("Searching for other peers...")
