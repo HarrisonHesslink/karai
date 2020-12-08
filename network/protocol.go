@@ -150,12 +150,12 @@ func (net *Network) CreateContract() {
 		go net.BroadCastTX(tx)
 	}
 
-	message := "Contract Creation [v0.1.0 testnet]\n" +
-		data.Asset + "/" + data.Denom + "\n" +
-		"Explorer: https://pythia.equilibria.network"
+	// message := "Contract Creation [v0.1.0 testnet]\n" +
+	// 	data.Asset + "/" + data.Denom + "\n" +
+	// 	"Explorer: https://pythia.equilibria.network"
 
-	sendDiscordMessage("775986994551324694", message)
-	sendTweet(message)
+	// sendDiscordMessage("775986994551324694", message)
+	// sendTweet(message)
 
 	log.Info("Created Contract " + tx.Hash[:8])
 }
