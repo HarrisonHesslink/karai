@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"fmt"
+	"math"
 	"os"
 	"os/signal"
 	"sync"
@@ -262,13 +263,10 @@ func (net *Network) CreateTrustedData(block_height int64) {
 			}
 
 			if send {
+
 				trusted_data := transaction.Trusted_Data{contract_array, price}
 
 				new_tx := transaction.CreateTrustedTransaction(prev, trusted_data)
-
-				s, _ := json.MarshalIndent(trusted_data, "", "\t")
-				log.Debug(s)
-				//sendDiscordMessage("775986994551324694", string(s))
 
 				net.Database.CommitDBTx(new_tx)
 				net.BroadCastTX(new_tx)
@@ -359,12 +357,6 @@ func StartNode(listenPort string, fullNode bool, callback func(*Network)) {
 	}
 	callback(network)
 	go network.hearbeat()
-	//go HandleEvents(network)
-	// if miner {
-	// 	// event loop for miners to constantly send a ping to fullnodes for new transactions
-	// 	// in order for it to be mined and added to the blockchain
-	// 	go network.MinersEventLoop()
-	// }
 
 	if err != nil {
 		panic(err)
@@ -382,15 +374,6 @@ func (net *Network) hearbeat() {
 	}
 }
 
-func HandleEvents(net *Network) {
-	// for {
-	// 	select {
-	// 	case tnx := <-net.Transactions:
-	// 		// mine := false
-	// 		//net.SendTx("", tnx)
-	// 	}
-	// }
-}
 func RequestBlocks(net *Network) error {
 	peers := net.GeneralChannel.ListPeers()
 	for range peers {
@@ -455,12 +438,9 @@ func SetupDiscovery(ctx context.Context, host host.Host) {
 			}
 
 			host.Peerstore().ClearAddrs(peer.ID)
-			//log.Info("Found peer:", peer)
 
-			//log.Info("Connecting to:", peer)
 			err := host.Connect(context.Background(), peer)
 			if err != nil {
-				//log.Warningf("Error connecting to peer %s: %s\n", peer.ID.Pretty(), err)
 				continue
 			}
 			log.Info("Connected to:", peer)
@@ -503,22 +483,6 @@ func loadPeerKey() (crypto.PrivKey, error) {
 	return prvkey, nil
 }
 
-// func (net *Network) MinersEventLoop() {
-// 	poolCheckTicker := time.NewTicker(time.Second)
-// 	defer poolCheckTicker.Stop()
-
-// 	for {
-// 		select {
-// 		case <-poolCheckTicker.C:
-// 			tnx := TxFromPool{net.Host.ID().Pretty(), 1}
-// 			payload := GobEncode(tnx)
-// 			request := append(CmdToBytes("gettxfrompool"), payload...)
-// 			net.FullNodesChannel.Publish("Request transaction from pool", request, "")
-// 			memoryPool.Wg.Add(1)
-// 		}
-// 	}
-// }
-
 func (net *Network) HandleStream(content *ChannelContent) {
 	// ui.displayContent(content)
 	if content.Payload != nil {
@@ -527,8 +491,6 @@ func (net *Network) HandleStream(content *ChannelContent) {
 		switch command {
 		case "gettxes":
 			net.HandleGetTxes(content)
-		case "getdata":
-			net.HandleGetData(content)
 		case "tx":
 			net.HandleTx(content)
 		case "data":

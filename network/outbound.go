@@ -8,26 +8,8 @@ import (
 	"github.com/harrisonhesslink/pythia/util"
 	log "github.com/sirupsen/logrus"
 
-	//"math/rand"
-	//"time"
 	"io/ioutil"
-	//"github.com/lithdew/kademlia"
 )
-
-// func(s *Server) RequestTxes(ctx *flatend.Context) {
-// 	for _, node := range KnownNodes {
-// 		/s.SendGetTxes(node)
-// 	}
-// }
-
-// func (s Server) SendAddr(provider flatend.Provider) {
-// 	nodes := Addr{KnownNodes}
-// 	nodes.AddrList = append(nodes.AddrList, nodeAddress)
-// 	payload := GobEncode(nodes)
-// 	request := append(CmdToBytes("addr"), payload...)
-
-// 	s.SendData(address, request)
-// }
 
 /*
 
@@ -82,21 +64,6 @@ func (net *Network) SendData(data []byte) {
 
 /*
 
-BroadCastData : Broadcast data
-
-*/
-func (s *Server) BroadCastData(data []byte) {
-	// providers := s.node.ProvidersFor("karai-xeq")
-	// for _, provider := range providers {
-	// 	_, err := provider.Push([]string{"karai-xeq"}, nil, ioutil.NopCloser(bytes.NewReader(data)))
-	// 	if err != nil {
-	// 		//fmt.Printf("Unable to broadcast to %s: %s\n", provider.Addr(), err)
-	// 	}
-	// }
-}
-
-/*
-
 SendGetTxes : Get tansactions not known
 
 */
@@ -115,9 +82,9 @@ func (net *Network) SendGetTxes(fill bool, contracts map[string]string) {
 	go net.SendData(request)
 
 	if !fill {
-		log.Info(util.Send + " [GTXS] Requesting Transactions starting from: " + txPrev)
+		log.Debug(util.Send + " [GTXS] Requesting Transactions starting from: " + txPrev)
 	} else {
-		log.Info(util.Send + " [GTXS] Requesting Contracts and Data")
+		log.Debug(util.Send + " [GTXS] Requesting Contracts and Data")
 	}
 }
 

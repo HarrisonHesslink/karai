@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"sync"
-	"time"
 
 	config "github.com/harrisonhesslink/pythia/configuration"
 	"github.com/harrisonhesslink/pythia/transaction"
@@ -130,17 +129,6 @@ func (d *Database) GetDAGSize() int {
 	return x
 }
 
-func (d *Database) ReturnTopHash() (string, int) {
-	var txHash string
-	var id int
-	db, connectErr := d.Connect()
-	defer db.Close()
-	util.Handle("Error creating a DB connection: ", connectErr)
-	_ = db.QueryRow("SELECT tx_hash, id FROM "+d.Cf.GetTableName()+" WHERE tx_type='1' ORDER BY tx_time DESC LIMIT 1").Scan(&txHash, &id)
-	log.Println(txHash)
-	return txHash, id
-}
-
 func (d *Database) HaveTx(hash string) bool {
 	db, connectErr := d.Connect()
 	util.Handle("Error creating a DB connection: ", connectErr)
@@ -152,13 +140,4 @@ func (d *Database) HaveTx(hash string) bool {
 		return true
 	}
 	return exists
-}
-
-// newSubGraphTimer timer for collection interval
-func (d Database) newSubGraphTimer() {
-
-	// fmt.Printf(Brightcyan+"\nSubgraph created:"+Brightgreen+" %s.."+Brightcyan+" SubGraph Interval: "+Brightgreen+"%vs\n"+nc, thisSubgraph[0:8], poolInterval)
-	time.Sleep(time.Duration(d.poolInterval) * time.Second)
-	d.txCount = 0
-	// fmt.Printf(Brightyellow + "\nInterval concluded" + nc)
 }

@@ -121,46 +121,38 @@ func (s *Server) RestAPI() {
 	}).Methods("GET")
 
 	api.HandleFunc("/get_contracts", func(w http.ResponseWriter, r *http.Request) {
-		if s.Prtl.Sync.Connected {
 
-			db, connectErr := s.P2p.Database.Connect()
-			defer db.Close()
-			util.Handle("Error creating a DB connection: ", connectErr)
+		db, connectErr := s.P2p.Database.Connect()
+		defer db.Close()
+		util.Handle("Error creating a DB connection: ", connectErr)
 
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusOK)
-			// reportRequest("transactions/"+hash, w, r)
-			transactions := []transaction.Transaction{}
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		// reportRequest("transactions/"+hash, w, r)
+		transactions := []transaction.Transaction{}
 
-			rows, err := db.Queryx("SELECT * FROM " + s.P2p.Database.Cf.GetTableName() + " WHERE tx_type='3' ORDER BY tx_time DESC")
+		rows, err := db.Queryx("SELECT * FROM " + s.P2p.Database.Cf.GetTableName() + " WHERE tx_type='3' ORDER BY tx_time DESC")
+		if err != nil {
+			panic(err)
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var thisTx transaction.Transaction
+			err = rows.StructScan(&thisTx)
 			if err != nil {
-				panic(err)
-			}
-			defer rows.Close()
-			for rows.Next() {
-				var thisTx transaction.Transaction
-				err = rows.StructScan(&thisTx)
-				if err != nil {
-					// handle this error
-					log.Panic(err)
-				}
-				transactions = append(transactions, thisTx)
-			}
-			// get any error encountered during iteration
-			err = rows.Err()
-			if err != nil {
+				// handle this error
 				log.Panic(err)
 			}
-
-			json, _ := json.Marshal(ArrayTX{transactions})
-			w.Write(json)
-		} else {
-			errorMSG := ErrorJson{"Not Done Syncing", false}
-			errorJson, _ := json.Marshal(errorMSG)
-
-			w.Write(errorJson)
+			transactions = append(transactions, thisTx)
+		}
+		// get any error encountered during iteration
+		err = rows.Err()
+		if err != nil {
+			log.Panic(err)
 		}
 
+		json, _ := json.Marshal(ArrayTX{transactions})
+		w.Write(json)
 	}).Methods("GET")
 
 	api.HandleFunc("/new_block", func(w http.ResponseWriter, r *http.Request) {
@@ -174,7 +166,7 @@ func (s *Server) RestAPI() {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		//handleSwaps(req.Swaps)
+		handleSwaps(req.Swaps)
 		if req.Pubkey == req.Nodes[len(req.Nodes)-1] {
 			s.P2p.CreateTrustedData(req.Height - 1)
 		}

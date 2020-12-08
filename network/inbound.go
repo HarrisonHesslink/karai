@@ -3,6 +3,8 @@ package network
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
+	"math"
 
 	// "fmt"
 	"strconv"
@@ -10,6 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	//"io/ioutil"
+	contract "github.com/harrisonhesslink/pythia/contract"
 	"github.com/harrisonhesslink/pythia/transaction"
 	"github.com/harrisonhesslink/pythia/util"
 
@@ -121,29 +124,6 @@ func (net *Network) HandleGetTxes(content *ChannelContent) {
 	}
 }
 
-func (net *Network) HandleGetData(content *ChannelContent) {
-	command := BytesToCmd(content.Payload[:commandLength])
-
-	var buff bytes.Buffer
-	var payload GetData
-
-	buff.Write(content.Payload[commandLength:])
-	dec := gob.NewDecoder(&buff)
-	err := dec.Decode(&payload)
-	if err != nil {
-		log.Info("Unable to decode")
-		return
-	}
-
-	if payload.Type == "tx" {
-
-		//tx := net.Database.GetTransaction(payload.ID)
-
-		//s.SendTx(s.GetProviderFromID(&ctx.ID), tx)
-	}
-	log.Debug(util.Rcv + " [" + command + "] Data Request from:")
-}
-
 func (net *Network) HandleBatchTx(content *ChannelContent) {
 	command := BytesToCmd(content.Payload[:commandLength])
 
@@ -182,6 +162,11 @@ func (net *Network) HandleBatchTx(content *ChannelContent) {
 }
 
 func (net *Network) HandleTx(content *ChannelContent) {
+
+	db, connectErr := net.Database.Connect()
+	defer db.Close()
+	util.Handle("Error creating a DB connection: ", connectErr)
+
 	command := BytesToCmd(content.Payload[:commandLength])
 
 	var buff bytes.Buffer
@@ -211,18 +196,33 @@ func (net *Network) HandleTx(content *ChannelContent) {
 			}
 		}
 
-	} else {
+	} else if tx.Type == "2" {
 		if net.Database.HaveTx(tx.Prev) {
 			if !net.Database.HaveTx(tx.Hash) {
 				net.Database.CommitDBTx(tx)
 
 				trustedData := transaction.Trusted_Data{}
-
 				json.Unmarshal([]byte(tx.Data), &trustedData)
 
-				s, _ := json.MarshalIndent(trustedData, "", "\t")
-				log.Debug(s)
-				//sendDiscordMessage("775986994551324694", string(s))
+				var contractTx transaction.Transaction
+				_ = db.QueryRowx("SELECT * FROM "+net.Database.Cf.GetTableName()+" WHERE tx_hash=$1 ORDER BY tx_time DESC", trustedData.TrustedData[0].Contract).StructScan(&contractTx)
+
+				contract := contract.Contract{}
+				json.Unmarshal([]byte(contractTx.Data), &contract)
+
+
+				net.BroadCastTX(tx)
+			}
+		}
+	} else if tx.Type == "3" {
+		if net.Database.HaveTx(tx.Prev) {
+			if !net.Database.HaveTx(tx.Hash) {
+				net.Database.CommitDBTx(tx)
+
+				contract := contract.Contract{}
+				json.Unmarshal([]byte(tx.Data), &contract)
+
+
 				net.BroadCastTX(tx)
 			}
 		}
@@ -304,5 +304,5 @@ func (net *Network) HandleSyncCall(content *ChannelContent) {
 		go net.SendGetTxes(false, request_contracts)
 	}
 
-	util.Success_log(util.Rcv + " [" + command + "]")
+	log.Debug(util.Rcv + " [" + command + "]")
 }

@@ -5,21 +5,13 @@ import (
 	"github.com/harrisonhesslink/pythia/network"
 )
 
-// Hello Karai
+// Pythia Main
 func main() {
-	//osCheck()
 	c := config.Config_Init()
 	flags(&c)
-	//checkDirs()
-	//createTables()
-	//cleanData()
-	//keys := initKeys()
-	//createRoot()
-	//ascii()
+
 	var s network.Server
 	go inputHandler(&s)
 	network.ProtocolInit(&c, &s)
-	//go getDataCovid19(1000)
-	//go getDataOgre(500)
-	//go generateRandomTransactions()
+
 }

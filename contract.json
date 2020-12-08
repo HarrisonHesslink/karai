@@ -1,25 +1,17 @@
 {
-    "Asset": "BTC",
+    "Asset": "NOLE",
     "Denom": "USD",
     "variables": {
-        "gemini": [
-            "close"
-        ],
-        "binance": [
-            "lastPrice"
-        ],
-        "ftx": [
-            "result.last"
+        "coingecko": [
+            "nolecoin.usd"
         ]
     },
     "request_time": 0,
     "ContractRef": "",
-    "Threshold": ".01",
+    "Threshold": "",
     "Type": "",
     "OutputVar": "",
     "api_url": {
-        "gemini": "https://api.gemini.com/v2/ticker/btcusd",
-        "binance": "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
-        "ftx": "https://ftx.com/api/markets/BTC/USD"
+        "coingecko": "https://api.coingecko.com/api/v3/simple/price?ids=nolecoin&vs_currencies=usd&include_market_cap=true"
     }
 }

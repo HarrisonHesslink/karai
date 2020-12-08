@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"log"
-
 	"github.com/harrisonhesslink/pythia/transaction"
 	"github.com/harrisonhesslink/pythia/util"
 )
@@ -67,7 +65,6 @@ func FilterOracleDataMap(contract_map map[string][]transaction.OracleData) (map[
 		stdev, mean := stdevData(floats)
 
 		for i, contract_data := range oracle_array {
-			log.Println(floats[i])
 			if isOneDev(floats[i], stdev, mean) {
 				contract_data_map[contract_data.Contract] = append(contract_data_map[contract_data.Contract], contract_data)
 			}
