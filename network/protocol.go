@@ -3,7 +3,6 @@ package network
 import (
 	"context"
 	"fmt"
-	"math"
 	"os"
 	"os/signal"
 	"sync"
@@ -150,6 +149,14 @@ func (net *Network) CreateContract() {
 		net.Database.CommitDBTx(tx)
 		go net.BroadCastTX(tx)
 	}
+
+	message := "Contract Creation [v0.1.0 testnet]\n" +
+		data.Asset + "/" + data.Denom + "\n" +
+		"Explorer: https://pythia.equilibria.network"
+
+	sendDiscordMessage("775986994551324694", message)
+	sendTweet(message)
+
 	log.Info("Created Contract " + tx.Hash[:8])
 }
 
@@ -270,6 +277,15 @@ func (net *Network) CreateTrustedData(block_height int64) {
 
 				net.Database.CommitDBTx(new_tx)
 				net.BroadCastTX(new_tx)
+
+				// sf := fmt.Sprintf("%.12f", math.Round(trusted_data.TrustedAnswer*1000000000000)/1000000000000)
+
+				// message := "Pythia Contract Request [v0.1.0 testnet]\n" +
+				// 	sf + " " + contract.Asset + "/" + contract.Denom + "\n" +
+				// 	strconv.Itoa(len(trusted_data.TrustedData)) + " Node Responses\nExplorer: https://pythia.equilibria.network"
+
+				// sendDiscordMessage("775986994551324694", message)
+				//sendTweet(message)
 			}
 		}
 	}

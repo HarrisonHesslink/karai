@@ -3,10 +3,7 @@ package network
 import (
 	"bytes"
 	"encoding/gob"
-	"fmt"
-	"math"
 
-	// "fmt"
 	"strconv"
 
 	log "github.com/sirupsen/logrus"
@@ -210,6 +207,15 @@ func (net *Network) HandleTx(content *ChannelContent) {
 				contract := contract.Contract{}
 				json.Unmarshal([]byte(contractTx.Data), &contract)
 
+				// sf := fmt.Sprintf("%.12f", math.Round(trustedData.TrustedAnswer*1000000000000)/1000000000000)
+				// message := "Pythia Contract Request [v0.1.0 testnet]\n" +
+				// 	sf + " " + contract.Asset + "/" + contract.Denom + "\n" +
+				// 	strconv.Itoa(len(trustedData.TrustedData)) + " Node Responses\nExplorer: https://pythia.equilibria.network"
+
+				// if trustedData.TrustedAnswer > 0 {
+				// 	sendDiscordMessage("775986994551324694", message)
+				// 	//	sendTweet(message)
+				// }
 
 				net.BroadCastTX(tx)
 			}
@@ -222,6 +228,12 @@ func (net *Network) HandleTx(content *ChannelContent) {
 				contract := contract.Contract{}
 				json.Unmarshal([]byte(tx.Data), &contract)
 
+				// message := "Contract Creation [v0.1.0 testnet]\n" +
+				// 	contract.Asset + "/" + contract.Denom + "\n" +
+				// 	"Explorer: https://pythia.equilibria.network"
+
+				// sendDiscordMessage("775986994551324694", message)
+				// sendTweet(message)
 
 				net.BroadCastTX(tx)
 			}
