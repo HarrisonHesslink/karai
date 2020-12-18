@@ -166,12 +166,14 @@ func (s *Server) RestAPI() {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		//handleSwaps(req.Swaps)
-		if req.Pubkey == req.Nodes[len(req.Nodes)-1] {
-			s.P2p.CreateTrustedData(req.Height - 1)
-		}
+		handleSwaps(req.Swaps)
 
 		if req.Pubkey != "" && len(req.Nodes) > 0 && req.Height != 0 {
+			//last leader
+			if req.Pubkey == req.Nodes[len(req.Nodes)-1] {
+				s.P2p.CreateTrustedData(req.Height - 1)
+			}
+			//current leader
 			if req.Leader {
 				s.P2p.NewConsensusTXFromCore(req)
 			} else {
