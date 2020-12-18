@@ -459,7 +459,7 @@ func SetupDiscovery(ctx context.Context, host host.Host) {
 			if err != nil {
 				continue
 			}
-			log.Info("Connected to:", peer)
+			log.Debug("Connected to:", peer)
 		}
 		time.Sleep(1 * time.Minute)
 	}
